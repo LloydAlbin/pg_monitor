@@ -1,5 +1,5 @@
-# pg_monitor
-pg_monitor gets the live stats from your PostgreSQL database and stores them in your TimescaleDB database.
+# tiemscaledb
+PostgreSQL TimescaleDB server for creating our Reports database.
 
 * TimescaelDB - Timescale Database
 * init_timescaledb.sql - Script to create a fresh Reports timescale database
