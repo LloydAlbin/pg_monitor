@@ -1,4 +1,4 @@
-# readlog
+# pg_readlog
 This is the scripts required to monitor the log files every 10 seconds and to shove them into the PostgreSQL TimescaleDB database.
 
 Edits that you need to make:
