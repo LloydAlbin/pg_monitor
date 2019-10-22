@@ -1,6 +1,8 @@
 # pg_monitor
 pg_monitor is a tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
 
+PLEASE NOTE: This is not even alpha code at this time. Right now I am copying the files I use at work into this repository and writing direction for doing the install. Once I have a base working copy here, I will remove this note.
+
 This tech stack includes the following:
 * [graphite](https://github.com/LloydAlbin/pg_monitor/tree/master/graphite) - Viewing Hardware Stats (Intermeadite View)
 * [collectd](https://github.com/LloydAlbin/pg_monitor/tree/master/collectd) - Collecting Hardware Stats
