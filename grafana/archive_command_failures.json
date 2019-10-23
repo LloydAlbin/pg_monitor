@@ -27,6 +27,12 @@
       "id": "postgres",
       "name": "PostgreSQL",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
     }
   ],
   "annotations": {
@@ -46,6 +52,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
+  "iteration": 1571853262222,
   "links": [],
   "panels": [
     {
@@ -91,7 +98,7 @@
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  cluster_name,\n  $__time(log_time),\n  1 AS count\nFROM\n  reports.archive_failure_log\nWHERE\n  $__timeFilter(log_time)\nORDER BY cluster_name, log_time  \n",
+          "rawSql": "SET application_name = 'Grafana';\nSELECT\n  cluster_name,\n  $__time(log_time),\n  1 AS count\nFROM\n  reports.archive_failure_log\nWHERE\n  $__timeFilter(log_time)\n  AND (cluster_name = $ServerName OR $ServerName IS NULL)\nORDER BY cluster_name, log_time  \n",
           "refId": "A",
           "select": [
             [
@@ -155,6 +162,130 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "columns": [],
+      "datasource": "${DS_REPORTS_DB}",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 5,
+      "links": [],
+      "options": {},
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "time",
+          "type": "date"
+        },
+        {
+          "alias": "Cluster Name",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "cluster_name",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Error Message",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "message",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Error Detail",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "detail",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 0,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SET application_name = 'Grafana';\nSELECT\n  $__time(log_time),\n  cluster_name,\n  message,\n  detail\nFROM\n  reports.archive_failure_log\nWHERE\n  $__timeFilter(log_time)\n  AND (cluster_name IN ($ServerName) OR ($ServerName) IS NULL)\nORDER BY log_time, cluster_name  \n\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Archive Command Failures (List)",
+      "transform": "table",
+      "type": "table"
     }
   ],
   "refresh": "30s",
@@ -162,7 +293,30 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": "NULL",
+        "current": {},
+        "datasource": "${DS_REPORTS_DB}",
+        "definition": "SELECT DISTINCT cluster_name FROM reports.postgres_log_databases",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Server Name",
+        "multi": true,
+        "name": "ServerName",
+        "options": [],
+        "query": "SELECT DISTINCT cluster_name FROM reports.postgres_log_databases",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 5,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
     "from": "now-30d",
@@ -196,5 +350,5 @@
   "timezone": "",
   "title": "Archive Command Failures",
   "uid": "-HDIG15Zz",
-  "version": 3
+  "version": 6
 }
