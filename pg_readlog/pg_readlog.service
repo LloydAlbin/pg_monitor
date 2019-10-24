@@ -5,11 +5,12 @@ After=network.target
 
 [Service]
 Type=simple
-
 User=postgres
 Group=postgres
 
-ExecStart=/pgdata_local/pg_readlog.sh (ClusterName) (ReportsServer) (ReportsDatabase) (ReportsPort) (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory)
+ExecStart=/pgdata_local/pg_readlog.sh \
+     (ClusterName) (ReportsServer) (ReportsDatabase) (ReportsPort) \
+     (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory)
 
 [Install]
 WantedBy=multi-user.target
