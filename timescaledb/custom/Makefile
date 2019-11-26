@@ -87,5 +87,7 @@ docker-cleanup:
 	# Remove the docker iamges with REPOSITORY = <none> and TAG = <none>
 	docker images | awk '/^<none>/{print $$3}' | xargs docker rmi
 
+new: postgres-new timescaledb-new
+
 all: postgres timescaledb
-.PHONY: all timescaledb-check timescaledb-new timescaledb
+.PHONY: all timescaledb-check timescaledb-new timescaledb postgres-new timescaledb-new
