@@ -37,9 +37,7 @@ make new
 make new ORG=lloydalbin TSNAME=timescaledb PGNAME=postgres
 # Optional: Just Postgres
 make postgres-new
-make postgres-new
 # Optional: Just TimescaleDB
-make timescale-new
 make timescale-new
 ```
 
