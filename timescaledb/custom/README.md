@@ -1,4 +1,5 @@
 # tiemscaledb
+
 TimescaleDB uses the PostgreSQL Alpine version by default without LDAP support. We need the LDAP support, so this directory contains the code to build both the PostgreSQL Alpine with LDAP support and then to build the TimescaleDB using this new PostgreSQL image.
 
 * [TimescaelDB](https://www.timescale.com/products) - Timescale Database
@@ -22,6 +23,11 @@ make postgres-clean
 # Update, edit and build postgres repository
 make postgres
 
+# Update, edit and build postgres repository, sending customer names to be used.
+# ORG/PGNAME:VERSION # Postgres
+# ORG/TSNAME:VERSION # TimescaleDB
+make postgres ORG=xxx TSNAME=xxx PGNAME=xxx
+
 ```
 
 You can also have these auto-created via a cronjob
@@ -29,4 +35,3 @@ You can also have these auto-created via a cronjob
 ```cron
 0 0 0 Write Sample Here
 ```
-

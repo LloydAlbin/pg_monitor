@@ -1,58 +1,33 @@
-TSNAME=?timescaledb
-PGNAME=?postgres
+TSNAME?=timescaledb
+PGNAME?=postgres
 ORG?=lloydalbin
 PG_VER=pg11
 PG_VER_NUMBER=$(shell echo $(PG_VER) | cut -c3-)
-#VERSION=$(shell awk '/^ENV TIMESCALEDB_VERSION/ {print $$3}' Dockerfile)
+VERSION=$(shell awk '/^ENV TIMESCALEDB_VERSION/ {print $$3}' ~/timescaledb-docker/Dockerfile)
+PGFULLVERSION=$(shell awk '/^ENV PG_VERSION/ {print $$3}' ~/postgres/$(PG_VER_NUMBER)/alpine/Dockerfile)
 
-default: image
+default: postgres timescaledb
 
-.build_$(VERSION)_$(PG_VER)_oss: Dockerfile
-	docker build --build-arg PREV_EXTRA="-oss" --build-arg OSS_ONLY=" -DAPACHE_ONLY=1" --build-arg PG_VERSION=$(PG_VER_NUMBER) -t $(ORG)/$(TSNAME):latest-$(PG_VER)-oss .
-	docker tag $(ORG)/$(TSNAME):latest-$(PG_VER)-oss $(ORG)/$(TSNAME):$(VERSION)-$(PG_VER)-oss
-	touch .build_$(VERSION)_$(PG_VER)_oss
-
-.build_$(VERSION)_$(PG_VER): Dockerfile
-	docker build --build-arg PG_VERSION=$(PG_VER_NUMBER) -t $(ORG)/$(TSNAME):latest-$(PG_VER) .
+.timescaledb-build_$(VERSION)_$(PG_VER): ~/timescaledb-docker/Dockerfile
+	docker build --build-arg PG_VERSION=$(PG_VER_NUMBER) -t $(ORG)/$(TSNAME):latest-$(PG_VER) ~/timescaledb-docker
 	docker tag $(ORG)/$(TSNAME):latest-$(PG_VER) $(ORG)/$(TSNAME):$(VERSION)-$(PG_VER)
-	touch .build_$(VERSION)_$(PG_VER)
+	touch ~/timescaledb-docker/.build_$(VERSION)_$(PG_VER)
 
-image: .build_$(VERSION)_$(PG_VER)
+timescaledb-image: .timescaledb-build_$(VERSION)_$(PG_VER)
 
-oss: .build_$(VERSION)_$(PG_VER)_oss
-
-push: image
+timescaledb-push: timescaledb-image
 	docker push $(ORG)/$(TSNAME):$(VERSION)-$(PG_VER)
 	docker push $(ORG)/$(TSNAME):latest-$(PG_VER)
 
-push-oss: oss
-	docker push $(ORG)/$(TSNAME):$(VERSION)-$(PG_VER)-oss
-	docker push $(ORG)/$(TSNAME):latest-$(PG_VER)-oss
-
-clean:
+timescaledb-clean2:
 	rm -f *~ .build_*
 
-.PHONY: default image push push-oss oss clean
+.PHONY: default timescaledb-image timescaledb-push timescaledb-clean2
 
 
-.check-postgres:
-	cd ~/postgres
- 
-	UPSTREAM=${1:-'@{u}'}
-	LOCAL=$(git rev-parse @)
-	REMOTE=$(git rev-parse "$UPSTREAM")
-	BASE=$(git merge-base @ "$UPSTREAM")
- 
-	if [ $LOCAL = $REMOTE ]; then
-		echo "Up-to-date"
-	elif [ $LOCAL = $BASE ]; then
-		git pull
-		echo "Need to pull"
-	elif [ $REMOTE = $BASE ]; then
-		echo "Need to push"
-	else
-		echo "Diverged"
-	fi
+.check-postgres: SHELL:=/bin/bash
+.check-postgres: 
+	./git_check.sh ~/postgres
 
 .update-postgres:
 	sed -i 's/#\t\topenldap-dev/\t\topenldap-dev/g' ~/postgres/$(PG_VER_NUMBER)/alpine/Dockerfile
@@ -74,6 +49,8 @@ endif
 
 postgres: .check-postgres .update-postgres .build-postgres
 
+postgres-check: .check-postgres
+
 postgres-update: .update-postgres
 
 postgres-force: .update-postgres .build-postgres
@@ -85,13 +62,23 @@ postgres-new: .new-postgres .update-postgres .build-postgres
 postgres-clean:
 	rm -rf ~/postgres
 
+.check-timescaledb: SHELL:=/bin/bash
+.check-timescaledb:
+	./git_check.sh ~/timescaledb-docker
+
+.update-timescaledb:
+	sed -i 's#FROM postgres:#FROM $(ORG)/$(PGNAME):#g' ~/timescaledb-docker/Dockerfile
+	#sed -i 's#ORG=timescale#ORG=$(ORG)#g' ~/timescaledb-docker/Makefile
+
 .new-timescaledb:
 	cd ~
 	git clone https://github.com/timescale/timescaledb-docker.git ~/timescaledb-docker
 
-timescaledb: .check-postgres
+timescaledb: .timescaledb-build_$(VERSION)_$(PG_VER)
 
-timescaledb-new: .new-timescaledb
+timescaledb-new: .new-timescaledb .update-timescaledb .timescaledb-build_$(VERSION)_$(PG_VER)
+
+timescaledb-check: .check-timescaledb
 
 timescaledb-clean:
 	rm -rf ~/timescaledb-docker
@@ -101,4 +88,4 @@ docker-cleanup:
 	docker images | awk '/^<none>/{print $$3}' | xargs docker rmi
 
 all: postgres timescaledb
-.PHONY: all
+.PHONY: all timescaledb-check timescaledb-new timescaledb
