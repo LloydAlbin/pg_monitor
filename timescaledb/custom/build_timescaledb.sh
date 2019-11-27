@@ -29,7 +29,7 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 	-h/--help					display this help and exit
 	-o/--org ORGANIZATION		insert the organization name into the docker name ORGANIZATION/NAME:VERSION - Default: lloydalbin
 	--pn/--pg_name NAME			insert the Poistgres name into the docker name ORGANIZATION/NAME:VERSION - Default: postgres
-	--tn/--tg_name NAME			insert the TimescaleDB name into the docker name ORGANIZATION/NAME:VERSION - Default: timescaledb
+	--tn/--ts_name NAME			insert the TimescaleDB name into the docker name ORGANIZATION/NAME:VERSION - Default: timescaledb
 	-v							verbose mode. Can be used multiple times for increased verbosity
 								MUST precede the -c command
 	-c/--clean					remove both repositories and exit
@@ -252,14 +252,14 @@ while :; do
 			;;
         -tn|--ts_name)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
-				TG_NAME=$2
+				TS_NAME=$2
 				shift
 			else
 				die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
 			fi
 			;;
 		-tn=?*|--ts_name=?*)
-			TG_NAME=${1#*=} # Delete everything up to "=" and assign the remainder.
+			TS_NAME=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
 		-tn=|--ts_name=)         # Handle the case of an empty --file=
 			die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
@@ -401,3 +401,8 @@ if [ $timescaledb -eq 1 ]; then
 		git_push 0 $push $ORG $TS_NAME $build_location $PG_VER
 	fi
 fi
+
+if [ $clean -ge 2 ]; then
+	clean_docker
+fi
+
