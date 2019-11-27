@@ -5,6 +5,16 @@ You can use then use Grafana to display the combined stats from all three source
 
 **_PLEASE NOTE_**: This is not even alpha code at this time. Right now I am copying the files I use at work into this repository and writing direction for doing the install. Once I have a base working copy here, I will remove this note.
 
+## Download Repository
+
+Download the pg_monitor repository. This will be needed for the instructions on each installation page.
+
+```bash
+cd ~
+# Get the pg_monitor repositories
+git clone https://github.com/LloydAlbin/pg_monitor.git
+```
+
 ## Installation Order
 
 This tech stack that needs to be installed in the following order:
