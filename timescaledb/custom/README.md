@@ -12,9 +12,12 @@ cd ~
 git clone https://github.com/LloydAlbin/pg_monitor.git
 ```
 
+## Build Custom TimescaleDB
+
 To run the make command, you need to be inside this directory (~/pg_monitor/timescaledb/custom/).
 
 The make command takes some optional options:
+
 * org
 * ts_name
 * pg_name
@@ -45,6 +48,8 @@ The build script will download the postgres and timescaledb-docker repositories.
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --org=lloydalbin --ts_name=timescaledb --pg_name=postgres
 ```
 
+## Clean / Delete Repositories
+
 If you wish to delete the repositories, you may do so manually or you can use the make command to clean up the postgres & timescaledb-docker repositories.
 
 ```bash
@@ -56,6 +61,8 @@ If you wish to delete the repositories, you may do so manually or you can use th
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean --timescaledb
 ```
 
+## Cron
+
 You can also have these auto-created via a cronjob on an hourly basis.
 
 ```cron
@@ -64,3 +71,9 @@ You can also have these auto-created via a cronjob on an hourly basis.
 # With optional arguments
 * 0 * * * $HOME/pg_monitor/timescaledb/custom/build_timescaledb.sh --org=lloydalbin --ts_name=timescaledb --pg_name=postgres
 ```
+
+## To Do List
+
+* build_timescaledb.sh
+* * Touch file each Postgres build
+* * Check version in Dockerfile after PULL, then if touched file exist for that version, skip build
