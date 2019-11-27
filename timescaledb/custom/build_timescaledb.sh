@@ -147,14 +147,14 @@ git_update()
 clean_git()
 {
 	# clean REPOSITORY_LOCATION
-	GITPATH=$1
-	print_verbose 1 "rm -rf ${GITPATH}"
-	rm -rf ${GITPATH}
+	print_verbose 1 "Removing Repository $1"
+	rm -rf $1
 }
 
 clean_docker()
 {
 	# Remove the docker images with REPOSITORY = <none> and TAG = <none>
+	print_verbose 1 "Removing Docker Images with REPOSITORY = <none> and TAG = <none>"
 	docker images | awk '/^<none>/{print $3}' | xargs docker rmi
 }
 
@@ -250,7 +250,7 @@ while :; do
 		-pn=|--pg_name=)         # Handle the case of an empty --file=
 			die 'ERROR: "-pn or --pg_name" requires a non-empty option argument.'
 			;;
-        -tn|--tg_name)       # Takes an option argument; ensure it has been specified.
+        -tn|--ts_name)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
 				TG_NAME=$2
 				shift
@@ -258,10 +258,10 @@ while :; do
 				die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
 			fi
 			;;
-		-tn=?*|--tg_name=?*)
+		-tn=?*|--ts_name=?*)
 			TG_NAME=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		-tn=|--tg_name=)         # Handle the case of an empty --file=
+		-tn=|--ts_name=)         # Handle the case of an empty --file=
 			die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
 			;;
         --location)       # Takes an option argument; ensure it has been specified.
@@ -280,7 +280,12 @@ while :; do
 			;;
         -c|--clean)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
-				clean_location=$2
+				if [[ "-${2:0:1}" == "--" ]]; then
+					clean=$((clean + 1))  # Each -v adds 1 to verbosity.
+				else
+					clean_location=$2
+					shift
+				fi
 			else
 				clean=$((verbose + 1))  # Each -v adds 1 to verbosity.
 			fi
@@ -338,7 +343,15 @@ print_verbose 3 "Postgres Name: $PG_NAME"
 print_verbose 3 "TimescaleDB Name: $TS_NAME"
 print_verbose 3 "Postgres Version: $PG_VER"
 print_verbose 3 "Postgres Version Number: $PG_VER_NUMBER"
-print_verbose 3 "Push Repositories: $push"
+print_verbose 3 "Clone/Pull Repositories: $git"
+print_verbose 3 "Patch Repositories: $patch"
+print_verbose 3 "Build Docker Images: $build"
+print_verbose 3 "Push Docker Images: $push"
+print_verbose 3 "Cleaning Level: $clean"
+print_verbose 3 "Cleaning Location: $clean_location"
+print_verbose 3 "Show Version Information: $version"
+print_verbose 3 "Override Exit: $override_exit"
+print_verbose 3 "Build Location: $build_location"
 print_verbose 3 "Process Postgres: $postgres"
 print_verbose 3 "Process TimescaleDB: $timescaledb"
 print_verbose 3 ""
