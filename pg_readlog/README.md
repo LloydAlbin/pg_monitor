@@ -30,3 +30,11 @@ zcat postgresql-2019-10-23_00.csv.gz postgresql-2019-10-23_01.csv.gz >> /pgdata_
 cat  postgresql-2019-10-23_00.csv postgresql-2019-10-23_01.csv >> /pgdata_local/logtail.csv
 cat  postgresql-2019-10-22_*.csv postgresql-2019-10-23_0*.csv postgresql-2019-10-23_10.csv >> /pgdata_local/logtail.csv
 ```
+
+
+```bash
+cp ~/pg_monitor/pg_readlog/pg_readlog.service /etc/systemd/system/pg_readlog.service
+cp ~/pg_monitor/pg_readlog/pg_readlog.sh /pgdata_local/
+sudo systemctl enable pg_readlog
+sudo systemctl start pg_readlog
+```
