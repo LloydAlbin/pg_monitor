@@ -1,7 +1,11 @@
 # pg_monitor
-pg_monitor is a tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
+pg_monitor is a entire tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
 
-PLEASE NOTE: This is not even alpha code at this time. Right now I am copying the files I use at work into this repository and writing direction for doing the install. Once I have a base working copy here, I will remove this note.
+You can use then use Grafana to display the combined stats from all three sources. I use [RaspberryPI's](https://www.raspberrypi.org/) to drive displays in my office.
+
+**_PLEASE NOTE_**: This is not even alpha code at this time. Right now I am copying the files I use at work into this repository and writing direction for doing the install. Once I have a base working copy here, I will remove this note.
+
+## Installation Order
 
 This tech stack that needs to be installed in the following order:
 1. [graphite](/graphite/README.md) - Viewing Hardware Stats Database and Intermeadite Viewing.
