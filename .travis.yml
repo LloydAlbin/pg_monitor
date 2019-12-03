@@ -7,9 +7,9 @@ services: docker
 #  - experimental
 
 # safelist
-branches:
-  only:
-  - master
+#branches:
+#  only:
+#  - master
 
 script:
   # Using the default build paramaters for a fresh build
