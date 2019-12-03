@@ -1,9 +1,19 @@
 language: bash
 services: docker
 
+# blocklist
+#branches:
+#  except:
+#  - experimental
+
+# safelist
+branches:
+  only:
+  - master
+
 script:
   # Using the default build paramaters for a fresh build
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
+  - ~/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
   # Testing the Upgrade Path
   - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --git --patch --build
   # Testing Removing of both Postgres and TimescaleDB repositories
@@ -18,6 +28,7 @@ script:
   - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
   - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
+  ls -l ~/
 
 after_script:
   - docker images
