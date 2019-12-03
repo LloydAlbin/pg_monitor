@@ -28,7 +28,7 @@ script:
   - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
   - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
-  ls -l ~/
+  - ls -l ~/
 
 after_script:
   - docker images
