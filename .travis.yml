@@ -14,22 +14,22 @@ services: docker
 script:
   - ls -l
   # Using the default build paramaters for a fresh build
-  - ~/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v -V
   # Testing the Upgrade Path
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --git --patch --build
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --git --patch --build
   # Testing Removing of both Postgres and TimescaleDB repositories
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean
   # Using the optional arguments for a fresh build
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
   # Using the optional arguments for the Upgrade Path
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
   # Using the optional arguments for the Upgrade Path
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
   # Testing Removing of TimescaleDB repository and then rebuilding just the TimescaleDB
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
-  - ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
-  - ls -l ~/
+  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
+  - pwd
 
 after_script:
   - docker images
