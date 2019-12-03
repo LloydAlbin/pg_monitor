@@ -1,4 +1,4 @@
-# tiemscaledb
+# timescaledb
 PostgreSQL TimescaleDB server for creating our Reports database.
 
 * [TimescaelDB](https://www.timescale.com/products) - Timescale Database
