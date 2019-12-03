@@ -34,7 +34,7 @@ before_script: |
   mkdir -p coverage
 
 script:
-  - ls -l
+  #- ls -l
   # Using the default build paramaters for a fresh build
   - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
   # Testing the Upgrade Path
@@ -51,7 +51,7 @@ script:
   - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
   - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
-  - pwd
+  #- pwd
 
 after_script:
   - docker images
