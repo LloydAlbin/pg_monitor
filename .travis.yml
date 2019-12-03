@@ -55,6 +55,6 @@ script:
 
 after_script:
   - docker images
-  - bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)>
   
 # vim:set et ts=2 sw=2:
