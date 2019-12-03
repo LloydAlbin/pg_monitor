@@ -1,3 +1,7 @@
+|License|
+|:---:|
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)
+
 # pg_monitor
 pg_monitor is a entire tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
 
