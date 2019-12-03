@@ -1,5 +1,6 @@
 language: bash
 services: docker
+sudo: required
 
 # blocklist
 #branches:
@@ -11,27 +12,49 @@ services: docker
 #  only:
 #  - master
 
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+
+before_script: |
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz &&
+  cd kcov-master &&
+  mkdir build &&
+  cd build &&
+  cmake .. &&
+  make &&
+  sudo make install &&
+  cd ../.. &&
+  rm -rf kcov-master &&
+  mkdir -p coverage
+
 script:
   - ls -l
   # Using the default build paramaters for a fresh build
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v -V
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
   # Testing the Upgrade Path
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --git --patch --build
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --git --patch --build
   # Testing Removing of both Postgres and TimescaleDB repositories
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean
   # Using the optional arguments for a fresh build
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
   # Using the optional arguments for the Upgrade Path
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
   # Using the optional arguments for the Upgrade Path
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
   # Testing Removing of TimescaleDB repository and then rebuilding just the TimescaleDB
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
-  - ./timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
+  - kcov coverage ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
   - pwd
 
 after_script:
   - docker images
+  - bash <(curl -s https://codecov.io/bash)
   
 # vim:set et ts=2 sw=2:
