@@ -1,6 +1,6 @@
-|License|
-|:---:|
-|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)
+|License|Build|Code Coverage|
+|:---:|:---:|:---:|
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|![Codecov](https://img.shields.io/codecov/c/github/LloydAlbin/pg_monitor?token=acf488ee-6de4-4f50-8b59-bf1f2b63047e)
 
 # pg_monitor
 pg_monitor is a entire tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
