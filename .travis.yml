@@ -12,6 +12,7 @@ services: docker
 #  - master
 
 script:
+  - ls -l
   # Using the default build paramaters for a fresh build
   - ~/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
   # Testing the Upgrade Path
