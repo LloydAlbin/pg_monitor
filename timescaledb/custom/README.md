@@ -42,10 +42,13 @@ If you have your own inhouse docker registery, then the ORG name should be the n
 The build script will download the postgres and timescaledb-docker repositories.
 
 ```bash
-# For the first time use the "-new" to download the repositories needed.
+# For the first time
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh
 # Using the optional arguments
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --org=lloydalbin --ts_name=timescaledb --pg_name=postgres
+
+# For the second time, otherwise the postgres Dockerfile will get double patched.
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean postgres --override_exit
 ```
 
 ## Clean / Delete Repositories
@@ -56,9 +59,9 @@ If you wish to delete the repositories, you may do so manually or you can use th
 # Delete repositories
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean
 # Optional: Just Postgres
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean --postgres
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean postgres
 # Optional: Just TimescaleDB
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean --timescaledb
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean timescaledb
 ```
 
 ## Cron
@@ -77,3 +80,4 @@ You can also have these auto-created via a cronjob on an hourly basis.
 * build_timescaledb.sh
 * * Touch file each Postgres build
 * * Check version in Dockerfile after PULL, then if touched file exist for that version, skip build
+* Move this To Do list to the master TODO list.

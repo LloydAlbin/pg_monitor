@@ -8,6 +8,7 @@ PG_NAME="postgres"
 TS_NAME="timescaledb"
 PG_VER="pg11"
 PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
+PGTAP_VER="1.1.0"
 verbose=0
 postgres=0
 timescaledb=0
@@ -20,6 +21,7 @@ push=0
 clean=0
 clean_location=
 override_exit=0
+pgtap=0
 
 # Usage info
 show_help()
@@ -43,6 +45,11 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 	--patch						patch the repository - Default: --git --patch --build
 	--build						build the repository - Default: --git --patch --build
 	--push						push to repository
+	--add (item)				add item to the Postgres docker image
+								Items:
+									pgtap - pgTAP is a suite of database functions that make it easy to write 
+										TAP-emitting unit tests in psql scripts or xUnit-style test functions.
+										http://pgtap.org/
 EOF
 }
 
@@ -166,6 +173,22 @@ postgres_patch()
 	sed -i 's/#\t\t--with-ldap/\t\t--with-ldap/g' $1/postgres/$2/alpine/Dockerfile
 	sed -i "/FROM alpine/a RUN echo 'nvm.overcommit_memory = 2' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
 	sed -i "/FROM alpine/a RUN echo 'vm.overcommit_ratio = 100' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
+
+	if [ $pgtap = "1" ]; then
+		# Add pgtap
+		# pgTAP is a suite of database functions that make it easy to write TAP-emitting unit tests in psql scripts or xUnit-style test functions.
+		# http://pgtap.org/
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgtap "
+		sed -i "/ENV PG_SHA256/a ADD http:\/\/api.pgxn.org\/dist\/pgtap\/$PGTAP_VER\/pgtap-$PGTAP_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
+
+		sed -i "/VOLUME/a 	&& make -C \/pgtap-$PGTAP_VER install" $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& su-exec postgres make -C \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& cpan TAP::Harness \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& cpan Module::Build \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& unzip pgtap-$PGTAP_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+	fi
 }
 
 timescaledb_patch()
@@ -233,7 +256,7 @@ while :; do
 		-o=?*|--org=?*)
 			ORG=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		-o=|--org=)         # Handle the case of an empty --file=
+		-o=|--org=)         # Handle the case of an empty --org=
 			die 'ERROR: "-o or --org" requires a non-empty option argument.'
 			;;
         -pn|--pg_name)       # Takes an option argument; ensure it has been specified.
@@ -247,7 +270,7 @@ while :; do
 		-pn=?*|--pg_name=?*)
 			PG_NAME=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		-pn=|--pg_name=)         # Handle the case of an empty --file=
+		-pn=|--pg_name=)         # Handle the case of an empty --pg_name=
 			die 'ERROR: "-pn or --pg_name" requires a non-empty option argument.'
 			;;
         -tn|--ts_name)       # Takes an option argument; ensure it has been specified.
@@ -261,7 +284,7 @@ while :; do
 		-tn=?*|--ts_name=?*)
 			TS_NAME=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		-tn=|--ts_name=)         # Handle the case of an empty --file=
+		-tn=|--ts_name=)         # Handle the case of an empty --ts_name=
 			die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
 			;;
         --location)       # Takes an option argument; ensure it has been specified.
@@ -275,7 +298,7 @@ while :; do
 		--location=?*)
 			build_location=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		--location=)         # Handle the case of an empty --file=
+		--location=)         # Handle the case of an empty --location=
 			die 'ERROR: "--location" requires a non-empty option argument.'
 			;;
         -c|--clean)       # Takes an option argument; ensure it has been specified.
@@ -293,7 +316,7 @@ while :; do
 		-c=?*|--clean=?*)
 			clean_location=${1#*=} # Delete everything up to "=" and assign the remainder.
 			;;
-		-c=|--clean=)         # Handle the case of an empty --file=
+		-c=|--clean=)         # Handle the case of an empty --clean=
 			die 'ERROR: "-c or --clean" requires a non-empty option argument.'
 			;;
 		--override_exit)
@@ -314,6 +337,30 @@ while :; do
         --push)
 			push=1
         	;;
+        --add)       # Takes an option argument; ensure it has been specified.
+			if [ "$2" ]; then
+				if [ $2 = "pgtap" ]; then
+					pgtap=1
+				else
+					die 'ERROR: "--add" unknown argument: $2.'
+				fi
+				shift
+			else
+				die 'ERROR: "--add" requires a non-empty option argument.'
+			fi
+			;;
+		--add=?*)
+			add_variable=${1#*=} # Delete everything up to "=" and assign the remainder.
+			if [ $add_variable = "pgtap" ]; then
+				pgtap=1
+			else
+				die 'ERROR: "--add" unknown argument: $2.'
+			fi
+			shift
+			;;
+		--add=)         # Handle the case of an empty --add=
+			die 'ERROR: "--add" requires a non-empty option argument.'
+			;;
 		--)              # End of all options.
 			shift
 			break
@@ -352,6 +399,7 @@ print_verbose 3 "Cleaning Location: $clean_location"
 print_verbose 3 "Show Version Information: $version"
 print_verbose 3 "Override Exit: $override_exit"
 print_verbose 3 "Build Location: $build_location"
+print_verbose 3 "Add pgtap: $pgtap"
 print_verbose 3 "Process Postgres: $postgres"
 print_verbose 3 "Process TimescaleDB: $timescaledb"
 print_verbose 3 ""
@@ -368,7 +416,7 @@ if [ $clean -ge 1 ]; then
 fi
 
 if [[ ! -z $clean_location ]]; then
-	clean_git $clean_location
+	clean_git "$build_location/$clean_location"
 	if [ $override_exit -eq 0 ]; then
 		exit
 	fi
