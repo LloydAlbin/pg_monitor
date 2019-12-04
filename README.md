@@ -1,9 +1,9 @@
-|License|Build|Code Coverage|
-|:---:|:---:|:---:|
-|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|![Codecov](https://img.shields.io/codecov/c/github/LloydAlbin/pg_monitor?token=acf488ee-6de4-4f50-8b59-bf1f2b63047e)
+|License|Build|
+|:---:|:---:|
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)
 
 # pg_monitor
-pg_monitor is a entire tech stack to monitor Hardware, PostgreSQL Live and PostgreSQL Logs
+pg_monitor is a entire tech stack to monitor your Hardware, PostgreSQL Live and PostgreSQL Logs in realtime.
 
 You can use then use Grafana to display the combined stats from all three sources. I use [RaspberryPI's](https://www.raspberrypi.org/) to drive displays in my office.
 
@@ -28,3 +28,7 @@ This tech stack that needs to be installed in the following order:
 1. [pg_readlog](/pg_readlog/README.md) - Collecting PostgreSQL Log Stats and store into the TimescaleDB database.
 1. [pg_monitor](/pg_monitor/README.md) - Collecting PostgreSQL Live Stats and store into the TimescaleDB database.
 1. [grafana](/grafana/README.md) - Viewing All Stats from the TimescaleDB database and the graphite database. (Final View)
+
+## TODO List
+
+[TODO List](/TODO.md) - This is a list of the items that I currently need to complete to make this beta ready. Some I need to write and others, I just need to publish.
