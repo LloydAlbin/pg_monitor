@@ -24,12 +24,12 @@
 
 * Messages for what the users should do when we can't pull the repository
 * Don't build if already built
-* Optional pgtap extension, for unit testing the pg_realod and pg_monitor scripts data inserted into the TimescaleDB database. 
 
 ## pg_readlog
 
 * Create init.d script
 * Create sidecar for Postgres on kubernetes
+* Create pgtap unit tests
 
 ## pg_monitor
 
@@ -37,6 +37,7 @@
 * Create systemd script
 * Create Dockerfile
 * Create Kuberetes files
+* Create pgtap unit tests
 
 ## Grafana
 
@@ -47,3 +48,4 @@
 * Write Docker Instructions
 * Write Kubernetes Instructions
 * Upload my Kubernetes configs to use as base sample configs
+* Convert all the yaml files into an Grafana Extension
