@@ -218,6 +218,8 @@ postgres_build()
 		print_verbose 2 "Tagging Docker Image: $2/$3:latest-alpine from $2/$3:$PG_FULL_VERSION-alpine"
 		docker tag $2/$3:$PG_FULL_VERSION-alpine $2/$3:latest-alpine
 	fi
+
+	touch $1/postgres/$4/alpine/.build_$PG_FULL_VERSION
 }
 
 timescaledb_build()
