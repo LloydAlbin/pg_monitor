@@ -74,10 +74,3 @@ You can also have these auto-created via a cronjob on an hourly basis.
 # With optional arguments
 * 0 * * * $HOME/pg_monitor/timescaledb/custom/build_timescaledb.sh --org=lloydalbin --ts_name=timescaledb --pg_name=postgres
 ```
-
-## To Do List
-
-* build_timescaledb.sh
-* * Touch file each Postgres build
-* * Check version in Dockerfile after PULL, then if touched file exist for that version, skip build
-* Move this To Do list to the master TODO list.

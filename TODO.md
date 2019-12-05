@@ -23,7 +23,6 @@
 ### Custom TimescaleDB
 
 * Messages for what the users should do when we can't pull the repository
-* Don't build if already built
 
 ## pg_readlog
 
