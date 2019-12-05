@@ -200,44 +200,52 @@ timescaledb_patch()
 
 postgres_build()
 {
-	# postgres_build $build_location $ORG $PG_NAME $PG_VER_NUMBER
-	print_verbose 1 "Building Postgres Docker Image: $1/postgres/$4/alpine"
-	PG_FULL_VERSION=$( awk '/^ENV PG_VERSION/ {print $3}' $1/postgres/$4/alpine/Dockerfile )
-	print_verbose 3 "Postgres Full Version Number: $PG_FULL_VERSION"
+	if [[ -f $1/postgres/$4/alpine/.build_$PG_FULL_VERSION ]]; then
+		print_verbose 1 "Skipping Building Postgres Docker Image: $1/postgres/$4/alpine"
+	else
+		# postgres_build $build_location $ORG $PG_NAME $PG_VER_NUMBER
+		print_verbose 1 "Building Postgres Docker Image: $1/postgres/$4/alpine"
+		PG_FULL_VERSION=$( awk '/^ENV PG_VERSION/ {print $3}' $1/postgres/$4/alpine/Dockerfile )
+		print_verbose 3 "Postgres Full Version Number: $PG_FULL_VERSION"
 
-	# Build exact Postgres Version
-	print_verbose 2 "Building Docker Image: $2/$3:$PG_FULL_VERSION-alpine in $1/postgres/$4/alpine"
-	docker build -t $2/$3:$PG_FULL_VERSION-alpine $1/postgres/$4/alpine
+		# Build exact Postgres Version
+		print_verbose 2 "Building Docker Image: $2/$3:$PG_FULL_VERSION-alpine in $1/postgres/$4/alpine"
+		docker build -t $2/$3:$PG_FULL_VERSION-alpine $1/postgres/$4/alpine
 
-	# Tag Major Postgres Version
-	print_verbose 2 "Tagging Docker Image: $2/$3:$4-alpine from $2/$3:$PG_FULL_VERSION-alpine"
-	docker tag $2/$3:$PG_FULL_VERSION-alpine $2/$3:$4-alpine
+		# Tag Major Postgres Version
+		print_verbose 2 "Tagging Docker Image: $2/$3:$4-alpine from $2/$3:$PG_FULL_VERSION-alpine"
+		docker tag $2/$3:$PG_FULL_VERSION-alpine $2/$3:$4-alpine
 
-	if [ $4 -eq "12" ]; then
-		# Tag Latest Postgres Version
-		print_verbose 2 "Tagging Docker Image: $2/$3:latest-alpine from $2/$3:$PG_FULL_VERSION-alpine"
-		docker tag $2/$3:$PG_FULL_VERSION-alpine $2/$3:latest-alpine
+		if [ $4 -eq "12" ]; then
+			# Tag Latest Postgres Version
+			print_verbose 2 "Tagging Docker Image: $2/$3:latest-alpine from $2/$3:$PG_FULL_VERSION-alpine"
+			docker tag $2/$3:$PG_FULL_VERSION-alpine $2/$3:latest-alpine
+		fi
+
+		touch $1/postgres/$4/alpine/.build_$PG_FULL_VERSION
 	fi
-
-	touch $1/postgres/$4/alpine/.build_$PG_FULL_VERSION
 }
 
 timescaledb_build()
 {
-	# timescaledb_build $build_location $ORG $TS_NAME $PG_VER_NUMBER $PG_VER
-	print_verbose 1 "Building TimescaleDB Docker Image: $1/timescaledb-docker"
-	VERSION=$( awk '/^ENV TIMESCALEDB_VERSION/ {print $3}' $1/timescaledb-docker/Dockerfile )
-	print_verbose 3 "Timescale Version: $VERSION"
-	
-	# Build Latest TimescaleDB Version
-	print_verbose 2 "Building Docker Image: $2/$3:latest-$5 in $1/timescaledb-docker"
-	docker build --build-arg PG_VERSION=$4 -t $2/$3:latest-$5 $1/timescaledb-docker
+	if [[ -f $1/timescaledb-docker/.build_$VERSION_$5 ]]; then
+		print_verbose 1 "Skipping Building Postgres Docker Image: $1/postgres/$4/alpine"
+	else
+		# timescaledb_build $build_location $ORG $TS_NAME $PG_VER_NUMBER $PG_VER
+		print_verbose 1 "Building TimescaleDB Docker Image: $1/timescaledb-docker"
+		VERSION=$( awk '/^ENV TIMESCALEDB_VERSION/ {print $3}' $1/timescaledb-docker/Dockerfile )
+		print_verbose 3 "Timescale Version: $VERSION"
+		
+		# Build Latest TimescaleDB Version
+		print_verbose 2 "Building Docker Image: $2/$3:latest-$5 in $1/timescaledb-docker"
+		docker build --build-arg PG_VERSION=$4 -t $2/$3:latest-$5 $1/timescaledb-docker
 
-	# Tag exact TimescaleDB Version
-	print_verbose 2 "Tagging Docker Image: $2/$3:$VERSION-$5 from $2/$3:latest-$5"
-	docker tag $2/$3:latest-$5 $2/$3:$VERSION-$5
+		# Tag exact TimescaleDB Version
+		print_verbose 2 "Tagging Docker Image: $2/$3:$VERSION-$5 from $2/$3:latest-$5"
+		docker tag $2/$3:latest-$5 $2/$3:$VERSION-$5
 
-	touch $1/timescaledb-docker/.build_$VERSION_$5
+		touch $1/timescaledb-docker/.build_$VERSION_$5
+	fi
 }
 
 # Example from http://mywiki.wooledge.org/BashFAQ/035
