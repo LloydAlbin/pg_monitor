@@ -15,21 +15,46 @@ See Instructions in the custom [README.md](custom/README.md)
 
 ## Installation
 
+### Install on Docker
+
 The instructions for [installing your TimescaleDB](https://docs.timescale.com/latest/getting-started/installation/docker/installation-docker).
+
+### Install on Kubernetes
+
+You should edit the PVC to use the StorageClass that you wish to use, such as NetApp storage, S3 storagem etc. The LocalStorage is included for doing a self contained and complete kubernetes test.
 
 You will need to customize the following yaml files:
 
+* local_storage.yaml for creating the StorageClass to store the file locally, for testing.
 * reports-pvc.yaml for setting size, location, etc.
 * reports-service.yaml for setting the targetPort (converts Port 5432 to 5432)
 * reports-frontend.yaml for setting the nodePort (converts Port 5432 to 30002)
 * reports-deploy.yaml file for setting the postgres password / secrets.
 
+### Install Official Kubernetes
+
 ```bash
-kubectl apply -f reports-pvc.yaml
-kubectl apply -f reports-frontend.yaml
-kubectl apply -f reports-service.yaml
-kubectl apply -f reports-deploy.yaml
+# Example for Standard Docker Image
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/local_storage.yaml
+# 
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-frontend.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-service.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-deploy.yaml
 ```
+
+### Install Custom Kubernetes
+
+```bash
+# Example for Custom Docker Image
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/local_storage.yaml
+# https://kubernetes.io/blog/2019/04/04/kubernetes-1.14-local-persistent-volumes-ga/
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-frontend.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-service.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/reports-deploy.yaml
+```
+
 ## Upgrade
 
 The instructions for [upgrading your TimescaleDB](https://docs.timescale.com/latest/using-timescaledb/update-db).
