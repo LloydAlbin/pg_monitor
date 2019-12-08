@@ -25,34 +25,29 @@ You should edit the PVC to use the StorageClass that you wish to use, such as Ne
 
 You will need to customize the following yaml files:
 
-* local_storage.yaml for creating the StorageClass to store the file locally, for testing.
-* reports-pvc.yaml for setting size, location, etc.
-* reports-service.yaml for setting the targetPort (converts Port 5432 to 5432)
-* reports-frontend.yaml for setting the nodePort (converts Port 5432 to 30002)
-* reports-deploy.yaml file for setting the postgres password / secrets.
+* pg-monitor-timescaledb-pvc.yaml for setting size, location, StorageClass for the PVC.
+* pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
+* pg-monitor-timescaledb-deploy.yaml file for setting the postgres password / secrets, etc.
+
+volumes and volumeMounts
+resources
 
 ### Install Official Kubernetes
 
 ```bash
 # Example for Standard Docker Image
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/local_storage.yaml
-# 
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-pvc.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-frontend.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-service.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-deploy.yaml
+# kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deploy.yaml
 ```
 
 ### Install Custom Kubernetes
 
 ```bash
 # Example for Custom Docker Image
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/local_storage.yaml
-# https://kubernetes.io/blog/2019/04/04/kubernetes-1.14-local-persistent-volumes-ga/
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-pvc.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-frontend.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/reports-service.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/reports-deploy.yaml
+# kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deploy.yaml
 ```
 
 ## Upgrade

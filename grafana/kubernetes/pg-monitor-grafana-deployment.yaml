@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pg-monitor-grafana
+  labels:
+    app: pg-monitor-grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pg-monitor-grafana
+  template:
+    metadata:
+      name: pg-monitor-grafana
+      labels:
+        app: pg-monitor-grafana
+    spec:
+      containers:
+      - env:
+#        - name: GF_PATHS_DATA
+#          value: /netapp
+#        - name: GF_AUTH_LDAP_CONFIG_FILE
+#          value: /netapp/config/ldap.toml
+        - name: GF_INSTALL_PLUGINS
+          value: grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel,briangann-gauge-panel,vonage-status-panel,raintank-worldping-app,briangann-datatable-panel,grafana-azure-monitor-datasource,grafana-kubernetes-app,btplc-trend-box-panel,michaeldmoore-multistat-panel,farski-blendstat-panel,yesoreyeram-boomtable-panel,grafana-polystat-panel,btplc-status-dot-panel,flant-statusmap-panel,blackmirror1-statusbygroup-panel
+#        - name: GF_AUTH_LDAP_ENABLED
+#          value: "true"
+#        - name: GF_AUTH_LDAP_ALLOW_SIGN_UP
+#          value: "true"
+        - name: GF_LOG_LEVEL
+          value: warn
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+#        - name: GF_AUTH_ANONYMOUS_ORG_NAME
+#          value: fredhutch.org
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: Viewer
+        - name: GF_DEFAULT_APP_MODE
+          value: development
+        - name: GF_DATAPROXY_LOGGING
+          value: "false"
+        - name: GF_DATAPROXY_TIMEOUT
+          value: "6000"
+        image: grafana/grafana:6.5.1
+        #image: grafana/grafana:6.5.1-ubuntu
+        imagePullPolicy: IfNotPresent
+        name: pg-monitor-grafana
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+#        volumeMounts:
+#        - mountPath: /netapp
+#          name: netapp
+#        resources:
+#          requests:
+#            memory: "8G"
+#            cpu: 4
+#          limits:
+#            memory: "8G"
+#            cpu: 4
+      restartPolicy: Always
+#      volumes:
+#      - name: netapp
+#        persistentVolumeClaim:
+#          claimName: pg-monitor-grafana
