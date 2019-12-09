@@ -12,9 +12,10 @@ sudo: required
 #  only:
 #  - master
 
-#addons:
-#  apt:
-#    packages:
+addons:
+  apt:
+    packages:
+      - postgresql-client
 #      - libcurl4-openssl-dev
 #      - libelf-dev
 #      - libdw-dev
@@ -87,6 +88,7 @@ script:
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deploy.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+  #- psql -p 30002 -U postgres -p pgpass -f ~/build/LloydAlbin/pg_monitor/grafana/init.sql
 
 after_script:
   - docker images
