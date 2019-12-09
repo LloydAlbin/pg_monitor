@@ -60,7 +60,7 @@ before_script:
   - sudo minikube start --vm-driver=none --kubernetes-version=v1.16.0
   - "sudo chown -R travis: /home/travis/.minikube/"
   # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-  - "sudo cpanm TAP::Parser::SourceHandler::pgTAP"
+  - cpanm TAP::Parser::SourceHandler::pgTAP
 
 
 script:
