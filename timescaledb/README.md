@@ -27,7 +27,7 @@ You will need to customize the following yaml files:
 
 * pg-monitor-timescaledb-pvc.yaml for setting size, location, StorageClass for the PVC.
 * pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
-* pg-monitor-timescaledb-deploy.yaml file for setting the postgres password / secrets, etc.
+* pg-monitor-timescaledb-deployment.yaml file for setting the postgres password / secrets, etc.
 
 volumes and volumeMounts
 resources
@@ -38,7 +38,7 @@ resources
 # Example for Standard Docker Image
 # kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deploy.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
 
 ### Install Custom Kubernetes
@@ -47,7 +47,7 @@ kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-depl
 # Example for Custom Docker Image
 # kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deploy.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
 
 ## Upgrade
@@ -57,16 +57,16 @@ The instructions for [upgrading your TimescaleDB](https://docs.timescale.com/lat
 For upgrading an in use deployment, here is an easy way to do it.
 
 ```bash
-kubectl delete -f reports-deploy.yaml
-#Edit reports-deploy.yaml and Update version number such as 1.2.2 to 1.5.1
+kubectl delete -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+#Edit pg-monitor-timescaledb-deployment.yaml and Update version number such as 1.2.2 to 1.5.1
 #        #image: lloydalbin/timescaledb:1.2.2-pg11
 #        image: lloydalbin/timescaledb:1.5.1-pg11
-kubectl apply -f reports-deploy.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 
 kubectl get all
 NAME                                      READY   STATUS    RESTARTS   AGE
-pod/reports-59f67889cc-wkf9g       1/1     Running   0          9m26s
+pod/pg-monitor-timescaledb-59f67889cc-wkf9g       1/1     Running   0          9m26s
 
-kubectl exec -ti reports-59f67889cc-wkf9g -- psql -U postgres -d postgres -c 'ALTER EXTENSION timescaledb UPDATE;'
-kubectl exec -ti reports-59f67889cc-wkf9g -- psql -U postgres -d reports -c 'ALTER EXTENSION timescaledb UPDATE;'
+kubectl exec -ti pg-monitor-timescaledb-59f67889cc-wkf9g -- psql -U postgres -d postgres -c 'ALTER EXTENSION timescaledb UPDATE;'
+kubectl exec -ti pg-monitor-timescaledb-59f67889cc-wkf9g -- psql -U postgres -d pg_monitor_db -c 'ALTER EXTENSION timescaledb UPDATE;'
 ```
