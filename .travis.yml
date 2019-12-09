@@ -12,45 +12,45 @@ sudo: required
 #  only:
 #  - master
 
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
+#addons:
+#  apt:
+#    packages:
+#      - libcurl4-openssl-dev
+#      - libelf-dev
+#      - libdw-dev
+#      - cmake
 
-before_script: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
-  make &&
-  sudo make install &&
-  cd ../.. &&
-  rm -rf kcov-master &&
-  mkdir -p coverage
+#before_script: |
+#  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+#  tar xzf master.tar.gz &&
+#  cd kcov-master &&
+#  mkdir build &&
+#  cd build &&
+#  cmake .. &&
+#  make &&
+#  sudo make install &&
+#  cd ../.. &&
+#  rm -rf kcov-master &&
+#  mkdir -p coverage
 
 script:
   #- ls -l
   # Using the default build paramaters for a fresh build
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V
+  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
   # Testing the Upgrade Path and add pgtap for unit testing pg_monitor later on
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --add pgtap
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --add pgtap
   # Testing Removing of both Postgres and TimescaleDB repositories
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean
   # Using the optional arguments for a fresh build
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
   # Using the optional arguments for the Upgrade Path
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
   # Using the optional arguments for the Upgrade Path
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
   # Testing Removing of TimescaleDB repository and then rebuilding just the TimescaleDB
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
   # Testing Removing of Postgres repository
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
+  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
   #- pwd
 
 after_script:
