@@ -55,17 +55,6 @@ before_script:
   - "sudo chown -R travis: /home/travis/.minikube/"
 
 script:
-  # Following is just to demo that the kubernetes cluster works.
-  - kubectl cluster-info
-  # Verify kube-addon-manager.
-  # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
-  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
-  # Wait for kube-dns to be ready.
-  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
-  # Create example Redis deployment on Kubernetes.
-  - kubectl run travis-example --image=redis --labels="app=travis-example"
-  # Make sure created pod is scheduled and running.
-  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=travis-example -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for travis-example deployment to be available"; kubectl get pods -n default; done
   #- ls -l
   # Using the default build paramaters for a fresh build
   - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
@@ -84,11 +73,29 @@ script:
   # Testing Removing of Postgres repository
   #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
   #- pwd
+  # Following is just to demo that the kubernetes cluster works.
+  - kubectl cluster-info
+  # Verify kube-addon-manager.
+  # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+  # Wait for kube-dns to be ready.
+  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+  # Create example Redis deployment on Kubernetes.
+  #- kubectl run travis-example --image=redis --labels="app=travis-example"
+  # Deploy TimescaleDB
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deploy.yaml
+  # Deploy Grafana
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
-  #- psql -p 30002 -U postgres -p pgpass -f ~/build/LloydAlbin/pg_monitor/grafana/init.sql
+  # Deploy Graphite
+  #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+  #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+  # Make sure created pod is scheduled and running.
+  - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=travis-example -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for travis-example deployment to be available"; kubectl get pods -n default; done
+  # Install pg_monitor sql
+  #- psql -p 30002 -U postgres -p pgpass -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+
 
 after_script:
   - docker images
