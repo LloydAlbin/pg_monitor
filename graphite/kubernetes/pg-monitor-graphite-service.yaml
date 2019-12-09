@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pg-monitor-graphite
+  labels:
+    app: pg-monitor-graphite
+spec:
+  ports:
+  - nodePort: 30080 # ngix port
+    port: 80
+    targetPort: 80
+    protocol: TCP
+    name: pg-monitor-graphite-ngix
+  - nodePort: 32003 # carbon receiver - plaintext
+    port: 2003
+    targetPort: 2003
+    protocol: TCP
+    name: pg-monitor-graphite-carbon-plaintext
+  - nodePort: 32004 # carbon receiver - pickle
+    port: 2004
+    targetPort: 2004
+    protocol: TCP
+    name: pg-monitor-graphite-carbon-pickle
+  - nodePort: 32023 # carbon aggregator - plaintext
+    port: 2023
+    targetPort: 2023
+    protocol: TCP
+    name: pg-monitor-graphite-carbon-aggregator-plaintext
+  - nodePort: 32024 # carbon aggregator - pickle
+    port: 2024
+    targetPort: 2024
+    protocol: TCP
+    name: pg-monitor-graphite-carbon-aggregator-pickle
+  - nodePort: 32125 # statd TCP
+    port: 8125
+    targetPort: 8125
+    protocol: TCP
+    name: pg-monitor-graphite-statd-tcp
+  - nodePort: 32125 # statd UDP
+    port: 8125
+    targetPort: 8125
+    protocol: UDP
+    name: pg-monitor-graphite-statd-udp
+  - nodePort: 32126 # statd admin
+    port: 8126
+    targetPort: 8126
+    protocol: TCP
+    name: pg-monitor-graphite-statd-admin
+  selector:
+    app: pg-monitor-graphite
+  type: NodePort

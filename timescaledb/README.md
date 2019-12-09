@@ -1,11 +1,12 @@
 # timescaledb
+
 PostgreSQL TimescaleDB server for creating our Reports database.
 
 * [TimescaelDB](https://www.timescale.com/products) - Timescale Database
 * init_timescaledb.sql - Script to create a fresh Reports timescale database
 * upgrade.sql - Script to upgrade your Reports timescale database with new features
 
-You may either use a standard PostgreSQL database with the TimescaleDB extension installed, use the TiemscaleDB docker image, or even use the TimescaleDB Cloud edition. 
+You may either use a standard PostgreSQL database with the TimescaleDB extension installed, use the TiemscaleDB docker image, or even use the TimescaleDB Cloud edition.
 
 ## Building Custom Installation
 
