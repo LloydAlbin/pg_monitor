@@ -44,7 +44,10 @@ env:
     - MINIKUBE_HOME=$HOME
     - CHANGE_MINIKUBE_NONE_USER=true
     - KUBECONFIG=$HOME/.kube/config
-    - PGPASS=pgpass
+    - PGHOST=localhost
+    - PGUSER=postgres
+    - PGPASSWORD=pgpass
+    - PGPORT=30002
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
@@ -99,7 +102,7 @@ script:
   #- JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
   # Install pg_monitor sql
   #- psql -h localhost -p 30002 -d pg_monitor_db -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
-  - psql -h localhost -p 30002 -d postgres -U postgres -c 'SELECT version();'
+  - psql -d postgres -c 'SELECT version();'
 
   # Note: Last build test took 15+ mintues
 
