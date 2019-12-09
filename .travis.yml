@@ -16,6 +16,8 @@ addons:
   apt:
     packages:
       - postgresql-client
+      - perl
+      - cpanm
 #      - libcurl4-openssl-dev
 #      - libelf-dev
 #      - libdw-dev
@@ -58,6 +60,9 @@ before_script:
   - touch $KUBECONFIG
   - sudo minikube start --vm-driver=none --kubernetes-version=v1.16.0
   - "sudo chown -R travis: /home/travis/.minikube/"
+  # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+  - cpanm TAP::Parser::SourceHandler::pgTAP
+
 
 script:
   #- ls -l
@@ -89,7 +94,8 @@ script:
   #- kubectl run travis-example --image=redis --labels="app=travis-example"
   # Deploy TimescaleDB
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
-  - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+  #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+  - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
   # Make sure created pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
   # Deploy Grafana
