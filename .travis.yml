@@ -60,10 +60,11 @@ before_script:
   - sudo minikube start --vm-driver=none --kubernetes-version=v1.16.0
   - "sudo chown -R travis: /home/travis/.minikube/"
   # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-  - cpanm TAP::Parser::SourceHandler::pgTAP
+  - "sudo cpanm TAP::Parser::SourceHandler::pgTAP"
 
 
 script:
+  - pg_prove -V
   #- ls -l
   # Using the default build paramaters for a fresh build
   - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
