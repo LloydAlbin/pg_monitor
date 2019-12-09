@@ -1,8 +1,9 @@
+# pg_monitor
+
 |License|Build|
 |:---:|:---:|
 |![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)
 
-# pg_monitor
 pg_monitor is a entire tech stack to monitor your Hardware, PostgreSQL Live and PostgreSQL Logs in realtime.
 
 You can use then use Grafana to display the combined stats from all three sources. I use [RaspberryPI's](https://www.raspberrypi.org/) to drive displays in my office.
@@ -22,6 +23,7 @@ git clone https://github.com/LloydAlbin/pg_monitor.git
 ## Installation Order
 
 This tech stack that needs to be installed in the following order:
+
 1. [graphite](/graphite/README.md) - Viewing Hardware Stats Database and Intermeadite Viewing.
 1. [collectd](/collectd/README.md) - Collecting Hardware Stats and store into the graphite database.
 1. [timescaledb](/timescaledb/README.md) - PostgreSQL TimescaleDB database for storing PostgreSQL Live stats and Log Stats.
