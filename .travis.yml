@@ -64,25 +64,8 @@ before_script:
 
 
 script:
-  - pg_prove -V
-  #- ls -l
   # Using the default build paramaters for a fresh build
   - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
-  # Testing the Upgrade Path and add pgtap for unit testing pg_monitor later on
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --location=~ --add pgtap
-  # Testing Removing of both Postgres and TimescaleDB repositories
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean
-  # Using the optional arguments for a fresh build
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --pg_name=scharp-postgres
-  # Using the optional arguments for the Upgrade Path
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --pg_name=scharp-postgres --postgres
-  # Using the optional arguments for the Upgrade Path
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --org=dreg.scharp.org --ts_name=scharp-timescaledb --timescaledb
-  # Testing Removing of TimescaleDB repository and then rebuilding just the TimescaleDB
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean timescaledb --timescaledb --override_exit
-  # Testing Removing of Postgres repository
-  #- ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v --clean postgres
-  #- pwd
   # Following is just to demo that the kubernetes cluster works.
   - kubectl cluster-info
   # Verify kube-addon-manager.
@@ -90,23 +73,21 @@ script:
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
   # Wait for kube-dns to be ready.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
-  # Create example Redis deployment on Kubernetes.
-  #- kubectl run travis-example --image=redis --labels="app=travis-example"
-  # Deploy TimescaleDB
+  # Deploy Custom TimescaleDB with pgtap
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
   #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
-  # Make sure created pod is scheduled and running.
+  # Make sure TimescaleDB pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
   # Deploy Grafana
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
-  # Make sure created pod is scheduled and running.
+  # Make sure Grafana pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
   # Deploy Graphite
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
-  # Make sure created pod is scheduled and running.
+  # Make sure Graphite pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
   # Install pg_monitor sql
   #- psql -h localhost -p 30002 -d pg_monitor_db -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
