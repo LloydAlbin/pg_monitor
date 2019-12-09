@@ -17,7 +17,6 @@ addons:
     packages:
       - postgresql-client
       - perl
-#      - cpanm
 #      - libcurl4-openssl-dev
 #      - libelf-dev
 #      - libdw-dev
@@ -111,6 +110,7 @@ script:
   # Install pg_monitor sql
   #- psql -h localhost -p 30002 -d pg_monitor_db -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
   - psql -d postgres -c 'SELECT version();'
+  - pg_prove -V
 
   # Note: Last build test took 18+ mintues
 
