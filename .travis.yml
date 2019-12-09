@@ -17,7 +17,7 @@ addons:
     packages:
       - postgresql-client
       - perl
-      - cpanm
+#      - cpanm
 #      - libcurl4-openssl-dev
 #      - libelf-dev
 #      - libdw-dev
