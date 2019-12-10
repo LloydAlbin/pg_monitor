@@ -1,0 +1,9 @@
+-- Setup Test Variables
+\set test_name 'basic_test'
+\set test_user 'grafana'
+\set test_production_database 'postgres'
+\set plan 0
+
+-- Install pgTAP, show diagnostics, and start common tests
+--\ir ../common/diagnostic.sql
+\i common/diagnostics.pg
