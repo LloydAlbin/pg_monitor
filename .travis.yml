@@ -92,7 +92,9 @@ script:
   # Install pg_monitor sql
   #- psql -h localhost -p 30002 -d pg_monitor_db -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
   - psql -d postgres -c 'SELECT version();'
-  - pg_prove -v -h localhost -p 30002 -d postgres -U postgres ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+  - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+  - pg_prove -v -d postgres .
+  #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
 
   # Note: Last build test took 18+ mintues
 
