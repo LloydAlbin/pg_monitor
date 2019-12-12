@@ -8,9 +8,13 @@ Type=simple
 User=postgres
 Group=postgres
 
+#ExecStart=/pgdata_local/pg_readlog.sh \
+#     (ClusterName) (TimescaleDBServer) (ReportsDatabase) (ReportsPort) \
+#     (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory)
+
 ExecStart=/pgdata_local/pg_readlog.sh \
-     (ClusterName) (ReportsServer) (ReportsDatabase) (ReportsPort) \
-     (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory)
+     (ClusterName) (ReportsServer) pg_monitor_db 30002 \
+     /pgdata_local/pg_log /pgdata_local /usr/local/postgres-current/bin
 
 [Install]
 WantedBy=multi-user.target
