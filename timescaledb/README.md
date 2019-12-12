@@ -51,9 +51,9 @@ kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-serv
 kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
 
-## Upgrade
+## Upgrade 
 
-The instructions for [upgrading your TimescaleDB](https://docs.timescale.com/latest/using-timescaledb/update-db).
+The official instructions for [upgrading your TimescaleDB](https://docs.timescale.com/latest/using-timescaledb/update-db).
 
 For upgrading an in use deployment, here is an easy way to do it.
 
@@ -71,3 +71,16 @@ pod/pg-monitor-timescaledb-59f67889cc-wkf9g       1/1     Running   0          9
 kubectl exec -ti pg-monitor-timescaledb-59f67889cc-wkf9g -- psql -U postgres -d postgres -c 'ALTER EXTENSION timescaledb UPDATE;'
 kubectl exec -ti pg-monitor-timescaledb-59f67889cc-wkf9g -- psql -U postgres -d pg_monitor_db -c 'ALTER EXTENSION timescaledb UPDATE;'
 ```
+
+## Applying Enterprise TimescaleDB License
+
+```sql
+ALTER SYSTEM SET timescaledb.license_key='<license_key>';
+
+-- Reload your PostgreSQL configs
+SELECT pg_reload_conf();
+```
+
+## Timescale Documentation
+
+[TimescaleDB Documentation](https://docs.timescale.com/latest/main)
