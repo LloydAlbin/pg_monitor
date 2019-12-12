@@ -51,7 +51,7 @@ kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-serv
 kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
 
-## Upgrade 
+## Upgrade
 
 The official instructions for [upgrading your TimescaleDB](https://docs.timescale.com/latest/using-timescaledb/update-db).
 
