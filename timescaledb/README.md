@@ -27,6 +27,7 @@ You should edit the PVC to use the StorageClass that you wish to use, such as Ne
 You will need to customize the following yaml files:
 
 * pg-monitor-timescaledb-pvc.yaml for setting size, location, StorageClass for the PVC.
+* pg-monitor-timescaledb-secret.yaml for setting the postgres superuser password.
 * pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
 * pg-monitor-timescaledb-deployment.yaml file for setting the postgres password / secrets, etc.
 
@@ -38,6 +39,7 @@ resources
 ```bash
 # Example for Standard Docker Image
 # kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
@@ -47,6 +49,7 @@ kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-depl
 ```bash
 # Example for Custom Docker Image
 # kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-pvc.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 ```
