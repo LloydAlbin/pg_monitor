@@ -90,10 +90,15 @@ script:
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
   # Make sure Graphite pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
-  # Install pg_monitor sql
-  #- psql -h localhost -p 30002 -d pg_monitor_db -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+  # Verify Postgres Version and Connection
   - psql -d postgres -c 'SELECT version();'
+  # Install pg_monitor sql
+  - psql -d postgres -c "CREATE ROLE grafana WITH PASSWORD 'pgpass' IN ROLE pg_monitor;"
+  #- psql -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+  #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+  # Must change directories to tune the pgtap tests.
   - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+  # Run the all the pgtap tests in the pgtap_tests directory
   - pg_prove -v -d postgres .
   #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
 
@@ -103,5 +108,6 @@ after_script:
   - docker images
   #- bash <(curl -s https://codecov.io/bash)>
   - kubectl get all
+  - kubectl get secrets
   
 # vim:set et ts=2 sw=2:
