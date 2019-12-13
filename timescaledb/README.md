@@ -27,7 +27,7 @@ You should edit the PVC to use the StorageClass that you wish to use, such as Ne
 You will need to customize the following yaml files:
 
 * pg-monitor-timescaledb-pvc.yaml for setting size, location, StorageClass for the PVC.
-* pg-monitor-timescaledb-secret.yaml for setting the postgres superuser password. The password needs to be base64 encoded.
+* pg-monitor-timescaledb-secret.yaml for setting the postgres superuser password. The password needs to be [base64 encoded](https://www.base64encode.org/).
 * pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
 * pg-monitor-timescaledb-deployment.yaml file for setting the postgres password / secrets, etc.
 
