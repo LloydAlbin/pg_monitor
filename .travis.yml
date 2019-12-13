@@ -86,6 +86,7 @@ script:
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
   # Deploy Graphite
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+  - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-secret.yaml
   - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
   # Make sure Graphite pod is scheduled and running.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
