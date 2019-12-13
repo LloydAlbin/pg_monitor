@@ -210,7 +210,7 @@ postgres_build()
 
 		# Build exact Postgres Version
 		print_verbose 2 "Building Docker Image: $2/$3:$PG_FULL_VERSION-alpine in $1/postgres/$4/alpine"
-		docker build -t $2/$3:$PG_FULL_VERSION-alpine $1/postgres/$4/alpine
+		docker build --no-cache=true -t $2/$3:$PG_FULL_VERSION-alpine $1/postgres/$4/alpine
 
 		# Tag Major Postgres Version
 		print_verbose 2 "Tagging Docker Image: $2/$3:$4-alpine from $2/$3:$PG_FULL_VERSION-alpine"
@@ -238,7 +238,7 @@ timescaledb_build()
 		
 		# Build Latest TimescaleDB Version
 		print_verbose 2 "Building Docker Image: $2/$3:latest-$5 in $1/timescaledb-docker"
-		docker build --build-arg PG_VERSION=$4 -t $2/$3:latest-$5 $1/timescaledb-docker
+		docker build --no-cache=true --build-arg PG_VERSION=$4 -t $2/$3:latest-$5 $1/timescaledb-docker
 
 		# Tag exact TimescaleDB Version
 		print_verbose 2 "Tagging Docker Image: $2/$3:$VERSION-$5 from $2/$3:latest-$5"
