@@ -31,9 +31,6 @@ You will need to customize the following yaml files:
 * pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
 * pg-monitor-timescaledb-deployment.yaml file for setting the postgres password / secrets, etc.
 
-volumes and volumeMounts
-resources
-
 ### Install Official Kubernetes
 
 ```bash
@@ -52,6 +49,13 @@ kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-depl
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+```
+
+### Loading the starting database
+
+```bash
+psql -h <cluster_name> -d postgres -p 30002 -U postgres -c "CREATE ROLE grafana WITH PASSWORD '<password>' IN ROLE pg_monitor;"
+psql -h <cluster_name> -d postgres -p 30002 -U postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
 ```
 
 ## Upgrade
@@ -84,10 +88,14 @@ ALTER SYSTEM SET timescaledb.license_key='<license_key>';
 SELECT pg_reload_conf();
 ```
 
-## Timescale Documentation
+## TimescaleDB Documentation
 
 [TimescaleDB Documentation](https://docs.timescale.com/latest/main)
 
-## Enterprise Timescale License
+## Enterprise TimescaleDB License
 
-[](https://docs.timescale.com/latest/getting-started/exploring-enterprise)
+[Emterprise TimescaleDB](https://docs.timescale.com/latest/getting-started/exploring-enterprise)
+
+## Restoring your TimescaleDB from Backup
+
+[Restoring from Backup](https://docs.timescale.com/latest/using-timescaledb/backup)
