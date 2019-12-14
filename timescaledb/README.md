@@ -31,6 +31,8 @@ You will need to customize the following yaml files:
 * pg-monitor-timescaledb-service.yaml for setting the targetPort (converts Port 5432 to 5432) and nodePort (converts Port 5432 to 30002)
 * pg-monitor-timescaledb-deployment.yaml file for setting the postgres password / secrets, etc.
 
+More information about [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/).
+
 ### Install Official Kubernetes
 
 ```bash
