@@ -14,7 +14,7 @@ Edits that you need to make:
 
 * Replace the (ClusterName) with the hostname of the logfiles that you are monitoring.
 * Replace the (ReportsServer) with the hostname of the PostgreSQL TimescaleDB.
-* Replace the pg_monitor_db with the database on the PostgreSQL TimescaleDB.
+* Replace the pgmonitor_db with the database on the PostgreSQL TimescaleDB.
 * Replace the 30002 with the port of the PostgreSQL TimescaleDB.
 * Replace the /pgdata_local/pg_log with the location of the PostgreSQL log files.
 * Replace the /pgdata_local with the location of the temporay location of the logtail csv file.
