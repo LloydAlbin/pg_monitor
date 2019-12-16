@@ -3,7 +3,7 @@ SELECT pg_catalog.set_config('search_path', '', false);
 \set ON_ERROR_STOP true
 
 -- Create grafana user
-CREATE USER grafana LOGIN IN ROLE pgmon;
+CREATE USER grafana LOGIN IN ROLE pg_monitor;
 
 -- Create pgmon_db database
 CREATE DATABASE pgmonitor_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US' LC_CTYPE = 'en_US';
