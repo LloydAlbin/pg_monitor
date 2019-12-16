@@ -54,7 +54,7 @@ CREATE TABLE pgmon.current_pg_settings (
 ALTER TABLE pgmon.current_pg_settings OWNER TO grafana;
 CREATE INDEX current_pg_settings_cluster_name_log_time_idx ON pgmon.current_pg_settings USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_pg_settings_log_time_idx ON pgmon.current_pg_settings USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_pg_settings', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_pg_settings', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_pg_stat_activity (
     log_time timestamp with time zone NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE pgmon.current_pg_stat_activity (
 ALTER TABLE pgmon.current_pg_stat_activity OWNER TO grafana;
 CREATE INDEX current_pg_stat_activity_cluster_name_log_time_idx ON pgmon.current_pg_stat_activity USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_pg_stat_activity_log_time_idx ON pgmon.current_pg_stat_activity USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_pg_stat_activity', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_pg_stat_activity', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_auto_vacuum_count (
     log_time timestamp with time zone NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE pgmon.current_auto_vacuum_count (
 ALTER TABLE pgmon.current_auto_vacuum_count OWNER TO grafana;
 CREATE INDEX current_auto_vacuum_count_cluster_name_log_time_idx ON pgmon.current_auto_vacuum_count USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_auto_vacuum_count_log_time_idx ON pgmon.current_auto_vacuum_count USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_auto_vacuum_count', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_auto_vacuum_count', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_replication_status (
     log_time timestamp with time zone NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE pgmon.current_replication_status (
 ALTER TABLE pgmon.current_replication_status OWNER TO grafana;
 CREATE INDEX current_replication_status_cluster_name_log_time_idx ON pgmon.current_replication_status USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_replication_status_log_time_idx ON pgmon.current_replication_status USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_replication_status', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_replication_status', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_autovacuum (
     log_time timestamp with time zone NOT NULL,
@@ -127,7 +127,7 @@ CREATE TABLE pgmon.current_autovacuum (
 ALTER TABLE pgmon.current_autovacuum OWNER TO grafana;
 CREATE INDEX current_autovacuum_cluster_name_log_time_idx ON pgmon.current_autovacuum USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_autovacuum_log_time_idx ON pgmon.current_autovacuum USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_autovacuum', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_autovacuum', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_pg_database (
     log_time timestamp with time zone NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE pgmon.current_pg_database (
 ALTER TABLE pgmon.current_pg_database OWNER TO grafana;
 CREATE INDEX current_pg_database_cluster_name_log_time_idx ON pgmon.current_pg_database USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_pg_database_log_time_idx ON pgmon.current_pg_database USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_pg_database', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_pg_database', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.granted_locks (
     log_time timestamp with time zone NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE pgmon.granted_locks (
 ALTER TABLE pgmon.granted_locks OWNER TO grafana;
 CREATE INDEX granted_locks_cluster_name_log_time_idx ON pgmon.granted_locks USING btree (cluster_name, log_time DESC);
 CREATE INDEX granted_locks_log_time_idx ON pgmon.granted_locks USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.granted_locks', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.granted_locks', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.current_table_stats (
     log_time timestamp with time zone NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE pgmon.current_table_stats (
 ALTER TABLE pgmon.current_table_stats OWNER TO grafana;
 CREATE INDEX current_table_stats_cluster_name_log_time_idx ON pgmon.current_table_stats USING btree (cluster_name, log_time DESC);
 CREATE INDEX current_table_stats_log_time_idx ON pgmon.current_table_stats USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.current_table_stats', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.current_table_stats', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.custom_table_settings (
     log_time timestamp with time zone NOT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE pgmon.custom_table_settings (
 ALTER TABLE pgmon.custom_table_settings OWNER TO grafana;
 CREATE INDEX custom_table_settings_cluster_name_log_time_idx ON pgmon.custom_table_settings USING btree (cluster_name, log_time DESC);
 CREATE INDEX custom_table_settings_log_time_idx ON pgmon.custom_table_settings USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.custom_table_settings', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.custom_table_settings', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.autovacuum_thresholds (
     log_time timestamp with time zone NOT NULL,
@@ -209,7 +209,7 @@ CREATE TABLE pgmon.autovacuum_thresholds (
 ALTER TABLE pgmon.autovacuum_thresholds OWNER TO grafana;
 CREATE INDEX autovacuum_thresholds_cluster_name_log_time_idx ON pgmon.autovacuum_thresholds USING btree (cluster_name, log_time DESC);
 CREATE INDEX autovacuum_thresholds_log_time_idx ON pgmon.autovacuum_thresholds USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.autovacuum_thresholds', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.autovacuum_thresholds', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.autoanalyze_logs (
     log_time timestamp with time zone NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE pgmon.autoanalyze_logs (
 ALTER TABLE pgmon.autoanalyze_logs OWNER TO grafana;
 CREATE INDEX autoanalyze_logs_cluster_name_time_idx ON pgmon.autoanalyze_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX autoanalyze_logs_time_idx ON pgmon.autoanalyze_logs USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.autoanalyze_logs', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.autoanalyze_logs', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.autovacuum_logs (
     log_time timestamp(3) with time zone NOT NULL,
@@ -256,7 +256,7 @@ CREATE TABLE pgmon.autovacuum_logs (
 ALTER TABLE pgmon.autovacuum_logs OWNER TO grafana;
 CREATE INDEX autovacuum_logs_cluster_name_time_idx ON pgmon.autovacuum_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX autovacuum_logs_time_idx ON pgmon.autovacuum_logs USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.autovacuum_logs', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.autovacuum_logs', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.lock_logs (
     lock_type text,
@@ -291,7 +291,7 @@ CREATE TABLE pgmon.lock_logs (
 ALTER TABLE pgmon.lock_logs OWNER TO grafana;
 CREATE INDEX lock_logs_cluster_name_time_idx ON pgmon.lock_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX lock_logs_time_idx ON pgmon.lock_logs USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.lock_logs', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.lock_logs', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.checkpoint_warning_logs (
     log_time timestamp with time zone NOT NULL,
@@ -302,7 +302,7 @@ CREATE TABLE pgmon.checkpoint_warning_logs (
 ALTER TABLE pgmon.checkpoint_warning_logs OWNER TO postgres;
 CREATE INDEX checkpoint_warning_logs_cluster_name_time_idx ON pgmon.checkpoint_warning_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX checkpoint_warning_logs_time_idx ON pgmon.checkpoint_warning_logs USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.checkpoint_warning_logs', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.checkpoint_warning_logs', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.checkpoint_logs (
     log_time timestamp with time zone NOT NULL,
@@ -323,7 +323,7 @@ CREATE TABLE pgmon.checkpoint_logs (
 ALTER TABLE pgmon.checkpoint_logs OWNER TO grafana;
 CREATE INDEX checkpoint_logs_cluster_name_time_idx ON pgmon.checkpoint_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX checkpoint_logs_time_idx ON pgmon.checkpoint_logs USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.checkpoint_logs', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.checkpoint_logs', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.postgres_log (
     cluster_name text NOT NULL,
@@ -356,7 +356,7 @@ CREATE INDEX postgres_log_cluster_name_log_time_idx ON pgmon.postgres_log USING 
 CREATE INDEX postgres_log_log_time_idx ON pgmon.postgres_log USING btree (log_time DESC);
 CREATE INDEX postgres_logs_idx ON pgmon.postgres_log USING btree (log_time, cluster_name, database_name);
 CREATE INDEX postgres_logs_pkey ON pgmon.postgres_log USING btree (cluster_name, session_id, session_line_num);
-SELECT create_hypertable('pgmon.postgres_log', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.postgres_log', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.archive_failure_log (
     cluster_name text NOT NULL,
@@ -368,7 +368,7 @@ CREATE TABLE pgmon.archive_failure_log (
 ALTER TABLE pgmon.archive_failure_log OWNER TO postgres;
 CREATE INDEX archive_failure_log_cluster_name_log_time_idx ON pgmon.archive_failure_log USING btree (cluster_name, log_time DESC);
 CREATE INDEX archive_failure_log_log_time_idx ON pgmon.archive_failure_log USING btree (log_time DESC);
-SELECT create_hypertable('pgmon.archive_failure_log', 'log_time', 'cluster_name', 20);
+SELECT public.create_hypertable('pgmon.archive_failure_log', 'log_time', 'cluster_name', 20);
 
 CREATE TABLE pgmon.lock_message_types (
     message text
