@@ -1,0 +1,33 @@
+\connect pgmonitor_db
+
+-- Setup Test Variables
+\set test_name 'permissions'
+\set test_user 'grafana'
+\set test_production_database 'pgmonitor_db'
+\set plan 7
+
+--\set plan :plan
+
+-- Install pgTAP, show diagnostics, and start common tests
+--\ir ../common/diagnostic.sql
+\i common/diagnostics.pg
+
+SELECT diag('Has Schema Tests');
+SELECT diag('=================================');
+SELECT has_role('grafana', 'Has grafana Role');
+--SELECT database_privs_are( 'pgmonitor_db', 'grafana', ARRAY['CREATE'], E'Role Grafana has Create Permissions aka Create Schema''s' );
+
+SELECT diag('Has Schema Tests');
+SELECT diag('=================================');
+SELECT has_schema('pgmon', 'Has pgmon Schema');
+SELECT has_schema('tools', 'Has tools Schema');
+
+SELECT diag('Schema Ownership Tests');
+SELECT diag('=================================');
+SELECT schema_owner_is ( 'pgmon', 'grafana', 'Grafana owns pgmon Schema' );
+SELECT schema_owner_is ( 'tools', 'grafana', 'Grafana owns tools Schema' );
+
+SELECT diag('Table Ownership Tests');
+SELECT diag('=================================');
+SELECT table_owner_is ( table_schema, table_name, 'grafana', 'Grafana owns ' || table_schema || '.' || table_name || '.' )
+FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmon', 'tools');
