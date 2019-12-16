@@ -67,7 +67,14 @@ $BODY$
 LANGUAGE plpgsql;
 
 -- Plan the tests.
-SELECT plan(:plan + 12);
+DO $BODY$
+BEGIN
+    IF :plan != '-1' THEN
+        SELECT plan(:plan + 12);
+    END IF;
+END
+$BODY$
+LANGUAGE plpgsql;
 
 -- Configuration Data
 SELECT diag('Configuration');
