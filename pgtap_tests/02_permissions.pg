@@ -1,10 +1,19 @@
 \connect pgmonitor_db
 
+-- Help figure out the number of plans
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    SELECT count(*) INTO r FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmon', 'tools');
+    \set plan (6 + r.count)
+END $$;
+
 -- Setup Test Variables
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 7
+--\set plan 7
 
 --\set plan :plan
 
