@@ -4,6 +4,26 @@ This script monitors the log files every 10 seconds and to shove them into the P
 
 ## Setup
 
+The log files must be in csv format. The first two are mandatory, the rest are optional but good ones to have.
+
+```config
+logging_collector = 'on'
+log_destination = 'csvlog'
+log_directory = '/pgdata_local/pg_log'
+log_filename = 'postgresql-%Y-%m-%d_%H.log'
+log_rotation_age = '1h'
+log_rotation_size = '1MB'
+log_min_duration_statement = '5000' # Normally 5000, temp set to 0 to log everything
+log_checkpoints = 'on'
+log_connections = 'on'
+log_disconnections = 'on'
+log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,client=%h,appname=%a '
+log_lock_waits = 'on'
+log_temp_files = '0'
+log_autovacuum_min_duration = '0'
+log_hostname = 'true'
+```
+
 You need to edit one of the following three files depending on how you are going to start this script.
 
 * start_pg_readlog.sh (Manually start and stop service):
