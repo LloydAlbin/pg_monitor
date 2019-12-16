@@ -381,7 +381,7 @@ CREATE TABLE pgmon.postgres_log_databases (
     start_date timestamp with time zone,
     end_date timestamp with time zone
 );
-ALTER TABLE pgmon.postgres_log_databases OWNER TO pgmon;
+ALTER TABLE pgmon.postgres_log_databases OWNER TO grafana;
 ALTER TABLE ONLY pgmon.postgres_log_databases
     ADD CONSTRAINT postgres_log_databases_pkey PRIMARY KEY (cluster_name, database_name);
 
@@ -392,7 +392,7 @@ CREATE TABLE pgmon.postgres_log_databases_temp (
     min timestamp with time zone,
     max timestamp with time zone
 );
-ALTER TABLE pgmon.postgres_log_databases_temp OWNER TO postgres;
+ALTER TABLE pgmon.postgres_log_databases_temp OWNER TO grafana;
 
 -- VIEWS: pgmon
 CREATE VIEW pgmon.autovacuum_length AS
