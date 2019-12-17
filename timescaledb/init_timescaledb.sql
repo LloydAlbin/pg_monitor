@@ -299,7 +299,7 @@ CREATE TABLE pgmon.checkpoint_warning_logs (
     seconds integer,
     hint text
 );
-ALTER TABLE pgmon.checkpoint_warning_logs OWNER TO postgres;
+ALTER TABLE pgmon.checkpoint_warning_logs OWNER TO grafana;
 CREATE INDEX checkpoint_warning_logs_cluster_name_time_idx ON pgmon.checkpoint_warning_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX checkpoint_warning_logs_time_idx ON pgmon.checkpoint_warning_logs USING btree (log_time DESC);
 SELECT public.create_hypertable('pgmon.checkpoint_warning_logs', 'log_time', 'cluster_name', 20);
@@ -365,7 +365,7 @@ CREATE TABLE pgmon.archive_failure_log (
     message text,
     detail text
 );
-ALTER TABLE pgmon.archive_failure_log OWNER TO postgres;
+ALTER TABLE pgmon.archive_failure_log OWNER TO grafana;
 CREATE INDEX archive_failure_log_cluster_name_log_time_idx ON pgmon.archive_failure_log USING btree (cluster_name, log_time DESC);
 CREATE INDEX archive_failure_log_log_time_idx ON pgmon.archive_failure_log USING btree (log_time DESC);
 SELECT public.create_hypertable('pgmon.archive_failure_log', 'log_time', 'cluster_name', 20);
@@ -373,7 +373,7 @@ SELECT public.create_hypertable('pgmon.archive_failure_log', 'log_time', 'cluste
 CREATE TABLE pgmon.lock_message_types (
     message text
 );
-ALTER TABLE pgmon.lock_message_types OWNER TO postgres;
+ALTER TABLE pgmon.lock_message_types OWNER TO grafana;
 
 CREATE TABLE pgmon.postgres_log_databases (
     cluster_name text NOT NULL,
@@ -440,7 +440,7 @@ CREATE TABLE tools.queries_disabled (
     port integer DEFAULT 5432 NOT NULL,
     query_name text
 );
-ALTER TABLE tools.queries_disabled OWNER TO postgres;
+ALTER TABLE tools.queries_disabled OWNER TO grafana;
 
 -- tools.query
 CREATE TABLE tools.query (
@@ -494,7 +494,7 @@ CREATE VIEW pgmon.hypertable AS
             WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
             ELSE NULL::text
         END)::regclass) size(table_size, index_size, toast_size, total_size) ON (true));
-ALTER TABLE pgmon.hypertable OWNER TO postgres;
+ALTER TABLE pgmon.hypertable OWNER TO grafana;
 
 CREATE VIEW pgmon.last_log_entries AS
  SELECT postgres_log.cluster_name,
@@ -521,7 +521,7 @@ CREATE VIEW tools.current_table_size AS
     now() AS "time"
    FROM information_schema.tables
   WHERE (((tables.table_type)::text = 'BASE TABLE'::text) AND ((tables.table_schema)::text <> ALL (ARRAY[('information_schema'::character varying)::text, ('pg_catalog'::character varying)::text])));
-ALTER TABLE tools.current_table_size OWNER TO postgres;
+ALTER TABLE tools.current_table_size OWNER TO grafana;
 
 CREATE VIEW tools.pg_major_version AS
  SELECT ((((current_setting('server_version_num'::text))::integer / 10000))::numeric + (((((current_setting('server_version_num'::text))::integer / 100) - (((current_setting('server_version_num'::text))::integer / 10000) * 100)))::numeric / (10)::numeric)) AS major_version;

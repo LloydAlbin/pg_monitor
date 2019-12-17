@@ -67,17 +67,24 @@ $BODY$
 LANGUAGE plpgsql;
 
 -- Plan the tests.
+/*
 DO $BODY$
+DECLARE
+    r RECORD;
 BEGIN
-    CASE :plan 
+    SELECT (:plan) AS plan INTO r;
+    CASE r.plan 
         WHEN '-1' THEN
             SELECT * FROM no_plan();
         ELSE
-            SELECT plan(:plan + 12);
+            SELECT plan(r.plan + 12);
     END CASE;
 END
 $BODY$
 LANGUAGE plpgsql;
+*/
+SELECT plan(:plan + 12);
+
 
 -- Configuration Data
 SELECT diag('Configuration');
