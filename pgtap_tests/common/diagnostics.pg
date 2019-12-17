@@ -69,9 +69,12 @@ LANGUAGE plpgsql;
 -- Plan the tests.
 DO $BODY$
 BEGIN
-    IF :plan != '-1' THEN
-        SELECT plan(:plan + 12);
-    END IF;
+    CASE :plan 
+        WHEN '-1' THEN
+            SELECT * FROM no_plan();
+        ELSE
+            SELECT plan(:plan + 12);
+    END CASE;
 END
 $BODY$
 LANGUAGE plpgsql;
