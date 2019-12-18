@@ -32,21 +32,23 @@ In this build/testing environment I am using the following:
 ## Testing
 
 ```bash
-###### DELETE  ######
-# Clean from previous builds
+###### DELETE GITHUB DATA ######
+# Clean from previous builds before building, otherwise patching issues
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean
 
 ###### BUILD DOCKER IMAGES ######
-# Build Postgres and TimescaleDB
+# Build Postgres and TimescaleDB Docker Images
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
 docker images
 
 ###### CLEANUP IN KUBERNETES ######
+# Delete Service, Secret and Deployment in Kubernetes
 kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
 kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
 kubectl delete -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
 
 ###### INSTALL IN KUBERNETES ######
+# Add Service, Secret and Deployment in Kubernetes
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
 kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
