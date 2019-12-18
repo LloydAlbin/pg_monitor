@@ -4,7 +4,7 @@
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 30
+\set plan 70
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -20,3 +20,11 @@ SELECT diag('View Ownership Tests');
 SELECT diag('=================================');
 SELECT view_owner_is ( table_schema, table_name, 'grafana', 'Grafana owns view ' || table_schema || '.' || table_name || '.' )
 FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema IN ('pgmonitor', 'tools');
+
+SELECT diag('=================================');
+SELECT diag('Function Ownership Tests');
+SELECT diag('=================================');
+SELECT function_owner_is (n.nspname, p.proname, p.proargtypes::regtype[]::name[], 'grafana')
+FROM pg_catalog.pg_proc p
+LEFT JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE n.nspname IN ('pgmonitor', 'tools');
