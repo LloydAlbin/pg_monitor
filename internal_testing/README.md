@@ -25,16 +25,39 @@ In this build/testing environment I am using the following:
 ## Testing
 
 ```bash
-# Verify Postgres Version and Connection
-psql -h localhost -U postgres -d postgres -p 30002 -c 'SELECT version();'
-# Reset from previous Test
-psql -h localhost -U postgres -d postgres -p 30002 -c "DROP DATABASE pgmonitor_db; DROP ROLE grafana;"
-# Install pg_monitor sql
-psql -h localhost -U postgres -d postgres -p 30002 -f ~/pg_monitor/timescaledb/init_timescaledb.sql
-psql -h localhost -U postgres -d postgres -p 30002 -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
-#- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+###### DELETE  ######
+# Clean from previous builds
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean
+
+###### BUILD DOCKER IMAGES ######
+# Build Postgres and TimescaleDB
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
+docker images
+
+###### CLEANUP IN KUBERNETES ######
+kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+kubectl delete -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+
+###### INSTALL IN KUBERNETES ######
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+
+###### TIMESCALEDB CLEANUP ######
+# Cleanup from previous Timescale DB Testing
+psql -h localhost -p 30002 -U postgres -d postgres -c "DROP DATABASE pgmonitor_db;"
+psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
+
+###### TIMESCALEDB SETUP ######
+# Init TimescaleDB
+psql -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
+# Setup account with password
+psql -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+
+###### PGTAP ######
 # Must change directories to tune the pgtap tests.
 cd ~/pg_monitor/pgtap_tests/
 # Run the all the pgtap tests in the pgtap_tests directory
-pg_prove -v -d postgres -h localhost -U postgres -p 30002 .
+pg_prove -v -h localhost -p 30002 -U postgres -d postgres .
 ```
