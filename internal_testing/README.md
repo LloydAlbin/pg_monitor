@@ -13,12 +13,19 @@ In this build/testing environment I am using the following:
 * * * WSL Ubuntu 18
 * * Visual Studio Code
 * * * Add Local Extensions
-* * * * Remote - WSL
-* * * * systemd-unit-file
+* * * * Remote - WSL v0.41.6
+* * * * systemd-unit-file v1.0.6
+* * * * LDIF syntax v0.2.0
 * * * Add WSL Extensions
-* * * * Docker
-* * * * mardownlint
-* * * * PostgreSQL
+* * * * Docker v0.9.0
+* * * * Kubernetes v1.0.9
+* * * * mardownlint v0.33.0
+* * * * PostgreSQL v0.2.0
+* * * * pgFormatter v1.10.0
+* * * * C/C++ v0.26.2
+* * * * C++ Intellisense v0.2.2
+* * * * Cloud Code v1.0.1
+* * * * YAML v0.6.1
 
 [Windows Setup Directions](WINDOWS_SETUP.md)
 
