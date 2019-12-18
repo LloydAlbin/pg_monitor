@@ -17,10 +17,10 @@ SELECT has_role('grafana', 'Has grafana Role');
 
 SELECT diag('Has Schema Tests');
 SELECT diag('=================================');
-SELECT has_schema('pgmon', 'Has pgmon Schema');
+SELECT has_schema('pgmonitor', 'Has pgmonitor Schema');
 SELECT has_schema('tools', 'Has tools Schema');
 
 SELECT diag('Schema Ownership Tests');
 SELECT diag('=================================');
-SELECT schema_owner_is ( 'pgmon', 'grafana', 'Grafana owns pgmon Schema' );
+SELECT schema_owner_is ( 'pgmonitor', 'grafana', 'Grafana owns pgmonitor Schema' );
 SELECT schema_owner_is ( 'tools', 'grafana', 'Grafana owns tools Schema' );

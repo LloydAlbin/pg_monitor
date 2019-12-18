@@ -13,10 +13,10 @@
 SELECT diag('Table Ownership Tests');
 SELECT diag('=================================');
 SELECT table_owner_is ( table_schema, table_name, 'grafana', 'Grafana owns table ' || table_schema || '.' || table_name || '.' )
-FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmon', 'tools');
+FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmonitor', 'tools');
 
 SELECT diag('=================================');
 SELECT diag('View Ownership Tests');
 SELECT diag('=================================');
 SELECT view_owner_is ( table_schema, table_name, 'grafana', 'Grafana owns view ' || table_schema || '.' || table_name || '.' )
-FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema IN ('pgmon', 'tools');
+FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema IN ('pgmonitor', 'tools');
