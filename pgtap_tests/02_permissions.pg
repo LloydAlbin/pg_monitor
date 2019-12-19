@@ -12,15 +12,14 @@
 
 SELECT diag('Has Schema Tests');
 SELECT diag('=================================');
-SELECT has_role('grafana', 'Has grafana Role');
---SELECT database_privs_are( 'pgmonitor_db', 'grafana', ARRAY['CREATE'], E'Role Grafana has Create Permissions aka Create Schema''s' );
+SELECT has_role(:'test_user'::name);
 
 SELECT diag('Has Schema Tests');
 SELECT diag('=================================');
-SELECT has_schema('pgmonitor', 'Has pgmonitor Schema');
-SELECT has_schema('tools', 'Has tools Schema');
+SELECT has_schema('pgmonitor');
+SELECT has_schema('tools');
 
 SELECT diag('Schema Ownership Tests');
 SELECT diag('=================================');
-SELECT schema_owner_is ( 'pgmonitor', 'grafana', 'Grafana owns pgmonitor Schema' );
-SELECT schema_owner_is ( 'tools', 'grafana', 'Grafana owns tools Schema' );
+SELECT schema_owner_is ( 'pgmonitor', :'test_user'::name );
+SELECT schema_owner_is ( 'tools', :'test_user'::name );
