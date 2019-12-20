@@ -35,7 +35,7 @@ CREATE SCHEMA tools;
 ALTER SCHEMA tools OWNER TO grafana;
 
 -- TABLES: pgmonitor
-CREATE TABLE pgmonitor.current_pg_settings (
+CREATE TABLE stats.pg_settings (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     name text,
@@ -56,11 +56,11 @@ CREATE TABLE pgmonitor.current_pg_settings (
     sourceline integer,
     pending_restart boolean
 );
-ALTER TABLE pgmonitor.current_pg_settings OWNER TO grafana;
-CREATE INDEX current_pg_settings_cluster_name_log_time_idx ON pgmonitor.current_pg_settings USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_pg_settings_log_time_idx ON pgmonitor.current_pg_settings USING btree (log_time DESC);
+ALTER TABLE stats.pg_settings OWNER TO grafana;
+CREATE INDEX pg_settings_cluster_name_log_time_idx ON stats.pg_settings USING btree (cluster_name, log_time DESC);
+CREATE INDEX pg_settings_log_time_idx ON stats.pg_settings USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_pg_stat_activity (
+CREATE TABLE stats.pg_stat_activity (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -76,30 +76,30 @@ CREATE TABLE pgmonitor.current_pg_stat_activity (
     state_change timestamp with time zone,
     backend_xmin xid
 );
-ALTER TABLE pgmonitor.current_pg_stat_activity OWNER TO grafana;
-CREATE INDEX current_pg_stat_activity_cluster_name_log_time_idx ON pgmonitor.current_pg_stat_activity USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_pg_stat_activity_log_time_idx ON pgmonitor.current_pg_stat_activity USING btree (log_time DESC);
+ALTER TABLE stats.pg_stat_activity OWNER TO grafana;
+CREATE INDEX pg_stat_activity_cluster_name_log_time_idx ON stats.pg_stat_activity USING btree (cluster_name, log_time DESC);
+CREATE INDEX pg_stat_activity_log_time_idx ON stats.pg_stat_activity USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_autovacuum_count (
+CREATE TABLE stats.autovacuum_count (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
     count bigint
 );
-ALTER TABLE pgmonitor.current_autovacuum_count OWNER TO grafana;
-CREATE INDEX current_auto_vacuumcount_cluster_name_log_time_idx ON pgmonitor.current_autovacuum_count USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_auto_vacuumcount_log_time_idx ON pgmonitor.current_autovacuum_count USING btree (log_time DESC);
+ALTER TABLE stats.autovacuum_count OWNER TO grafana;
+CREATE INDEX auto_vacuumcount_cluster_name_log_time_idx ON stats.autovacuum_count USING btree (cluster_name, log_time DESC);
+CREATE INDEX auto_vacuumcount_log_time_idx ON stats.autovacuum_count USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_replication_status (
+CREATE TABLE stats.replication_status (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     status text
 );
-ALTER TABLE pgmonitor.current_replication_status OWNER TO grafana;
-CREATE INDEX current_replication_status_cluster_name_log_time_idx ON pgmonitor.current_replication_status USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_replication_status_log_time_idx ON pgmonitor.current_replication_status USING btree (log_time DESC);
+ALTER TABLE stats.replication_status OWNER TO grafana;
+CREATE INDEX replication_status_cluster_name_log_time_idx ON stats.replication_status USING btree (cluster_name, log_time DESC);
+CREATE INDEX replication_status_log_time_idx ON stats.replication_status USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_autovacuum (
+CREATE TABLE stats.autovacuum (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -125,20 +125,20 @@ CREATE TABLE pgmonitor.current_autovacuum (
     state text,
     backend_xmin xid
 );
-ALTER TABLE pgmonitor.current_autovacuum OWNER TO grafana;
-CREATE INDEX current_autovacuum_cluster_name_log_time_idx ON pgmonitor.current_autovacuum USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_autovacuum_log_time_idx ON pgmonitor.current_autovacuum USING btree (log_time DESC);
+ALTER TABLE stats.autovacuum OWNER TO grafana;
+CREATE INDEX autovacuum_cluster_name_log_time_idx ON stats.autovacuum USING btree (cluster_name, log_time DESC);
+CREATE INDEX autovacuum_log_time_idx ON stats.autovacuum USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_pg_database (
+CREATE TABLE stats.pg_database (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name
 );
-ALTER TABLE pgmonitor.current_pg_database OWNER TO grafana;
-CREATE INDEX current_pg_database_cluster_name_log_time_idx ON pgmonitor.current_pg_database USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_pg_database_log_time_idx ON pgmonitor.current_pg_database USING btree (log_time DESC);
+ALTER TABLE stats.pg_database OWNER TO grafana;
+CREATE INDEX pg_database_cluster_name_log_time_idx ON stats.pg_database USING btree (cluster_name, log_time DESC);
+CREATE INDEX pg_database_log_time_idx ON stats.pg_database USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.granted_locks (
+CREATE TABLE stats.granted_locks (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -149,11 +149,11 @@ CREATE TABLE pgmonitor.granted_locks (
     "Locks" text,
     "AutoVacuum" text
 );
-ALTER TABLE pgmonitor.granted_locks OWNER TO grafana;
-CREATE INDEX granted_locks_cluster_name_log_time_idx ON pgmonitor.granted_locks USING btree (cluster_name, log_time DESC);
-CREATE INDEX granted_locks_log_time_idx ON pgmonitor.granted_locks USING btree (log_time DESC);
+ALTER TABLE stats.granted_locks OWNER TO grafana;
+CREATE INDEX granted_locks_cluster_name_log_time_idx ON stats.granted_locks USING btree (cluster_name, log_time DESC);
+CREATE INDEX granted_locks_log_time_idx ON stats.granted_locks USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.current_table_stats (
+CREATE TABLE stats.table_stats (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -166,11 +166,11 @@ CREATE TABLE pgmonitor.current_table_stats (
     last_autoanalyze timestamp with time zone,
     "time" timestamp with time zone
 );
-ALTER TABLE pgmonitor.current_table_stats OWNER TO grafana;
-CREATE INDEX current_table_stats_cluster_name_log_time_idx ON pgmonitor.current_table_stats USING btree (cluster_name, log_time DESC);
-CREATE INDEX current_table_stats_log_time_idx ON pgmonitor.current_table_stats USING btree (log_time DESC);
+ALTER TABLE stats.table_stats OWNER TO grafana;
+CREATE INDEX table_stats_cluster_name_log_time_idx ON stats.table_stats USING btree (cluster_name, log_time DESC);
+CREATE INDEX table_stats_log_time_idx ON stats.table_stats USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.custom_table_settings (
+CREATE TABLE stats.custom_table_settings (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -179,11 +179,11 @@ CREATE TABLE pgmonitor.custom_table_settings (
     "Table Name" text,
     "Table Setting" text
 );
-ALTER TABLE pgmonitor.custom_table_settings OWNER TO grafana;
-CREATE INDEX custom_table_settings_cluster_name_log_time_idx ON pgmonitor.custom_table_settings USING btree (cluster_name, log_time DESC);
-CREATE INDEX custom_table_settings_log_time_idx ON pgmonitor.custom_table_settings USING btree (log_time DESC);
+ALTER TABLE stats.custom_table_settings OWNER TO grafana;
+CREATE INDEX custom_table_settings_cluster_name_log_time_idx ON stats.custom_table_settings USING btree (cluster_name, log_time DESC);
+CREATE INDEX custom_table_settings_log_time_idx ON stats.custom_table_settings USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.autovacuum_thresholds (
+CREATE TABLE stats.autovacuum_thresholds (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name name,
@@ -202,9 +202,9 @@ CREATE TABLE pgmonitor.autovacuum_thresholds (
     av_neaded boolean,
     pct_dead numeric
 );
-ALTER TABLE pgmonitor.autovacuum_thresholds OWNER TO grafana;
-CREATE INDEX autovacuum_thresholds_cluster_name_log_time_idx ON pgmonitor.autovacuum_thresholds USING btree (cluster_name, log_time DESC);
-CREATE INDEX autovacuum_thresholds_log_time_idx ON pgmonitor.autovacuum_thresholds USING btree (log_time DESC);
+ALTER TABLE stats.autovacuum_thresholds OWNER TO grafana;
+CREATE INDEX autovacuum_thresholds_cluster_name_log_time_idx ON stats.autovacuum_thresholds USING btree (cluster_name, log_time DESC);
+CREATE INDEX autovacuum_thresholds_log_time_idx ON stats.autovacuum_thresholds USING btree (log_time DESC);
 
 CREATE TABLE pgmonitor.autoanalyze_logs (
     log_time timestamp with time zone NOT NULL,
@@ -387,9 +387,9 @@ CREATE VIEW pgmonitor.autovacuum_length AS
  SELECT b.cluster_name,
     b.database_name,
     COALESCE(max(b.running_time)) AS running_time
-   FROM (( SELECT max(current_autovacuum.log_time) AS log_time
-           FROM pgmonitor.current_autovacuum) a
-     LEFT JOIN pgmonitor.current_autovacuum b USING (log_time))
+   FROM (( SELECT max(autovacuum.log_time) AS log_time
+           FROM stats.autovacuum) a
+     LEFT JOIN stats.autovacuum b USING (log_time))
   GROUP BY b.cluster_name, b.database_name;
 ALTER TABLE pgmonitor.autovacuum_length OWNER TO grafana;
 
@@ -458,7 +458,7 @@ CREATE VIEW pgmonitor.databases AS
  SELECT DISTINCT cpd.cluster_name,
     cpd.database_name
    FROM (tools.servers s
-     LEFT JOIN pgmonitor.current_pg_database cpd ON ((s.server_name = cpd.cluster_name)))
+     LEFT JOIN stats.pg_database cpd ON ((s.server_name = cpd.cluster_name)))
   WHERE (((s.read_all_databases IS TRUE) OR ((s.maintenance_database = cpd.database_name) AND (s.read_all_databases IS FALSE))) AND (cpd.database_name <> ALL (ARRAY['template0'::name, 'template1'::name, 'rdsadmin'::name])))
   ORDER BY cpd.cluster_name, cpd.database_name;
 ALTER TABLE pgmonitor.databases OWNER TO grafana;
@@ -493,7 +493,7 @@ CREATE VIEW pgmonitor.last_log_entries AS
 ALTER TABLE pgmonitor.last_log_entries OWNER TO grafana;
 
 -- VIEWS: tools
-CREATE VIEW tools.current_table_size AS
+CREATE VIEW tools.table_size AS
  SELECT now() AS log_time,
     current_setting('cluster_name'::text) AS cluster_name,
     tables.table_catalog AS database_name,
@@ -509,7 +509,7 @@ CREATE VIEW tools.current_table_size AS
     now() AS "time"
    FROM information_schema.tables
   WHERE (((tables.table_type)::text = 'BASE TABLE'::text) AND ((tables.table_schema)::text <> ALL (ARRAY[('information_schema'::character varying)::text, ('pg_catalog'::character varying)::text])));
-ALTER TABLE tools.current_table_size OWNER TO grafana;
+ALTER TABLE tools.table_size OWNER TO grafana;
 
 CREATE VIEW tools.pg_major_version AS
  SELECT ((((current_setting('server_version_num'::text))::integer / 10000))::numeric + (((((current_setting('server_version_num'::text))::integer / 100) - (((current_setting('server_version_num'::text))::integer / 10000) * 100)))::numeric / (10)::numeric)) AS major_version;
@@ -544,9 +544,9 @@ BEGIN
     split_part(trim(both '"' from substr(split_part(split_part(NEW.message, E'\n', 1), ':', 1),27)), '.', 3),
     trim(split_part(split_part(NEW.message, E'\n', 1), ':', 3))::BIGINT,
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 1)), ' ', 1)::bigint,
-    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 1)), ' ', 1)::bigint * current_setting('block_size')::bigint,
+    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 1)), ' ', 1)::bigint * setting('block_size')::bigint,
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 2)), ' ', 1)::bigint,
-    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 2)), ' ', 1)::bigint * current_setting('block_size')::bigint,
+    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 2)), ' ', 1)::bigint * setting('block_size')::bigint,
     CASE WHEN split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 3)), ' ', 1) = '' THEN NULL::bigint ELSE split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 3)), ' ', 1)::bigint END,
     CASE WHEN split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 4)), ' ', 1) = '' THEN NULL::bigint ELSE split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 2), ':', 2), ',', 3)), ' ', 1)::bigint END,
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 3), ':', 2), ',', 1)), ' ', 1)::bigint,
@@ -556,7 +556,7 @@ BEGIN
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 4), ':', 2), ',', 1)), ' ', 1)::bigint,
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 4), ':', 2), ',', 2)), ' ', 1)::bigint,
     split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 4), ':', 2), ',', 3)), ' ', 1)::bigint,
-    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 4), ':', 2), ',', 3)), ' ', 1)::bigint * current_setting('block_size')::bigint,
+    split_part(trim(split_part(split_part(split_part(NEW.message, E'\n', 4), ':', 2), ',', 3)), ' ', 1)::bigint * setting('block_size')::bigint,
     split_part(trim(split_part(split_part(NEW.message, E'\n', 5), ':', 2)), ' ', 1)::NUMERIC,
     split_part(trim(split_part(split_part(NEW.message, E'\n', 5), ':', 3)), ' ', 1)::NUMERIC,
     CASE WHEN strpos(split_part(NEW.message, E'\n', 6), E'/') > 0 
@@ -2088,20 +2088,20 @@ $_X$;
 ALTER FUNCTION pgmonitor.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean, display_aggregate boolean) OWNER TO grafana;
 
 --
--- Name: current_autovacuum(text, text, text, timestamp without time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum(text, text, text, timestamp without time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.current_autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, vacuum boolean, "analyze" boolean, running_time integer, phase text, heap_blks_total bigint, heap_blks_total_size bigint, heap_blks_scanned bigint, heap_blks_scanned_pct numeric, heap_blks_vacuumed bigint, heap_blks_vacuumed_pct numeric, index_vacuum_count bigint, max_dead_tuples bigint, num_dead_tuples bigint, backend_start timestamp with time zone, wait_event_type text, wait_event text, state text, backend_xmin xid)
+CREATE FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, vacuum boolean, "analyze" boolean, running_time integer, phase text, heap_blks_total bigint, heap_blks_total_size bigint, heap_blks_scanned bigint, heap_blks_scanned_pct numeric, heap_blks_vacuumed bigint, heap_blks_vacuumed_pct numeric, index_vacuum_count bigint, max_dead_tuples bigint, num_dead_tuples bigint, backend_start timestamp with time zone, wait_event_type text, wait_event text, state text, backend_xmin xid)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT pgmonitor.current_autovacuum('$ServerName', '$DatabaseName', '$ShowAllVacuums', $__timeTo(), '$__interval');
+SELECT stats.autovacuum('$ServerName', '$DatabaseName', '$ShowAllVacuums', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT pgmonitor.current_autovacuum('sqltest', 'delphi_continuous_integrator_testing', 'All', '2019-05-08T22:36:44.901Z', '1m');
+SELECT stats.autovacuum('sqltest', 'delphi_continuous_integrator_testing', 'All', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -2128,9 +2128,9 @@ BEGIN
   b.backend_xmin 
 FROM (
 	SELECT max(log_time) AS log_time
-	FROM pgmonitor.current_autovacuum
+	FROM stats.autovacuum
 ) a
-LEFT JOIN pgmonitor.current_autovacuum b USING (log_time)
+LEFT JOIN stats.autovacuum b USING (log_time)
 WHERE (b.cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
   AND (b.database_name = ''' || database_name || ''' OR ''--All--'' = ''' || database_name || ''' OR ''' || all_vacuums || ''' = ''All'')
   AND b.log_time >= ''' || grafana_timeto || '''::timestamp - INTERVAL ''' || grafana_refresh || '''
@@ -2141,23 +2141,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.current_autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: current_pg_stat_activity_active(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: pg_stat_activity_active(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.current_pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, database_name text, pid integer, state text, application_name text, backend_type text, wait_event_type text, wait_event text, backend_start timestamp with time zone, xact_start timestamp with time zone, query_start timestamp with time zone, state_change timestamp with time zone, backend_xmin xid)
+CREATE FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, database_name text, pid integer, state text, application_name text, backend_type text, wait_event_type text, wait_event text, backend_start timestamp with time zone, xact_start timestamp with time zone, query_start timestamp with time zone, state_change timestamp with time zone, backend_xmin xid)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT pgmonitor.current_pg_stat_activity_active('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
+SELECT stats.pg_stat_activity_active('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT pgmonitor.current_pg_stat_activity_active('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
+SELECT stats.pg_stat_activity_active('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -2168,9 +2168,9 @@ BEGIN
 	b.pid, b.state, b.application_name, b.backend_type, b.wait_event_type, b.wait_event, b.backend_start, b.xact_start, b.query_start, b.state_change, b.backend_xmin 
 FROM (
 	SELECT max(log_time) AS log_time
-	FROM pgmonitor.current_pg_stat_activity
+	FROM stats.pg_stat_activity
 ) a  
-LEFT JOIN pgmonitor.current_pg_stat_activity b USING (log_time)
+LEFT JOIN stats.pg_stat_activity b USING (log_time)
 WHERE b.state IN (''idle in transaction'', ''active'')
         AND b.database_name IS NOT NULL
         AND  (b.cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
@@ -2183,23 +2183,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.current_pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: current_vacuum_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: vacuum_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.current_vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, name text, setting text, unit text, category text, short_desc text, extra_desc text, context text, vartype text, source text, min_val text, max_val text, enumvals text[], boot_val text, reset_val text, sourcefile text, sourceline integer, pending_restart boolean)
+CREATE FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, name text, setting text, unit text, category text, short_desc text, extra_desc text, context text, vartype text, source text, min_val text, max_val text, enumvals text[], boot_val text, reset_val text, sourcefile text, sourceline integer, pending_restart boolean)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.granted_locks('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
+SELECT * FROM stats.granted_locks('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.granted_locks('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
+SELECT * FROM stats.granted_locks('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -2208,12 +2208,12 @@ BEGIN
 	sql := E'SELECT b.*
 FROM (
 	SELECT max(log_time) AS log_time, cluster_name
-	FROM pgmonitor.current_pg_settings
+	FROM stats.pg_settings
         WHERE (cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
 	    AND log_time >= ''' || grafana_timeto || '''::TIMESTAMPTZ - INTERVAL ''' || grafana_refresh || ''' 
 	GROUP BY cluster_name
 ) a  
-LEFT JOIN pgmonitor.current_pg_settings b USING (log_time, cluster_name)
+LEFT JOIN stats.pg_settings b USING (log_time, cluster_name)
 WHERE b.category ilike ''%Vacuum%''
 ORDER BY b.cluster_name, b.name';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2222,7 +2222,7 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.current_vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
 -- Name: custom_table_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
@@ -2510,17 +2510,17 @@ ALTER FUNCTION pgmonitor.fatal_history(grafana_interval text, grafana_time_filte
 -- Name: granted_locks(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, "Server Nname" text, "Database Name" name, "Time" double precision, "PG Process ID" integer, "Application Name" text, "Transaction Start" timestamp with time zone, "Locks" text, "AutoVacuum" text)
+CREATE FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, "Server Nname" text, "Database Name" name, "Time" double precision, "PG Process ID" integer, "Application Name" text, "Transaction Start" timestamp with time zone, "Locks" text, "AutoVacuum" text)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.granted_locks('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
+SELECT * FROM stats.granted_locks('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.granted_locks('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
+SELECT * FROM stats.granted_locks('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -2536,13 +2536,13 @@ b."Time",
     b."AutoVacuum"
 FROM (
 	SELECT max(log_time) AS log_time, cluster_name, database_name
-	FROM pgmonitor.granted_locks
+	FROM stats.granted_locks
         WHERE database_name IS NOT NULL
         AND  (cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
   	AND (database_name = ''' || db_name || ''' OR ''--All--'' = ''' || db_name || ''')
 	GROUP BY cluster_name, database_name
 ) a  
-LEFT JOIN pgmonitor.granted_locks b USING (log_time, cluster_name, database_name)
+LEFT JOIN stats.granted_locks b USING (log_time, cluster_name, database_name)
 WHERE a.log_time >= ''' || grafana_timeto || '''::TIMESTAMPTZ - INTERVAL ''' || grafana_refresh || ''' 
 ORDER BY b.cluster_name, b.database_name, b."PG Process ID"';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2551,7 +2551,7 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
 -- Name: ldap_error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
@@ -2734,16 +2734,16 @@ INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partit
 
 -- pgmonitor Processing Tables
 INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval) VALUES
-('pgmonitor', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_autovacuum',         'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_autovacuum_count',   'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_pg_database',        'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_pg_settings',        'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_pg_stat_activity',   'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_replication_status', 'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'current_table_stats',        'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 week');
+('stats', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'autovacuum',                 'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'autovacuum_count',           'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'pg_database',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'pg_settings',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'pg_stat_activity',           'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'replication_status',         'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'table_stats',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
+('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 week');
 
 UPDATE tools.hypertables ht
 SET 
@@ -2760,28 +2760,28 @@ DROP TABLE tools.hypertables;
 -- LOAD DATA INTO tools.query
 INSERT INTO tools.query ("query_name", "sql", "disabled", "maintenance_db_only", "pg_version", "run_order", "schema_name", "table_name")
 VALUES 
-  (E'autovacuum_thresholds', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    current_database() AS database_name,\r\n    av.nspname AS schema_name,\r\n    av.relname AS table_name,\r\n    quote_ident(av.nspname::text) || ''.''::text ||\r\n        quote_ident(av.relname::text) AS name,\r\n    av.n_tup_ins,\r\n    av.n_tup_upd,\r\n    av.n_tup_del,\r\n    av.n_live_tup,\r\n    av.n_dead_tup,\r\n    av.reltuples,\r\n    av.av_threshold,\r\n    av.last_vacuum,\r\n    av.last_analyze,\r\n    av.n_dead_tup::double precision > av.av_threshold AS av_neaded,\r\n        CASE\r\n            WHEN av.reltuples > 0::double precision THEN av.n_dead_tup::numeric\r\n                / av.reltuples::numeric\r\n            ELSE 0::numeric\r\n        END AS pct_dead\r\nFROM (\r\n    SELECT pn.nspname,\r\n            pc.relname,\r\n            pg_stat_get_tuples_inserted(pc.oid) AS n_tup_ins,\r\n            pg_stat_get_tuples_updated(pc.oid) AS n_tup_upd,\r\n            pg_stat_get_tuples_deleted(pc.oid) AS n_tup_del,\r\n            pg_stat_get_live_tuples(pc.oid) AS n_live_tup,\r\n            pg_stat_get_dead_tuples(pc.oid) AS n_dead_tup,\r\n            pc.reltuples,\r\n            round(COALESCE(cto.autovacuum_vacuum_threshold,\r\n                current_setting(''autovacuum_vacuum_threshold''::text))::integer::double precision + COALESCE(cto.autovacuum_vacuum_scale_factor, current_setting(''autovacuum_vacuum_scale_factor''::text))::numeric::double precision * pc.reltuples) AS av_threshold,\r\n            date_trunc(''minute''::text,\r\n                GREATEST(pg_stat_get_last_vacuum_time(pc.oid), pg_stat_get_last_autovacuum_time(pc.oid))) AS last_vacuum,\r\n            date_trunc(''minute''::text,\r\n                GREATEST(pg_stat_get_last_analyze_time(pc.oid), pg_stat_get_last_autoanalyze_time(pc.oid))) AS last_analyze\r\n    FROM pg_catalog.pg_class pc\r\n             LEFT JOIN pg_catalog.pg_namespace pn ON pn.oid = pc.relnamespace\r\n             LEFT JOIN (\r\n        SELECT pc_1.oid,\r\n                    split_part(a.reloptions, ''=''::text, 2) AS\r\n                        autovacuum_vacuum_scale_factor,\r\n                    split_part(b.reloptions, ''=''::text, 2) AS\r\n                        autovacuum_vacuum_threshold\r\n        FROM pg_catalog.pg_class pc_1\r\n                     LEFT JOIN (\r\n            SELECT a2.oid,\r\n                            a2.reloptions\r\n            FROM (\r\n                SELECT pc_2.oid,\r\n                                    unnest(pc_2.reloptions) AS reloptions\r\n                FROM pg_catalog.pg_class pc_2\r\n                ) a2\r\n            WHERE split_part(a2.reloptions, ''=''::text, 1) =\r\n                ''autovacuum_vacuum_scale_factor''::text\r\n            ) a ON a.oid = pc_1.oid\r\n                     LEFT JOIN (\r\n            SELECT b2.oid,\r\n                            b2.reloptions\r\n            FROM (\r\n                SELECT pc_2.oid,\r\n                                    unnest(pc_2.reloptions) AS reloptions\r\n                FROM pg_catalog.pg_class pc_2\r\n                ) b2\r\n            WHERE split_part(b2.reloptions, ''=''::text, 1) =\r\n                ''autovacuum_vacuum_threshold''::text\r\n            ) b ON b.oid = pc_1.oid\r\n        ) cto ON cto.oid = pc.oid\r\n    WHERE (pc.relkind = ANY (ARRAY[''r''::\"char\", ''t''::\"char\"])) AND (pn.nspname\r\n        <> ALL (ARRAY[''pg_catalog''::name, ''information_schema''::name])) AND pn.nspname !~ ''^pg_toast''::text\r\n    ) av\r\nORDER BY av.n_dead_tup DESC', False, False, NULL, 1, E'reports', E'autovacuum_thresholds'),
-  (E'current_auto_vacuum_count', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    datname AS database_name,\r\ncount(*) AS count\r\nFROM pg_catalog.pg_stat_progress_vacuum\r\nGROUP BY datname', False, True, 9.6, 0, E'reports', E'current_auto_vacuum_count'),
-  (E'current_autovacuum', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    pspv.datname AS database_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 28), ''.''::text, 1)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN split_part(substr(psa.query, 20), ''.''::text, 1)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 21), ''.''::text, 1)\r\n           ELSE NULL::text\r\n         END AS schema_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 28), ''.''::text, 2)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN split_part(substr(psa.query, 20), ''.''::text, 2)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 21), ''.''::text, 2)\r\n           ELSE NULL::text\r\n         END AS table_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN substr(psa.query, 28)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN substr(psa.query, 20)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN substr(psa.query, 21)\r\n           ELSE NULL::text\r\n         END AS name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN TRUE\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN TRUE\r\n           ELSE FALSE\r\n         END AS vacuum,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN TRUE\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN TRUE\r\n             ELSE FALSE\r\n         END AS analyze,\r\n\r\n\t(date_part(''seconds'', date_trunc(''second'',now()-backend_start)) +\r\n\t(date_part(''minutes'', date_trunc(''second'',now()-backend_start))*60) +\r\n\t(date_part(''hours'', date_trunc(''second'',now()-backend_start))*60*60) +\r\n\t(date_part(''days'', date_trunc(''second'',now()-backend_start))*60*60*24))::INTEGER AS running_time,\r\n/*\r\n\tdate_part(''seconds'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start)))) +\r\n\t(date_part(''minutes'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60) +\r\n\t(date_part(''hours'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60*60) +\r\n\t(date_part(''days'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60*60*24) AS estamited_time_left,\r\n*/\t\r\n\tpspv.phase, pspv.heap_blks_total, pspv.heap_blks_total * current_setting(''block_size'')::bigint AS heap_blks_total_size, \r\n    pspv.heap_blks_scanned, pspv.heap_blks_scanned::numeric / pspv.heap_blks_total::numeric AS heap_blks_scanned_pct, \r\n    pspv.heap_blks_vacuumed, pspv.heap_blks_vacuumed::numeric / pspv.heap_blks_total::numeric AS heap_blks_vacuumed_pct,\r\n    pspv.index_vacuum_count, pspv.max_dead_tuples, pspv.num_dead_tuples,\r\n    backend_start, \r\n    --xact_start, query_start, state_change, \r\n    wait_event_type, wait_event, state, backend_xmin \r\nFROM pg_catalog.pg_stat_progress_vacuum pspv\r\nLEFT JOIN pg_catalog.pg_stat_activity psa ON pspv.pid = psa.pid', False, True, 9.6, 0, E'reports', E'current_autovacuum'),
-  (E'current_pg_database', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name, datname AS database_name FROM pg_catalog.pg_database', False, True, NULL, 0, E'reports', E'current_pg_database'),
-  (E'current_pg_settings', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name, *, null::boolean AS pending_restart FROM pg_catalog.pg_settings', False, True, 9.4, 0, E'reports', E'current_pg_settings'),
-  (E'current_pg_settings', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name, * FROM pg_catalog.pg_settings', False, True, 9.5, 0, E'reports', E'current_pg_settings'),
-  (E'current_pg_stat_activity', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, null::text AS backend_type, null::text AS wait_event_type, null::text AS wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 9.4, 0, E'reports', E'current_pg_stat_activity'),
-  (E'current_pg_stat_activity', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, null::text AS backend_type, wait_event_type, wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 9.6, 0, E'reports', E'current_pg_stat_activity'),
-  (E'current_pg_stat_activity', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, backend_type, wait_event_type, wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 10, 0, E'reports', E'current_pg_stat_activity'),
-  (E'current_replication_status', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,  COALESCE (\r\n\tCASE WHEN pg_is_in_recovery() IS FALSE THEN ''Primary'' ELSE ''Secondary'' END,\r\n    ''Disconnected''\r\n    ) AS status', False, True, NULL, 0, E'reports', E'current_replication_status'),
-  (E'current_table_size', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    tables.table_catalog AS database_name,\r\n    tables.table_schema AS schema_name,\r\n    tables.table_name AS table_name,\r\n    (quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text) AS name,\r\n    pg_relation_size(((quote_ident(tables.table_schema)::text || ''.''::text) ||\r\n        quote_ident(tables.table_name)::text)::regclass) AS table_size,\r\n    pg_size_pretty(pg_relation_size(((quote_ident(tables.table_schema::text) || ''.''::text)\r\n        || quote_ident(tables.table_name::text))::regclass)) AS table_size_pretty,\r\n    pg_indexes_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass) AS index_size,\r\n    pg_size_pretty(pg_indexes_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass)) AS index_size_pretty,\r\n    pg_total_relation_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass) AS total_size,\r\n    pg_size_pretty(pg_total_relation_size(((quote_ident(tables.table_schema)::text ||\r\n        ''.''::text) || quote_ident(tables.table_name)::text)::regclass)) AS total_size_pretty,\r\n    now() AS \"time\"\r\nFROM information_schema.tables\r\nWHERE tables.table_type::text = ''BASE TABLE''::text AND\r\n    (tables.table_schema::text <> ALL (ARRAY[''information_schema''::character varying::text, ''pg_catalog''::character varying::text]))', True, False, NULL, 0, E'reports', E'current_table_size'),
-  (E'current_table_stats', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    current_database() AS database_name,\r\n    pg_stat_user_tables.schemaname AS schema_name,\r\n    pg_stat_user_tables.relname AS table_name,\r\n    (quote_ident(pg_stat_user_tables.schemaname::text) || ''.''::text) ||\r\n        quote_ident(pg_stat_user_tables.relname::text) AS name,\r\n    pg_stat_user_tables.last_vacuum,\r\n    pg_stat_user_tables.last_analyze,\r\n    pg_stat_user_tables.last_autovacuum,\r\n    pg_stat_user_tables.last_autoanalyze,\r\n    now() AS \"time\"\r\nFROM pg_stat_user_tables', False, False, NULL, 1, E'reports', E'current_table_stats'),
-  (E'custom_table_settings', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    current_database() AS database_name,\r\n    pn.nspname AS schema_name,\r\n    pc.relname AS table_name,\r\n    (quote_ident(pn.nspname::text) || ''.''::text) ||\r\n        quote_ident(pc.relname::text) AS \"Table Name\",\r\n    unnest(pc.reloptions) AS \"Table Setting\"\r\nFROM pg_catalog.pg_class pc\r\n     JOIN pg_catalog.pg_namespace pn ON pn.oid = pc.relnamespace\r\nWHERE pc.reloptions IS NOT NULL AND (pn.nspname <> ALL\r\n    (ARRAY[''pg_catalog''::name, ''information_schema''::name]))', False, False, NULL, 1, E'reports', E'custom_table_settings'),
-  (E'granted_locks', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    current_database() AS database_name,\r\n    date_part(''seconds''::text, now() - psa.xact_start) +\r\n        date_part(''minutes''::text, now() - psa.xact_start) * 60::double precision + date_part(''hours''::text, now() - psa.xact_start) * 60::double precision * 60::double precision + date_part(''days''::text, now() - psa.xact_start) * 60::double precision * 60::double precision * 24::double precision AS \"Time\",\r\n    psa.pid AS \"PG Process ID\",\r\n    psa.application_name AS \"Application Name\",\r\n    psa.xact_start AS \"Transaction Start\",\r\n    locks.\"Locks\",\r\n        NULL::text AS \"AutoVacuum\"\r\nFROM pg_catalog.pg_stat_activity psa\r\n     LEFT JOIN (\r\n    SELECT a.pid,\r\n            string_agg((a.\"Object\" || '' - ''::text) || a.\"Mode\", ''\r\n''::text) AS \"Locks\"\r\n    FROM (\r\n        SELECT psa_1.pid,\r\n                    (pn.nspname::text || ''.''::text) || pc.relname::text AS \"Object\",\r\n                    string_agg(pl.mode, '', ''::text) AS \"Mode\"\r\n        FROM pg_catalog.pg_locks pl\r\n                     LEFT JOIN pg_catalog.pg_stat_activity psa_1 ON pl.pid = psa_1.pid\r\n                     LEFT JOIN pg_catalog.pg_class pc ON pl.relation = pc.oid\r\n                     LEFT JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid\r\n        WHERE pl.granted = true\r\n        GROUP BY psa_1.pid, ((pn.nspname::text || ''.''::text) || pc.relname::text)\r\n        ) a\r\n    GROUP BY a.pid\r\n    ) locks USING (pid)\r\nWHERE psa.datname = current_database() AND locks.\"Locks\" IS NOT NULL', False, False, 9.4, 1, E'reports', E'granted_locks'),
-  (E'granted_locks', E'SELECT now() AS log_time, current_setting(''cluster_name''::text) AS cluster_name,\r\n    current_database() AS database_name,\r\n    date_part(''seconds''::text, now() - psa.xact_start) +\r\n        date_part(''minutes''::text, now() - psa.xact_start) * 60::double precision + date_part(''hours''::text, now() - psa.xact_start) * 60::double precision * 60::double precision + date_part(''days''::text, now() - psa.xact_start) * 60::double precision * 60::double precision * 24::double precision AS \"Time\",\r\n    psa.pid AS \"PG Process ID\",\r\n    psa.application_name AS \"Application Name\",\r\n    psa.xact_start AS \"Transaction Start\",\r\n    locks.\"Locks\",\r\n        CASE\r\n            WHEN psa.backend_type = ''autovacuum worker''::text THEN psa.query\r\n            ELSE NULL::text\r\n        END AS \"AutoVacuum\"\r\nFROM pg_catalog.pg_stat_activity psa\r\n     LEFT JOIN (\r\n    SELECT a.pid,\r\n            string_agg((a.\"Object\" || '' - ''::text) || a.\"Mode\", ''\r\n''::text) AS \"Locks\"\r\n    FROM (\r\n        SELECT psa_1.pid,\r\n                    (pn.nspname::text || ''.''::text) || pc.relname::text AS \"Object\",\r\n                    string_agg(pl.mode, '', ''::text) AS \"Mode\"\r\n        FROM pg_catalog.pg_locks pl\r\n                     LEFT JOIN pg_catalog.pg_stat_activity psa_1 ON pl.pid = psa_1.pid\r\n                     LEFT JOIN pg_catalog.pg_class pc ON pl.relation = pc.oid\r\n                     LEFT JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid\r\n        WHERE pl.granted = true\r\n        GROUP BY psa_1.pid, ((pn.nspname::text || ''.''::text) || pc.relname::text)\r\n        ) a\r\n    GROUP BY a.pid\r\n    ) locks USING (pid)\r\nWHERE psa.datname = current_database() AND locks.\"Locks\" IS NOT NULL', False, False, 10, 1, E'reports', E'granted_locks');
+  (E'autovacuum_thresholds', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    database() AS database_name,\r\n    av.nspname AS schema_name,\r\n    av.relname AS table_name,\r\n    quote_ident(av.nspname::text) || ''.''::text ||\r\n        quote_ident(av.relname::text) AS name,\r\n    av.n_tup_ins,\r\n    av.n_tup_upd,\r\n    av.n_tup_del,\r\n    av.n_live_tup,\r\n    av.n_dead_tup,\r\n    av.reltuples,\r\n    av.av_threshold,\r\n    av.last_vacuum,\r\n    av.last_analyze,\r\n    av.n_dead_tup::double precision > av.av_threshold AS av_neaded,\r\n        CASE\r\n            WHEN av.reltuples > 0::double precision THEN av.n_dead_tup::numeric\r\n                / av.reltuples::numeric\r\n            ELSE 0::numeric\r\n        END AS pct_dead\r\nFROM (\r\n    SELECT pn.nspname,\r\n            pc.relname,\r\n            pg_stat_get_tuples_inserted(pc.oid) AS n_tup_ins,\r\n            pg_stat_get_tuples_updated(pc.oid) AS n_tup_upd,\r\n            pg_stat_get_tuples_deleted(pc.oid) AS n_tup_del,\r\n            pg_stat_get_live_tuples(pc.oid) AS n_live_tup,\r\n            pg_stat_get_dead_tuples(pc.oid) AS n_dead_tup,\r\n            pc.reltuples,\r\n            round(COALESCE(cto.autovacuum_vacuum_threshold,\r\n                setting(''autovacuum_vacuum_threshold''::text))::integer::double precision + COALESCE(cto.autovacuum_vacuum_scale_factor, setting(''autovacuum_vacuum_scale_factor''::text))::numeric::double precision * pc.reltuples) AS av_threshold,\r\n            date_trunc(''minute''::text,\r\n                GREATEST(pg_stat_get_last_vacuum_time(pc.oid), pg_stat_get_last_autovacuum_time(pc.oid))) AS last_vacuum,\r\n            date_trunc(''minute''::text,\r\n                GREATEST(pg_stat_get_last_analyze_time(pc.oid), pg_stat_get_last_autoanalyze_time(pc.oid))) AS last_analyze\r\n    FROM pg_catalog.pg_class pc\r\n             LEFT JOIN pg_catalog.pg_namespace pn ON pn.oid = pc.relnamespace\r\n             LEFT JOIN (\r\n        SELECT pc_1.oid,\r\n                    split_part(a.reloptions, ''=''::text, 2) AS\r\n                        autovacuum_vacuum_scale_factor,\r\n                    split_part(b.reloptions, ''=''::text, 2) AS\r\n                        autovacuum_vacuum_threshold\r\n        FROM pg_catalog.pg_class pc_1\r\n                     LEFT JOIN (\r\n            SELECT a2.oid,\r\n                            a2.reloptions\r\n            FROM (\r\n                SELECT pc_2.oid,\r\n                                    unnest(pc_2.reloptions) AS reloptions\r\n                FROM pg_catalog.pg_class pc_2\r\n                ) a2\r\n            WHERE split_part(a2.reloptions, ''=''::text, 1) =\r\n                ''autovacuum_vacuum_scale_factor''::text\r\n            ) a ON a.oid = pc_1.oid\r\n                     LEFT JOIN (\r\n            SELECT b2.oid,\r\n                            b2.reloptions\r\n            FROM (\r\n                SELECT pc_2.oid,\r\n                                    unnest(pc_2.reloptions) AS reloptions\r\n                FROM pg_catalog.pg_class pc_2\r\n                ) b2\r\n            WHERE split_part(b2.reloptions, ''=''::text, 1) =\r\n                ''autovacuum_vacuum_threshold''::text\r\n            ) b ON b.oid = pc_1.oid\r\n        ) cto ON cto.oid = pc.oid\r\n    WHERE (pc.relkind = ANY (ARRAY[''r''::\"char\", ''t''::\"char\"])) AND (pn.nspname\r\n        <> ALL (ARRAY[''pg_catalog''::name, ''information_schema''::name])) AND pn.nspname !~ ''^pg_toast''::text\r\n    ) av\r\nORDER BY av.n_dead_tup DESC', False, False, NULL, 1, E'reports', E'autovacuum_thresholds'),
+  (E'auto_vacuum_count', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    datname AS database_name,\r\ncount(*) AS count\r\nFROM pg_catalog.pg_stat_progress_vacuum\r\nGROUP BY datname', False, True, 9.6, 0, E'reports', E'auto_vacuum_count'),
+  (E'autovacuum', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    pspv.datname AS database_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 28), ''.''::text, 1)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN split_part(substr(psa.query, 20), ''.''::text, 1)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 21), ''.''::text, 1)\r\n           ELSE NULL::text\r\n         END AS schema_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 28), ''.''::text, 2)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN split_part(substr(psa.query, 20), ''.''::text, 2)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN split_part(substr(psa.query, 21), ''.''::text, 2)\r\n           ELSE NULL::text\r\n         END AS table_name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN substr(psa.query, 28)\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN substr(psa.query, 20)\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN substr(psa.query, 21)\r\n           ELSE NULL::text\r\n         END AS name,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN TRUE\r\n           WHEN substr(psa.query, 0, 20) = ''autovacuum: VACUUM ''::text\r\n             THEN TRUE\r\n           ELSE FALSE\r\n         END AS vacuum,\r\n         CASE\r\n           WHEN substr(psa.query, 0, 28) = ''autovacuum: VACUUM ANALYZE ''::text\r\n             THEN TRUE\r\n           WHEN substr(psa.query, 0, 21) = ''autovacuum: ANALYZE ''::text\r\n             THEN TRUE\r\n             ELSE FALSE\r\n         END AS analyze,\r\n\r\n\t(date_part(''seconds'', date_trunc(''second'',now()-backend_start)) +\r\n\t(date_part(''minutes'', date_trunc(''second'',now()-backend_start))*60) +\r\n\t(date_part(''hours'', date_trunc(''second'',now()-backend_start))*60*60) +\r\n\t(date_part(''days'', date_trunc(''second'',now()-backend_start))*60*60*24))::INTEGER AS running_time,\r\n/*\r\n\tdate_part(''seconds'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start)))) +\r\n\t(date_part(''minutes'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60) +\r\n\t(date_part(''hours'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60*60) +\r\n\t(date_part(''days'', date_trunc(''second'',((pspv.heap_blks_total::numeric / pspv.heap_blks_scanned::numeric) * (now()-backend_start))))*60*60*24) AS estamited_time_left,\r\n*/\t\r\n\tpspv.phase, pspv.heap_blks_total, pspv.heap_blks_total * setting(''block_size'')::bigint AS heap_blks_total_size, \r\n    pspv.heap_blks_scanned, pspv.heap_blks_scanned::numeric / pspv.heap_blks_total::numeric AS heap_blks_scanned_pct, \r\n    pspv.heap_blks_vacuumed, pspv.heap_blks_vacuumed::numeric / pspv.heap_blks_total::numeric AS heap_blks_vacuumed_pct,\r\n    pspv.index_vacuum_count, pspv.max_dead_tuples, pspv.num_dead_tuples,\r\n    backend_start, \r\n    --xact_start, query_start, state_change, \r\n    wait_event_type, wait_event, state, backend_xmin \r\nFROM pg_catalog.pg_stat_progress_vacuum pspv\r\nLEFT JOIN pg_catalog.pg_stat_activity psa ON pspv.pid = psa.pid', False, True, 9.6, 0, E'reports', E'autovacuum'),
+  (E'pg_database', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name, datname AS database_name FROM pg_catalog.pg_database', False, True, NULL, 0, E'reports', E'pg_database'),
+  (E'pg_settings', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name, *, null::boolean AS pending_restart FROM pg_catalog.pg_settings', False, True, 9.4, 0, E'reports', E'pg_settings'),
+  (E'pg_settings', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name, * FROM pg_catalog.pg_settings', False, True, 9.5, 0, E'reports', E'pg_settings'),
+  (E'pg_stat_activity', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, null::text AS backend_type, null::text AS wait_event_type, null::text AS wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 9.4, 0, E'reports', E'pg_stat_activity'),
+  (E'pg_stat_activity', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, null::text AS backend_type, wait_event_type, wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 9.6, 0, E'reports', E'pg_stat_activity'),
+  (E'pg_stat_activity', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\ndatname AS database_name,\r\npid, state, application_name, backend_type, wait_event_type, wait_event, backend_start, xact_start, query_start, state_change, backend_xmin\r\nFROM pg_catalog.pg_stat_activity', False, True, 10, 0, E'reports', E'pg_stat_activity'),
+  (E'replication_status', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,  COALESCE (\r\n\tCASE WHEN pg_is_in_recovery() IS FALSE THEN ''Primary'' ELSE ''Secondary'' END,\r\n    ''Disconnected''\r\n    ) AS status', False, True, NULL, 0, E'reports', E'replication_status'),
+  (E'table_size', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    tables.table_catalog AS database_name,\r\n    tables.table_schema AS schema_name,\r\n    tables.table_name AS table_name,\r\n    (quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text) AS name,\r\n    pg_relation_size(((quote_ident(tables.table_schema)::text || ''.''::text) ||\r\n        quote_ident(tables.table_name)::text)::regclass) AS table_size,\r\n    pg_size_pretty(pg_relation_size(((quote_ident(tables.table_schema::text) || ''.''::text)\r\n        || quote_ident(tables.table_name::text))::regclass)) AS table_size_pretty,\r\n    pg_indexes_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass) AS index_size,\r\n    pg_size_pretty(pg_indexes_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass)) AS index_size_pretty,\r\n    pg_total_relation_size(((quote_ident(tables.table_schema::text) || ''.''::text) ||\r\n        quote_ident(tables.table_name::text))::regclass) AS total_size,\r\n    pg_size_pretty(pg_total_relation_size(((quote_ident(tables.table_schema)::text ||\r\n        ''.''::text) || quote_ident(tables.table_name)::text)::regclass)) AS total_size_pretty,\r\n    now() AS \"time\"\r\nFROM information_schema.tables\r\nWHERE tables.table_type::text = ''BASE TABLE''::text AND\r\n    (tables.table_schema::text <> ALL (ARRAY[''information_schema''::character varying::text, ''pg_catalog''::character varying::text]))', True, False, NULL, 0, E'reports', E'table_size'),
+  (E'table_stats', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    database() AS database_name,\r\n    pg_stat_user_tables.schemaname AS schema_name,\r\n    pg_stat_user_tables.relname AS table_name,\r\n    (quote_ident(pg_stat_user_tables.schemaname::text) || ''.''::text) ||\r\n        quote_ident(pg_stat_user_tables.relname::text) AS name,\r\n    pg_stat_user_tables.last_vacuum,\r\n    pg_stat_user_tables.last_analyze,\r\n    pg_stat_user_tables.last_autovacuum,\r\n    pg_stat_user_tables.last_autoanalyze,\r\n    now() AS \"time\"\r\nFROM pg_stat_user_tables', False, False, NULL, 1, E'reports', E'table_stats'),
+  (E'custom_table_settings', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    database() AS database_name,\r\n    pn.nspname AS schema_name,\r\n    pc.relname AS table_name,\r\n    (quote_ident(pn.nspname::text) || ''.''::text) ||\r\n        quote_ident(pc.relname::text) AS \"Table Name\",\r\n    unnest(pc.reloptions) AS \"Table Setting\"\r\nFROM pg_catalog.pg_class pc\r\n     JOIN pg_catalog.pg_namespace pn ON pn.oid = pc.relnamespace\r\nWHERE pc.reloptions IS NOT NULL AND (pn.nspname <> ALL\r\n    (ARRAY[''pg_catalog''::name, ''information_schema''::name]))', False, False, NULL, 1, E'reports', E'custom_table_settings'),
+  (E'granted_locks', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    database() AS database_name,\r\n    date_part(''seconds''::text, now() - psa.xact_start) +\r\n        date_part(''minutes''::text, now() - psa.xact_start) * 60::double precision + date_part(''hours''::text, now() - psa.xact_start) * 60::double precision * 60::double precision + date_part(''days''::text, now() - psa.xact_start) * 60::double precision * 60::double precision * 24::double precision AS \"Time\",\r\n    psa.pid AS \"PG Process ID\",\r\n    psa.application_name AS \"Application Name\",\r\n    psa.xact_start AS \"Transaction Start\",\r\n    locks.\"Locks\",\r\n        NULL::text AS \"AutoVacuum\"\r\nFROM pg_catalog.pg_stat_activity psa\r\n     LEFT JOIN (\r\n    SELECT a.pid,\r\n            string_agg((a.\"Object\" || '' - ''::text) || a.\"Mode\", ''\r\n''::text) AS \"Locks\"\r\n    FROM (\r\n        SELECT psa_1.pid,\r\n                    (pn.nspname::text || ''.''::text) || pc.relname::text AS \"Object\",\r\n                    string_agg(pl.mode, '', ''::text) AS \"Mode\"\r\n        FROM pg_catalog.pg_locks pl\r\n                     LEFT JOIN pg_catalog.pg_stat_activity psa_1 ON pl.pid = psa_1.pid\r\n                     LEFT JOIN pg_catalog.pg_class pc ON pl.relation = pc.oid\r\n                     LEFT JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid\r\n        WHERE pl.granted = true\r\n        GROUP BY psa_1.pid, ((pn.nspname::text || ''.''::text) || pc.relname::text)\r\n        ) a\r\n    GROUP BY a.pid\r\n    ) locks USING (pid)\r\nWHERE psa.datname = database() AND locks.\"Locks\" IS NOT NULL', False, False, 9.4, 1, E'reports', E'granted_locks'),
+  (E'granted_locks', E'SELECT now() AS log_time, setting(''cluster_name''::text) AS cluster_name,\r\n    database() AS database_name,\r\n    date_part(''seconds''::text, now() - psa.xact_start) +\r\n        date_part(''minutes''::text, now() - psa.xact_start) * 60::double precision + date_part(''hours''::text, now() - psa.xact_start) * 60::double precision * 60::double precision + date_part(''days''::text, now() - psa.xact_start) * 60::double precision * 60::double precision * 24::double precision AS \"Time\",\r\n    psa.pid AS \"PG Process ID\",\r\n    psa.application_name AS \"Application Name\",\r\n    psa.xact_start AS \"Transaction Start\",\r\n    locks.\"Locks\",\r\n        CASE\r\n            WHEN psa.backend_type = ''autovacuum worker''::text THEN psa.query\r\n            ELSE NULL::text\r\n        END AS \"AutoVacuum\"\r\nFROM pg_catalog.pg_stat_activity psa\r\n     LEFT JOIN (\r\n    SELECT a.pid,\r\n            string_agg((a.\"Object\" || '' - ''::text) || a.\"Mode\", ''\r\n''::text) AS \"Locks\"\r\n    FROM (\r\n        SELECT psa_1.pid,\r\n                    (pn.nspname::text || ''.''::text) || pc.relname::text AS \"Object\",\r\n                    string_agg(pl.mode, '', ''::text) AS \"Mode\"\r\n        FROM pg_catalog.pg_locks pl\r\n                     LEFT JOIN pg_catalog.pg_stat_activity psa_1 ON pl.pid = psa_1.pid\r\n                     LEFT JOIN pg_catalog.pg_class pc ON pl.relation = pc.oid\r\n                     LEFT JOIN pg_catalog.pg_namespace pn ON pc.relnamespace = pn.oid\r\n        WHERE pl.granted = true\r\n        GROUP BY psa_1.pid, ((pn.nspname::text || ''.''::text) || pc.relname::text)\r\n        ) a\r\n    GROUP BY a.pid\r\n    ) locks USING (pid)\r\nWHERE psa.datname = database() AND locks.\"Locks\" IS NOT NULL', False, False, 10, 1, E'reports', E'granted_locks');
 
 -- LOAD DATA INTO tools.build_items
 INSERT INTO tools.build_items ("item_schema", "item_name", "item_sql", "build_order", "disabled")
 VALUES 
-  (E'reports', E'autovacuum_length', E'CREATE OR REPLACE VIEW reports.autovacuum_length(\r\n    cluster_name,\r\n    database_name,\r\n    running_time)\r\nAS\r\n  \tSELECT b.cluster_name,\r\n         b.database_name, COALESCE(max(b.running_time)) AS running_time FROM \r\n\t(\r\n    \tSELECT max(log_time) AS log_time FROM reports.current_autovacuum\r\n    ) a\r\n\tLEFT JOIN reports.current_autovacuum b USING (log_time)           \r\n  GROUP BY b.cluster_name,\r\n           b.database_name;;', NULL, False),
+  (E'reports', E'autovacuum_length', E'CREATE OR REPLACE VIEW reports.autovacuum_length(\r\n    cluster_name,\r\n    database_name,\r\n    running_time)\r\nAS\r\n  \tSELECT b.cluster_name,\r\n         b.database_name, COALESCE(max(b.running_time)) AS running_time FROM \r\n\t(\r\n    \tSELECT max(log_time) AS log_time FROM reports.autovacuum\r\n    ) a\r\n\tLEFT JOIN reports.autovacuum b USING (log_time)           \r\n  GROUP BY b.cluster_name,\r\n           b.database_name;;', NULL, False),
   (E'reports', E'autovacuum_thresholds_idx', E'CREATE INDEX IF NOT EXISTS autovacuum_thresholds_idx ON reports.autovacuum_thresholds\r\n  USING btree (log_time, cluster_name, database_name);\r\nSELECT create_hypertable(''reports.autovacuum_thresholds'', ''log_time'', ''cluster_name'');', NULL, True),
-  (E'reports', E'databases', E'CREATE OR REPLACE VIEW reports.databases (\r\n    cluster_name,\r\n    database_name)\r\nAS\r\nSELECT cpd.cluster_name, cpd.database_name \r\nFROM tools.servers s\r\nLEFT JOIN reports.current_pg_database cpd\r\nON s.server_name = cpd.cluster_name\r\nWHERE (s.read_all_databases IS TRUE\r\nOR (s.maintenance_database = cpd.database_name AND s.read_all_databases IS FALSE))\r\nAND cpd.database_name NOT IN (''template0'', ''template1'', ''rdsadmin'')', NULL, False),
+  (E'reports', E'databases', E'CREATE OR REPLACE VIEW reports.databases (\r\n    cluster_name,\r\n    database_name)\r\nAS\r\nSELECT cpd.cluster_name, cpd.database_name \r\nFROM tools.servers s\r\nLEFT JOIN reports.pg_database cpd\r\nON s.server_name = cpd.cluster_name\r\nWHERE (s.read_all_databases IS TRUE\r\nOR (s.maintenance_database = cpd.database_name AND s.read_all_databases IS FALSE))\r\nAND cpd.database_name NOT IN (''template0'', ''template1'', ''rdsadmin'')', NULL, False),
   (E'reports', E'hypertable', E'-- Needs to be OWNED by user Postgres\r\n-- With SELECT permissions for user Grafana\r\n-- Our current code does not support this setup, that is why this is disabled and created manually.\r\nCREATE OR REPLACE VIEW reports.hypertable (\r\n    table_schema,\r\n    table_name,\r\n    table_owner,\r\n    num_dimensions,\r\n    num_chunks,\r\n    table_size,\r\n    index_size,\r\n    toast_size,\r\n    total_size)\r\nAS\r\nSELECT ht.schema_name AS table_schema,\r\n    ht.table_name,\r\n    t.tableowner AS table_owner,\r\n    ht.num_dimensions,\r\n    (\r\n    SELECT count(1) AS count\r\n    FROM _timescaledb_catalog.chunk ch\r\n    WHERE ch.hypertable_id = ht.id\r\n    ) AS num_chunks,\r\n    size.table_size,\r\n    size.index_size,\r\n    size.toast_size,\r\n    size.total_size\r\nFROM _timescaledb_catalog.hypertable ht\r\n     LEFT JOIN pg_tables t ON ht.table_name = t.tablename AND ht.schema_name =\r\n         t.schemaname\r\n     LEFT JOIN LATERAL hypertable_relation_size(\r\n        CASE\r\n            WHEN has_schema_privilege(ht.schema_name::text, ''USAGE''::text) THEN\r\n                format(''%I.%I''::text, ht.schema_name, ht.table_name)\r\n            ELSE NULL::text\r\n        END::regclass) size(table_size, index_size, toast_size, total_size) ON true;', NULL, True),
   (E'reports', E'last_log_entries', E'CREATE OR REPLACE VIEW reports.last_log_entries AS\r\nSELECT postgres_log.cluster_name,\r\n    min(postgres_log.log_time) AS first_log_time,\r\n    max(postgres_log.log_time) AS last_log_time\r\nFROM reports.postgres_log\r\nGROUP BY postgres_log.cluster_name;\r\n', NULL, False),
   (E'reports', E'postgres_log', E'CREATE TABLE IF NOT EXISTS reports.postgres_log\r\n(\r\n  cluster_name TEXT NOT NULL,\r\n  log_time timestamp(3) with time zone NOT NULL,\r\n  user_name text,\r\n  database_name text,\r\n  process_id integer,\r\n  connection_from text,\r\n  session_id text NOT NULL,\r\n  session_line_num bigint NOT NULL,\r\n  command_tag text,\r\n  session_start_time timestamp with time zone,\r\n  virtual_transaction_id text,\r\n  transaction_id bigint,\r\n  error_severity text,\r\n  sql_state_code text,\r\n  message text,\r\n  detail text,\r\n  hint text,\r\n  internal_query text,\r\n  internal_query_pos integer,\r\n  context text,\r\n  query text,\r\n  query_pos integer,\r\n  location text,\r\n  application_name text,\r\n  PRIMARY KEY (session_id, session_line_num)\r\n);\r\n\r\nCREATE INDEX IF NOT EXISTS postgres_logs_idx ON postgres_logs.postgres_logs\r\n  USING btree (log_time, cluster_name, database_name);\r\n\r\nCREATE INDEX IF NOT EXISTS postgres_logs_log_time_idx ON postgres_logs.postgres_logs\r\n  USING btree (log_time DESC);\r\n\r\nCREATE INDEX IF NOT EXISTS postgres_logs_pkey ON postgres_logs.postgres_logs\r\n  USING btree (cluster_name, session_id, session_line_num);\r\n\r\nSELECT create_hypertable(''reports.postgres_logs'', ''log_time'', ''cluster_name'');\r\n', NULL, True);
