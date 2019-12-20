@@ -22,11 +22,11 @@ SELECT pg_catalog.set_config('search_path', '', false);
 CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
 COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
 
--- Create pgmonitor schema
-CREATE SCHEMA pgmonitor;
-ALTER SCHEMA pgmonitor OWNER TO grafana;
+-- Create logs schema
+CREATE SCHEMA logs;
+ALTER SCHEMA logs OWNER TO grafana;
 
--- Create pgmonitor schema
+-- Create logs schema
 CREATE SCHEMA stats;
 ALTER SCHEMA stats OWNER TO grafana;
 
@@ -34,7 +34,7 @@ ALTER SCHEMA stats OWNER TO grafana;
 CREATE SCHEMA tools;
 ALTER SCHEMA tools OWNER TO grafana;
 
--- TABLES: pgmonitor
+-- TABLES: logs
 CREATE TABLE stats.pg_settings (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
@@ -206,7 +206,7 @@ ALTER TABLE stats.autovacuum_thresholds OWNER TO grafana;
 CREATE INDEX autovacuum_thresholds_cluster_name_log_time_idx ON stats.autovacuum_thresholds USING btree (cluster_name, log_time DESC);
 CREATE INDEX autovacuum_thresholds_log_time_idx ON stats.autovacuum_thresholds USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.autoanalyze_logs (
+CREATE TABLE logs.autoanalyze_logs (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     database_name text,
@@ -216,11 +216,11 @@ CREATE TABLE pgmonitor.autoanalyze_logs (
     cpu_user numeric,
     elasped_seconds numeric
 );
-ALTER TABLE pgmonitor.autoanalyze_logs OWNER TO grafana;
-CREATE INDEX autoanalyze_logs_cluster_name_time_idx ON pgmonitor.autoanalyze_logs USING btree (cluster_name, log_time DESC);
-CREATE INDEX autoanalyze_logs_time_idx ON pgmonitor.autoanalyze_logs USING btree (log_time DESC);
+ALTER TABLE logs.autoanalyze_logs OWNER TO grafana;
+CREATE INDEX autoanalyze_logs_cluster_name_time_idx ON logs.autoanalyze_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX autoanalyze_logs_time_idx ON logs.autoanalyze_logs USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.autovacuum_logs (
+CREATE TABLE logs.autovacuum_logs (
     log_time timestamp(3) with time zone NOT NULL,
     cluster_name text,
     database_name text,
@@ -247,11 +247,11 @@ CREATE TABLE pgmonitor.autovacuum_logs (
     cpu_user numeric,
     elasped_seconds numeric
 );
-ALTER TABLE pgmonitor.autovacuum_logs OWNER TO grafana;
-CREATE INDEX autovacuum_logs_cluster_name_time_idx ON pgmonitor.autovacuum_logs USING btree (cluster_name, log_time DESC);
-CREATE INDEX autovacuum_logs_time_idx ON pgmonitor.autovacuum_logs USING btree (log_time DESC);
+ALTER TABLE logs.autovacuum_logs OWNER TO grafana;
+CREATE INDEX autovacuum_logs_cluster_name_time_idx ON logs.autovacuum_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX autovacuum_logs_time_idx ON logs.autovacuum_logs USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.lock_logs (
+CREATE TABLE logs.lock_logs (
     lock_type text,
     object_type text,
     relation_id text,
@@ -281,21 +281,21 @@ CREATE TABLE pgmonitor.lock_logs (
     location text,
     application_name text
 );
-ALTER TABLE pgmonitor.lock_logs OWNER TO grafana;
-CREATE INDEX lock_logs_cluster_name_time_idx ON pgmonitor.lock_logs USING btree (cluster_name, log_time DESC);
-CREATE INDEX lock_logs_time_idx ON pgmonitor.lock_logs USING btree (log_time DESC);
+ALTER TABLE logs.lock_logs OWNER TO grafana;
+CREATE INDEX lock_logs_cluster_name_time_idx ON logs.lock_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX lock_logs_time_idx ON logs.lock_logs USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.checkpoint_warning_logs (
+CREATE TABLE logs.checkpoint_warning_logs (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     seconds integer,
     hint text
 );
-ALTER TABLE pgmonitor.checkpoint_warning_logs OWNER TO grafana;
-CREATE INDEX checkpoint_warning_logs_cluster_name_time_idx ON pgmonitor.checkpoint_warning_logs USING btree (cluster_name, log_time DESC);
-CREATE INDEX checkpoint_warning_logs_time_idx ON pgmonitor.checkpoint_warning_logs USING btree (log_time DESC);
+ALTER TABLE logs.checkpoint_warning_logs OWNER TO grafana;
+CREATE INDEX checkpoint_warning_logs_cluster_name_time_idx ON logs.checkpoint_warning_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX checkpoint_warning_logs_time_idx ON logs.checkpoint_warning_logs USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.checkpoint_logs (
+CREATE TABLE logs.checkpoint_logs (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
     wbuffer integer,
@@ -311,11 +311,11 @@ CREATE TABLE pgmonitor.checkpoint_logs (
     distance integer,
     estimate integer
 );
-ALTER TABLE pgmonitor.checkpoint_logs OWNER TO grafana;
-CREATE INDEX checkpoint_logs_cluster_name_time_idx ON pgmonitor.checkpoint_logs USING btree (cluster_name, log_time DESC);
-CREATE INDEX checkpoint_logs_time_idx ON pgmonitor.checkpoint_logs USING btree (log_time DESC);
+ALTER TABLE logs.checkpoint_logs OWNER TO grafana;
+CREATE INDEX checkpoint_logs_cluster_name_time_idx ON logs.checkpoint_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX checkpoint_logs_time_idx ON logs.checkpoint_logs USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.postgres_log (
+CREATE TABLE logs.postgres_log (
     cluster_name text NOT NULL,
     log_time timestamp with time zone NOT NULL,
     user_name text,
@@ -341,49 +341,49 @@ CREATE TABLE pgmonitor.postgres_log (
     location text,
     application_name text
 );
-ALTER TABLE pgmonitor.postgres_log OWNER TO grafana;
-CREATE INDEX postgres_log_cluster_name_log_time_idx ON pgmonitor.postgres_log USING btree (cluster_name, log_time DESC);
-CREATE INDEX postgres_log_log_time_idx ON pgmonitor.postgres_log USING btree (log_time DESC);
-CREATE INDEX postgres_logs_idx ON pgmonitor.postgres_log USING btree (log_time, cluster_name, database_name);
-CREATE INDEX postgres_logs_pkey ON pgmonitor.postgres_log USING btree (cluster_name, session_id, session_line_num);
+ALTER TABLE logs.postgres_log OWNER TO grafana;
+CREATE INDEX postgres_log_cluster_name_log_time_idx ON logs.postgres_log USING btree (cluster_name, log_time DESC);
+CREATE INDEX postgres_log_log_time_idx ON logs.postgres_log USING btree (log_time DESC);
+CREATE INDEX postgres_logs_idx ON logs.postgres_log USING btree (log_time, cluster_name, database_name);
+CREATE INDEX postgres_logs_pkey ON logs.postgres_log USING btree (cluster_name, session_id, session_line_num);
 
-CREATE TABLE pgmonitor.archive_failure_log (
+CREATE TABLE logs.archive_failure_log (
     cluster_name text NOT NULL,
     log_time timestamp with time zone NOT NULL,
     process_id integer,
     message text,
     detail text
 );
-ALTER TABLE pgmonitor.archive_failure_log OWNER TO grafana;
-CREATE INDEX archive_failure_log_cluster_name_log_time_idx ON pgmonitor.archive_failure_log USING btree (cluster_name, log_time DESC);
-CREATE INDEX archive_failure_log_log_time_idx ON pgmonitor.archive_failure_log USING btree (log_time DESC);
+ALTER TABLE logs.archive_failure_log OWNER TO grafana;
+CREATE INDEX archive_failure_log_cluster_name_log_time_idx ON logs.archive_failure_log USING btree (cluster_name, log_time DESC);
+CREATE INDEX archive_failure_log_log_time_idx ON logs.archive_failure_log USING btree (log_time DESC);
 
-CREATE TABLE pgmonitor.lock_message_types (
+CREATE TABLE logs.lock_message_types (
     message text
 );
-ALTER TABLE pgmonitor.lock_message_types OWNER TO grafana;
+ALTER TABLE logs.lock_message_types OWNER TO grafana;
 
-CREATE TABLE pgmonitor.postgres_log_databases (
+CREATE TABLE logs.postgres_log_databases (
     cluster_name text NOT NULL,
     database_name text NOT NULL,
     start_date timestamp with time zone,
     end_date timestamp with time zone
 );
-ALTER TABLE pgmonitor.postgres_log_databases OWNER TO grafana;
-ALTER TABLE ONLY pgmonitor.postgres_log_databases
+ALTER TABLE logs.postgres_log_databases OWNER TO grafana;
+ALTER TABLE ONLY logs.postgres_log_databases
     ADD CONSTRAINT postgres_log_databases_pkey PRIMARY KEY (cluster_name, database_name);
 
 
-CREATE TABLE pgmonitor.postgres_log_databases_temp (
+CREATE TABLE logs.postgres_log_databases_temp (
     cluster_name text,
     database_name text,
     min timestamp with time zone,
     max timestamp with time zone
 );
-ALTER TABLE pgmonitor.postgres_log_databases_temp OWNER TO grafana;
+ALTER TABLE logs.postgres_log_databases_temp OWNER TO grafana;
 
 -- VIEWS: pgmon
-CREATE VIEW pgmonitor.autovacuum_length AS
+CREATE VIEW logs.autovacuum_length AS
  SELECT b.cluster_name,
     b.database_name,
     COALESCE(max(b.running_time)) AS running_time
@@ -391,7 +391,7 @@ CREATE VIEW pgmonitor.autovacuum_length AS
            FROM stats.autovacuum) a
      LEFT JOIN stats.autovacuum b USING (log_time))
   GROUP BY b.cluster_name, b.database_name;
-ALTER TABLE pgmonitor.autovacuum_length OWNER TO grafana;
+ALTER TABLE logs.autovacuum_length OWNER TO grafana;
 
 
 -- TABLES: tools
@@ -454,16 +454,16 @@ ALTER TABLE ONLY tools.query
     ADD CONSTRAINT query_pkey UNIQUE (query_name, pg_version);
 
 -- VIEWS: pgmon
-CREATE VIEW pgmonitor.databases AS
+CREATE VIEW logs.databases AS
  SELECT DISTINCT cpd.cluster_name,
     cpd.database_name
    FROM (tools.servers s
      LEFT JOIN stats.pg_database cpd ON ((s.server_name = cpd.cluster_name)))
   WHERE (((s.read_all_databases IS TRUE) OR ((s.maintenance_database = cpd.database_name) AND (s.read_all_databases IS FALSE))) AND (cpd.database_name <> ALL (ARRAY['template0'::name, 'template1'::name, 'rdsadmin'::name])))
   ORDER BY cpd.cluster_name, cpd.database_name;
-ALTER TABLE pgmonitor.databases OWNER TO grafana;
+ALTER TABLE logs.databases OWNER TO grafana;
 
-CREATE VIEW pgmonitor.hypertable AS
+CREATE VIEW logs.hypertable AS
  SELECT ht.schema_name AS table_schema,
     ht.table_name,
     t.tableowner AS table_owner,
@@ -482,15 +482,15 @@ CREATE VIEW pgmonitor.hypertable AS
             WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
             ELSE NULL::text
         END)::regclass) size(table_size, index_size, toast_size, total_size) ON (true));
-ALTER TABLE pgmonitor.hypertable OWNER TO grafana;
+ALTER TABLE logs.hypertable OWNER TO grafana;
 
-CREATE VIEW pgmonitor.last_log_entries AS
+CREATE VIEW logs.last_log_entries AS
  SELECT postgres_log.cluster_name,
     min(postgres_log.log_time) AS first_log_time,
     max(postgres_log.log_time) AS last_log_time
-   FROM pgmonitor.postgres_log
+   FROM logs.postgres_log
   GROUP BY postgres_log.cluster_name;
-ALTER TABLE pgmonitor.last_log_entries OWNER TO grafana;
+ALTER TABLE logs.last_log_entries OWNER TO grafana;
 
 -- VIEWS: tools
 CREATE VIEW tools.table_size AS
@@ -524,8 +524,8 @@ BEGIN
 /*
     -- Removed due to slowing down the inserts to much and getting deadlocks that postgres will not resolve.
 	IF (NEW.database_name IS NOT NULL) THEN
-	-- Maintain pgmonitor.postgres_log_databases
-		INSERT INTO pgmonitor.postgres_log_databases AS a (cluster_name, database_name, start_date, end_date)
+	-- Maintain logs.postgres_log_databases
+		INSERT INTO logs.postgres_log_databases AS a (cluster_name, database_name, start_date, end_date)
 			VALUES (NEW.cluster_name, NEW.database_name, NEW.log_time, NEW.log_time) 
 			ON CONFLICT (cluster_name, database_name) DO UPDATE SET
 				start_date = CASE WHEN a.start_date > EXCLUDED.start_date THEN EXCLUDED.start_date ELSE a.start_date END,
@@ -534,10 +534,10 @@ BEGIN
 */
 
 	IF (NEW.message LIKE 'automatic vacuum %') THEN
-	-- Move autovacuum log records from pgmonitor.postgres_log into the pgmonitor.autovacuum_logs
+	-- Move autovacuum log records from logs.postgres_log into the logs.autovacuum_logs
     
     
-    	INSERT INTO pgmonitor.autovacuum_logs VALUES (NEW.log_time,
+    	INSERT INTO logs.autovacuum_logs VALUES (NEW.log_time,
     NEW.cluster_name,
     split_part(trim(both '"' from substr(split_part(split_part(NEW.message, E'\n', 1), ':', 1),27)), '.', 1),
     split_part(trim(both '"' from substr(split_part(split_part(NEW.message, E'\n', 1), ':', 1),27)), '.', 2),
@@ -572,10 +572,10 @@ BEGIN
         
         
 	ELSIF (NEW.message LIKE 'automatic analyze%') THEN
-	-- Move autoanalyze log records from pgmonitor.postgres_log into the pgmonitor.autoanalyze_logs
+	-- Move autoanalyze log records from logs.postgres_log into the logs.autoanalyze_logs
     
     
-    	INSERT INTO pgmonitor.autoanalyze_logs VALUES (NEW.log_time,
+    	INSERT INTO logs.autoanalyze_logs VALUES (NEW.log_time,
     NEW.cluster_name,
         split_part(trim(both '"' from split_part(NEW.message, '"', 2)), '.', 1),
     split_part(trim(both '"' from split_part(NEW.message, '"', 2)), '.', 2),
@@ -594,10 +594,10 @@ BEGIN
         
 
 	ELSIF (NEW.message LIKE 'process%acquired%') THEN
-	-- Move lock log records from pgmonitor.postgres_log into the pgmonitor.lock_logs
+	-- Move lock log records from logs.postgres_log into the logs.lock_logs
 
 
-		INSERT INTO pgmonitor.lock_logs VALUES (
+		INSERT INTO logs.lock_logs VALUES (
 	split_part(NEW.message, ' ', 4)::TEXT,  
 	CASE split_part(NEW.message, ' ', 6)
     	WHEN 'extension' THEN (split_part(NEW.message, ' ', 6) || ' ' || split_part(NEW.message, ' ', 7) || ' ' || split_part(NEW.message, ' ', 8))::TEXT
@@ -661,10 +661,10 @@ BEGIN
 
 
 	ELSIF (NEW.message LIKE 'checkpoints are occurring too frequently%') THEN
-	-- Move checkpoint warnings records from pgmonitor.postgres_log into the pgmonitor.checkpoint_warning_logs
+	-- Move checkpoint warnings records from logs.postgres_log into the logs.checkpoint_warning_logs
 
     
-    INSERT INTO pgmonitor.checkpoint_warning_logs VALUES (
+    INSERT INTO logs.checkpoint_warning_logs VALUES (
         NEW.log_time,
     	NEW.cluster_name,
 		(regexp_match(NEW.message, 'checkpoints are occurring too frequently \((\d+) seconds apart'))[1]::INTEGER, 
@@ -674,10 +674,10 @@ BEGIN
 
 
 	ELSIF (NEW.message LIKE 'checkpoint complete%') THEN
-	-- Move checkpoint records from pgmonitor.postgres_log into the pgmonitor.checkpoint_logs
+	-- Move checkpoint records from logs.postgres_log into the logs.checkpoint_logs
 
     
-    INSERT INTO pgmonitor.checkpoint_logs VALUES (
+    INSERT INTO logs.checkpoint_logs VALUES (
         NEW.log_time,
     	NEW.cluster_name,
 	(regexp_match(NEW.message, 'point complete: wrote (\d+) buffers \(([^\)]+)\); (\d+) (?:transaction log|WAL) file\(s\) added, (\d+) removed, (\d+) recycled; write=([0-9\.]+) s, sync=([0-9\.]+) s, total=([0-9\.]+) s'))[1]::INTEGER, 
@@ -698,9 +698,9 @@ BEGIN
 
 
 	ELSIF (NEW.message LIKE 'archive command failed%') THEN
-	-- Move archive failures from pgmonitor.postgres_log into the pgmonitor.archive_failure_log
+	-- Move archive failures from logs.postgres_log into the logs.archive_failure_log
 
-    INSERT INTO pgmonitor.archive_failure_log VALUES (
+    INSERT INTO logs.archive_failure_log VALUES (
     	NEW.cluster_name,
         NEW.log_time,
         NEW.process_id,
@@ -718,14 +718,14 @@ END;
 $$;
 ALTER FUNCTION tools.postgres_log_trigger() OWNER TO grafana;
 
-CREATE FUNCTION tools.create_pgmonitor() RETURNS void
+CREATE FUNCTION tools.create_logs() RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
   queries RECORD;
   sql TEXT;
 BEGIN
-  CREATE SCHEMA IF NOT EXISTS pgmonitor;
+  CREATE SCHEMA IF NOT EXISTS logs;
   FOR queries IN SELECT * FROM tools.query WHERE disabled IS FALSE ORDER BY run_order LOOP
     sql := 'CREATE TABLE IF NOT EXISTS ' || quote_ident(queries.schema_name) || '.' || quote_ident(queries.table_name) ||
     ' AS ' || queries.sql || E' LIMIT 0; SELECT create_hypertable(''' || quote_ident(queries.schema_name) || '.' || quote_ident(queries.table_name) ||
@@ -741,7 +741,7 @@ BEGIN
   END LOOP;
 END;
 $$;
-ALTER FUNCTION tools.create_pgmonitor() OWNER TO grafana;
+ALTER FUNCTION tools.create_logs() OWNER TO grafana;
 
 CREATE FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) RETURNS void
     LANGUAGE plpgsql
@@ -756,7 +756,7 @@ BEGIN
   FOR tables IN SELECT t.*, query.maintenance_db_only FROM information_schema.tables t
 LEFT JOIN (SELECT DISTINCT ON (schema_name, table_name) * FROM tools.query WHERE disabled = false AND maintenance_db_only = false) AS query
 ON (query.schema_name = t.table_schema AND query.table_name = t.table_name)
-WHERE table_schema = 'pgmonitor' AND t.table_type = 'BASE TABLE' AND query.maintenance_db_only IS NOT NULL LOOP
+WHERE table_schema = 'logs' AND t.table_type = 'BASE TABLE' AND query.maintenance_db_only IS NOT NULL LOOP
     sql := 'CREATE TABLE IF NOT EXISTS ' || quote_ident($1 || '-' || $2) || '.' || quote_ident(tables.table_name) ||
     E' ( CHECK ((cluster_name = ''' || $1 || E''' OR cluster_name = ''' || $1 || E'-a'' OR cluster_name = ''' || $1 || E'-b'') ' || 
     E' AND database_name = ''' || $2 || E''') ' ||
@@ -777,7 +777,7 @@ BEGIN
   sql := 'CREATE SCHEMA IF NOT EXISTS ' || quote_ident($1) || ';';
   EXECUTE sql;
 
-  FOR tables IN SELECT * FROM information_schema.tables WHERE table_schema = 'pgmonitor' AND table_type = 'BASE TABLE' LOOP
+  FOR tables IN SELECT * FROM information_schema.tables WHERE table_schema = 'logs' AND table_type = 'BASE TABLE' LOOP
     sql := 'CREATE TABLE IF NOT EXISTS ' || quote_ident($1) || '.' || quote_ident(tables.table_name) ||
     E' ( CHECK (cluster_name = ''' || $1 || E''' OR cluster_name = ''' || $1 || E'-a'' OR cluster_name = ''' || $1 || E'-b'') ' ||
     ') INHERITS (' || quote_ident(tables.table_schema) || '.' || quote_ident(tables.table_name) || ');';
@@ -787,7 +787,7 @@ END;
 $_$;
 ALTER FUNCTION tools.create_server_inherits("server_name" text) OWNER TO grafana;
 
-CREATE FUNCTION tools.delete_pgmonitor() RETURNS void
+CREATE FUNCTION tools.delete_logs() RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -799,7 +799,7 @@ BEGIN
   FOR tables IN 
   	SELECT DISTINCT table_schema 
     FROM information_schema.tables 
-    WHERE table_schema NOT IN ('tools', 'public', 'pgmonitor', 'pg_catalog', 'information_schema') 
+    WHERE table_schema NOT IN ('tools', 'public', 'logs', 'pg_catalog', 'information_schema') 
     AND table_schema NOT LIKE 'pg_temp%' 
     AND table_schema NOT LIKE 'pg_toast%' 
     LOOP
@@ -809,11 +809,11 @@ BEGIN
   END LOOP;
 
   -- RECREATE MASTER TABLES
-  PERFORM tools.create_pgmonitor();
+  PERFORM tools.create_logs();
 
 END;
 $$;
-ALTER FUNCTION tools.delete_pgmonitor() OWNER TO grafana;
+ALTER FUNCTION tools.delete_logs() OWNER TO grafana;
 
 CREATE FUNCTION tools.field_list_check(field_in text, list_in text) RETURNS boolean
     LANGUAGE plpgsql IMMUTABLE
@@ -874,7 +874,7 @@ FROM (
 	(
     	SELECT 
     		trim(split_part(message, ':', 2)) AS ldap_error 
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
 		WHERE message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
 		GROUP BY 1
      ) b
@@ -884,7 +884,7 @@ FROM (
 			date_trunc('minute', log_time) AS time, 
 			trim(split_part(message, ':', 2)) AS ldap_error, 
 			count(*) AS value1
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
   		WHERE message LIKE 'LDAP login failed for user%' 
   		GROUP BY 1,2
 	) d WHERE $__timeFilter(time)
@@ -1015,19 +1015,19 @@ end
 $$;
 ALTER FUNCTION tools.parse_csv(s text, raise_on_error boolean) OWNER TO grafana;
 
--- FUNCTIONS PGMONITOR
+-- FUNCTIONS logs
 
-CREATE FUNCTION pgmonitor.autoanalyze_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
+CREATE FUNCTION logs.autoanalyze_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
+SELECT * FROM logs.autoanalyze_log($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
+SELECT * FROM logs.autoanalyze_log($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1040,7 +1040,7 @@ DECLARE
 --  variable_name datatype;
 	sql TEXT;
 BEGIN
-  sql := E'SELECT * FROM pgmonitor.autoanalyze_logs a
+  sql := E'SELECT * FROM logs.autoanalyze_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1055,26 +1055,26 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autoanalyze_log(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text, query_limit bigint) OWNER TO grafana;
+ALTER FUNCTION logs.autoanalyze_log(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text, query_limit bigint) OWNER TO grafana;
 
 --
--- Name: autoanalyze_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autoanalyze_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE FUNCTION logs.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log_count('$__interval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autoanalyze_log_count('$__interval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 SET application_name = 'Grafana';
-SELECT time, cluster_name || ' - analyze', count FROM pgmonitor.autoanalyze_log_count('$GraphInterval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT time, cluster_name || ' - analyze', count FROM logs.autoanalyze_log_count('$GraphInterval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autoanalyze_log_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1092,7 +1092,7 @@ BEGIN
    cluster_name,
   coalesce(count(*),0) AS count
 FROM
-  pgmonitor.autoanalyze_logs
+  logs.autoanalyze_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1108,23 +1108,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autoanalyze_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autoanalyze_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
+CREATE FUNCTION logs.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log_count_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autoanalyze_log_count_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autoanalyze_log_count_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autoanalyze_log_count_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1145,7 +1145,7 @@ BEGIN
    table_name AS table_name,
   count(*)
 FROM
-  pgmonitor.autoanalyze_logs
+  logs.autoanalyze_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1164,23 +1164,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_autoanalyze_count(text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_autoanalyze_count(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, vacuum bigint, "analyze" bigint)
+CREATE FUNCTION logs.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, vacuum bigint, "analyze" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_autoanalyze_count($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
+SELECT * FROM logs.autovacuum_autoanalyze_count($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_autoanalyze_count($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
+SELECT * FROM logs.autovacuum_autoanalyze_count($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1196,7 +1196,7 @@ BEGIN
   sql := E'SELECT a."time", COALESCE(b.count,0) AS vacuum, COALESCE(c.count,0) AS analyze
 FROM (
 	SELECT time_bucket(''1h'',time) AS "time"
-	FROM pgmonitor.autovacuum_logs
+	FROM logs.autovacuum_logs
     WHERE ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
@@ -1204,7 +1204,7 @@ FROM (
     AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
 	UNION 
 	SELECT time_bucket(''1h'',time) AS "time"
-	FROM pgmonitor.autoanalyze_logs
+	FROM logs.autoanalyze_logs
     WHERE ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
@@ -1213,7 +1213,7 @@ FROM (
 ) a
 LEFT JOIN (
 	SELECT time_bucket(''1h'',time) AS "time", count(*) 
-	FROM pgmonitor.autovacuum_logs
+	FROM logs.autovacuum_logs
     WHERE ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
@@ -1223,7 +1223,7 @@ LEFT JOIN (
 ) b USING ("time") 
 LEFT JOIN (
 	SELECT time_bucket(''1h'',time) AS "time", count(*) 
-	FROM pgmonitor.autoanalyze_logs
+	FROM logs.autoanalyze_logs
     WHERE ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
@@ -1238,23 +1238,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_log(text, text, text, text, text, bigint); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log(text, text, text, text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, index_scans bigint, pages_removed bigint, removed_size bigint, pages_remain bigint, pages_remain_size bigint, skipped_due_to_pins bigint, skipped_frozen bigint, tuples_removed bigint, tuples_remain bigint, tuples_dead bigint, oldest_xmin bigint, buffer_hits bigint, buffer_misses bigint, buffer_dirtied bigint, buffer_dirtied_size bigint, avg_read_rate numeric, avg_write_rate numeric, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
+CREATE FUNCTION logs.autovacuum_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, index_scans bigint, pages_removed bigint, removed_size bigint, pages_remain bigint, pages_remain_size bigint, skipped_due_to_pins bigint, skipped_frozen bigint, tuples_removed bigint, tuples_remain bigint, tuples_dead bigint, oldest_xmin bigint, buffer_hits bigint, buffer_misses bigint, buffer_dirtied bigint, buffer_dirtied_size bigint, avg_read_rate numeric, avg_write_rate numeric, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
+SELECT * FROM logs.autovacuum_log($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
+SELECT * FROM logs.autovacuum_log($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$, 100000);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1267,7 +1267,7 @@ DECLARE
 --  variable_name datatype;
 	sql TEXT;
 BEGIN
-  sql := E'SELECT * FROM pgmonitor.autovacuum_logs a
+  sql := E'SELECT * FROM logs.autovacuum_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1281,26 +1281,26 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text, query_limit bigint) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text, query_limit bigint) OWNER TO grafana;
 
 --
--- Name: autovacuum_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE FUNCTION logs.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_count('$__interval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_count('$__interval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 SET application_name = 'Grafana';
-SELECT time, cluster_name || ' - vacuum', count FROM pgmonitor.autovacuum_log_count('$GraphInterval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT time, cluster_name || ' - vacuum', count FROM logs.autovacuum_log_count('$GraphInterval', $$$__timeFilter(time)$$, $__timeFrom(), $__timeTo(), $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1318,7 +1318,7 @@ BEGIN
    cluster_name,
   COALESCE(count(*),0) AS count
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1334,23 +1334,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
+CREATE FUNCTION logs.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_count_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_count_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_count_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_count_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1371,7 +1371,7 @@ BEGIN
    table_name AS table_name,
   count(*)
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1390,23 +1390,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_log_removed_size(text, text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log_removed_size(text, text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, removed_size bigint)
+CREATE FUNCTION logs.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, removed_size bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_removed_size('$__interval', $$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_removed_size('$__interval', $$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_removed_size('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_removed_size('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1424,7 +1424,7 @@ BEGIN
    cluster_name,
   sum(removed_size)::bigint AS removed_size
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1440,23 +1440,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_log_removed_space_chart(text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log_removed_space_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, removed_size bigint)
+CREATE FUNCTION logs.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, removed_size bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_removed_space_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_removed_space_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_removed_space_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_removed_space_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1475,7 +1475,7 @@ BEGIN
    table_name AS table_name,
   sum(removed_size)::bigint AS removed_size
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1494,23 +1494,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_log_tuples_removed(text, text, text, text, text, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_log_tuples_removed(text, text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, tuples_removed bigint)
+CREATE FUNCTION logs.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, tuples_removed bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_tuples_removed('$__interval', $$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_tuples_removed('$__interval', $$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_tuples_removed('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_tuples_removed('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1528,7 +1528,7 @@ BEGIN
    cluster_name,
   sum(tuples_removed)::bigint AS tuples_removed
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1544,19 +1544,19 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
-CREATE FUNCTION pgmonitor.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, tuples_removed bigint)
+CREATE FUNCTION logs.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, tuples_removed bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_tuples_removed_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
+SELECT * FROM logs.autovacuum_log_tuples_removed_chart($$$__timeFilter(time)$$, $$$ServerName$$, $$$DatabaseName$$, $$$SchemaName$$, $$$TableName$$);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.autovacuum_log_tuples_removed_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
+SELECT * FROM logs.autovacuum_log_tuples_removed_chart($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-a'$$, $$'delphi_importer_venice_odm_dcostanz_1'$$, $$'continuous_integrator_ready_area'$$, $$'dataset'$$);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1575,7 +1575,7 @@ BEGIN
    table_name AS table_name,
   sum(tuples_removed)::bigint AS tuples_removed
 FROM
-  pgmonitor.autovacuum_logs
+  logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1594,23 +1594,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
 --
--- Name: autovacuum_thresholds(text, text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum_thresholds(text, text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, n_tup_ins bigint, n_tup_upd bigint, n_tup_del bigint, n_live_tup bigint, n_dead_tup bigint, reltuples real, av_threshold double precision, last_vacuum timestamp with time zone, last_analyze timestamp with time zone, av_neaded boolean, pct_dead numeric)
+CREATE FUNCTION logs.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, n_tup_ins bigint, n_tup_upd bigint, n_tup_del bigint, n_live_tup bigint, n_dead_tup bigint, reltuples real, av_threshold double precision, last_vacuum timestamp with time zone, last_analyze timestamp with time zone, av_neaded boolean, pct_dead numeric)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT pgmonitor.autovacuum_thresholds('$ServerName', '$DatabaseName', '$ShowAllVacuums', $__timeTo(), '$__interval');
+SELECT logs.autovacuum_thresholds('$ServerName', '$DatabaseName', '$ShowAllVacuums', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT pgmonitor.autovacuum_thresholds('sqltest', 'delphi_continuous_integrator_testing', 'All', '2019-05-08T22:36:44.901Z', '1m');
+SELECT logs.autovacuum_thresholds('sqltest', 'delphi_continuous_integrator_testing', 'All', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -1630,13 +1630,13 @@ BEGIN
     b.pct_dead 
 FROM (
 	SELECT max(log_time) AS log_time, cluster_name, database_name
-	FROM pgmonitor.autovacuum_thresholds
+	FROM logs.autovacuum_thresholds
     WHERE 
         (cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
         AND (database_name = ''' || database_name || ''' OR ''--All--'' = ''' || database_name || ''' OR ''' || all_vacuums || ''' = ''All'')
 	GROUP BY cluster_name, database_name
 ) a
-LEFT JOIN pgmonitor.autovacuum_thresholds b USING (log_time, cluster_name, database_name)
+LEFT JOIN logs.autovacuum_thresholds b USING (log_time, cluster_name, database_name)
 WHERE (b.cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
   AND (b.database_name = ''' || database_name || ''' OR ''--All--'' = ''' || database_name || ''' OR ''' || all_vacuums || ''' = ''All'')
   AND b.log_time >= ''' || grafana_timeto || '''::TIMESTAMPTZ - INTERVAL ''' || grafana_refresh || '''
@@ -1647,23 +1647,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION logs.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: checkpoint_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint, write numeric, sync numeric, total numeric)
+CREATE FUNCTION logs.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint, write numeric, sync numeric, total numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_buffers('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_buffers('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_buffers('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_buffers('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1681,7 +1681,7 @@ BEGIN
   coalesce(sum(write),0) AS write,
   coalesce(sum(sync),0) AS sync,
   coalesce(sum(total),0) AS total
-FROM pgmonitor.checkpoint_logs a
+FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1693,23 +1693,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
 
 --
--- Name: checkpoint_files(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_files(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files_added bigint, files_removed bigint, files_recycled bigint, sync_files bigint, sync_longest numeric, sync_avg numeric)
+CREATE FUNCTION logs.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files_added bigint, files_removed bigint, files_recycled bigint, sync_files bigint, sync_longest numeric, sync_avg numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_files('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_files('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_files('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_files('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1729,7 +1729,7 @@ BEGIN
   coalesce(sum(sync_files),0) AS synced_files,
   coalesce(sum(sync_longest),0) AS sync_longest,
   coalesce(sum(sync_avg),0) AS sync_avg
-FROM pgmonitor.checkpoint_logs a
+FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1741,23 +1741,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
 
 --
--- Name: checkpoint_logs(text, text, bigint); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_logs(text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer integer, files_added integer, files_removed integer, files_recycled integer, write numeric, sync numeric, total numeric, sync_files integer, sync_longest numeric, sync_avg numeric, distance integer, estimate integer)
+CREATE FUNCTION logs.checkpoint_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer integer, files_added integer, files_removed integer, files_recycled integer, write numeric, sync numeric, total numeric, sync_files integer, sync_longest numeric, sync_avg numeric, distance integer, estimate integer)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_logs($$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_logs($$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_logs($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_logs($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1767,7 +1767,7 @@ DECLARE
 --  variable_name datatype;
 	sql TEXT;
 BEGIN
-  sql := E'SELECT * FROM pgmonitor.checkpoint_logs a
+  sql := E'SELECT * FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1779,23 +1779,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_logs(grafana_time_filter text, cluster_name_in text, query_limit bigint) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_logs(grafana_time_filter text, cluster_name_in text, query_limit bigint) OWNER TO grafana;
 
 --
--- Name: checkpoint_wal_file_usage(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_wal_file_usage(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files bigint)
+CREATE FUNCTION logs.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_wal_file_usage('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_wal_file_usage('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_wal_file_usage('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_wal_file_usage('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1812,7 +1812,7 @@ BEGIN
   coalesce(sum(files_added),0) AS files_added,
   coalesce(sum(file_removed),0) AS files_removed,
   coalesce(sum(file_recycled),0) AS files_recycled
-FROM pgmonitor.checkpoint_logs a
+FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1833,23 +1833,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
 
 --
--- Name: checkpoint_warning_logs(text, text, bigint); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_warning_logs(text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, seconds integer, hint text)
+CREATE FUNCTION logs.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, seconds integer, hint text)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_warning_logs($$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_warning_logs($$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_warning_logs($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_warning_logs($$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__timeFilter(log_time) is the time period you have specified at the top of the page
 $ServerName is the name of the server you have specified at the top of the page or 'All' for all servers
@@ -1859,7 +1859,7 @@ DECLARE
 --  variable_name datatype;
 	sql TEXT;
 BEGIN
-  sql := E'SELECT * FROM pgmonitor.checkpoint_warning_logs a
+  sql := E'SELECT * FROM logs.checkpoint_warning_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1871,23 +1871,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text, query_limit bigint) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text, query_limit bigint) OWNER TO grafana;
 
 --
--- Name: checkpoint_warning_logs_count(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_warning_logs_count(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE FUNCTION logs.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_warning_logs_count('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_warning_logs_count('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_warning_logs_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_warning_logs_count('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1902,7 +1902,7 @@ BEGIN
    time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || ''') AS "time",
    cluster_name,
   coalesce(count(*),0) AS count
-FROM pgmonitor.checkpoint_warning_logs a
+FROM logs.checkpoint_warning_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1914,23 +1914,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
 
 --
--- Name: checkpoint_write_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: checkpoint_write_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint)
+CREATE FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_write_buffers('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
+SELECT * FROM logs.checkpoint_write_buffers('$GraphInterval', $$$__timeFilter(time)$$, $$$ServerName$$, $QueryLimit);
 
 aka
 
 SET application_name TO 'Grafana';
-SELECT * FROM pgmonitor.checkpoint_write_buffers('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
+SELECT * FROM logs.checkpoint_write_buffers('5m', $$time BETWEEN '2019-04-25T23:05:42.82Z' AND '2019-05-02T23:05:42.82Z'$$, $$'sqltest-b'$$, 100000);
 
 $__interval is the interval period for the display. The more data being displayed the larger the interval.
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -1945,7 +1945,7 @@ BEGIN
    time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || ''') AS "time",
    cluster_name,
   coalesce(sum(wbuffer),0) AS count
-FROM pgmonitor.checkpoint_logs a
+FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
@@ -1957,23 +1957,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
+ALTER FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text) OWNER TO grafana;
 
 --
--- Name: connection_attempt_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: connection_attempt_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'second', 'avg', False);
-SELECT * FROM pgmonitor.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'second', 'avg', False);
+SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
 
 aka
 
-SELECT * FROM pgmonitor.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2007,10 +2007,10 @@ BEGIN
 --	RAISE NOTICE 'cluster_name: %', cluster_name;
 	sql := E'SELECT a.start_time AS "Time", b.cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(' || aggregate || '(c.count),0)::BIGINT AS "Connections" ';
     sql = sql || E'FROM tools.generate_timestamps(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || '''), $$' || grafana_time_filter || '$$) a (start_time, end_time) ';
-    sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM pgmonitor.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
+    sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM logs.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
     sql = sql || 'LEFT JOIN (  SELECT ';
     sql = sql || E'date_trunc(''' || interval || ''', log_time) AS log_time, ';
-    sql = sql || 'cluster_name, count(*) FROM pgmonitor.postgres_log ';
+    sql = sql || 'cluster_name, count(*) FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
     sql = sql || 'AND ' || grafana_time_filter || ' GROUP BY 1,2) c ';
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
@@ -2021,23 +2021,23 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean, display_aggregate boolean) OWNER TO grafana;
+ALTER FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean, display_aggregate boolean) OWNER TO grafana;
 
 --
--- Name: connection_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: connection_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.connection_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'second', 'avg', False);
-SELECT * FROM pgmonitor.connection_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'second', 'avg', False);
+SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
 
 aka
 
-SELECT * FROM pgmonitor.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2071,10 +2071,10 @@ BEGIN
 --	RAISE NOTICE 'cluster_name: %', cluster_name;
 	sql := E'SELECT a.start_time AS "Time", b.cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(' || aggregate || '(c.count),0)::BIGINT AS "Connections" ';
     sql = sql || E'FROM tools.generate_timestamps(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || '''), $$' || grafana_time_filter || '$$) a (start_time, end_time) ';
-    sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM pgmonitor.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
+    sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM logs.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
     sql = sql || 'LEFT JOIN (  SELECT ';
     sql = sql || E'date_trunc(''' || interval || ''', log_time) AS log_time, ';
-    sql = sql || 'cluster_name, count(*) FROM pgmonitor.postgres_log ';
+    sql = sql || 'cluster_name, count(*) FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
     sql = sql || 'AND ' || grafana_time_filter || ' GROUP BY 1,2) c ';
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
@@ -2085,10 +2085,10 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean, display_aggregate boolean) OWNER TO grafana;
+ALTER FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean, display_aggregate boolean) OWNER TO grafana;
 
 --
--- Name: autovacuum(text, text, text, timestamp without time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: autovacuum(text, text, text, timestamp without time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
 CREATE FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, vacuum boolean, "analyze" boolean, running_time integer, phase text, heap_blks_total bigint, heap_blks_total_size bigint, heap_blks_scanned bigint, heap_blks_scanned_pct numeric, heap_blks_vacuumed bigint, heap_blks_vacuumed_pct numeric, index_vacuum_count bigint, max_dead_tuples bigint, num_dead_tuples bigint, backend_start timestamp with time zone, wait_event_type text, wait_event text, state text, backend_xmin xid)
@@ -2144,7 +2144,7 @@ $_X$;
 ALTER FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: pg_stat_activity_active(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: pg_stat_activity_active(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
 CREATE FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, database_name text, pid integer, state text, application_name text, backend_type text, wait_event_type text, wait_event text, backend_start timestamp with time zone, xact_start timestamp with time zone, query_start timestamp with time zone, state_change timestamp with time zone, backend_xmin xid)
@@ -2186,7 +2186,7 @@ $_X$;
 ALTER FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: vacuum_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: vacuum_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
 CREATE FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, name text, setting text, unit text, category text, short_desc text, extra_desc text, context text, vartype text, source text, min_val text, max_val text, enumvals text[], boot_val text, reset_val text, sourcefile text, sourceline integer, pending_restart boolean)
@@ -2225,20 +2225,20 @@ $_X$;
 ALTER FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: custom_table_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: custom_table_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, database_name name, table_name text, table_setting text)
+CREATE FUNCTION logs.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, database_name name, table_name text, table_setting text)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 Usage:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.custom_table_settings('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
+SELECT * FROM logs.custom_table_settings('$ServerName', '$DatabaseName', $__timeTo(), '$__interval');
 
 Example:
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.custom_table_settings('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
+SELECT * FROM logs.custom_table_settings('sqltest', 'delphi_continuous_integrator_testing', '2019-05-08T22:36:44.901Z', '1m');
 */
 
 DECLARE
@@ -2247,14 +2247,14 @@ BEGIN
 	sql := E'SELECT b.log_time, b.cluster_name, b.database_name, b."Table Name", b."Table Setting"
 FROM (
 	SELECT max(log_time) AS log_time, cluster_name, database_name
-	FROM pgmonitor.custom_table_settings
+	FROM logs.custom_table_settings
         WHERE database_name IS NOT NULL
         AND  (cluster_name IN (''' || server_name || ''', ''' || server_name || '-a'', ''' || server_name || '-b'') OR ''--All--'' = ''' || server_name || ''')
   	AND (database_name = ''' || db_name || ''' OR ''--All--'' = ''' || db_name || ''')
     AND log_time >= ''' || grafana_timeto || '''::TIMESTAMPTZ - INTERVAL ''' || grafana_refresh || ''' 
 	GROUP BY cluster_name, database_name
 ) a  
-LEFT JOIN pgmonitor.custom_table_settings b USING (log_time, cluster_name, database_name)
+LEFT JOIN logs.custom_table_settings b USING (log_time, cluster_name, database_name)
 ORDER BY b.cluster_name, b.database_name, b."Table Name"';
 --  RAISE NOTICE 'SQL: %', sql;
   RETURN QUERY EXECUTE sql;  
@@ -2262,24 +2262,24 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
+ALTER FUNCTION logs.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE FUNCTION logs.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
-SELECT * FROM pgmonitor.error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
+SELECT * FROM logs.error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
 
 aka
 
-SELECT * FROM pgmonitor.error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2318,7 +2318,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2327,7 +2327,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (cluster_name = ''' || cluster_name || E''' OR ''All'' = ''' || cluster_name || E''') AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2; ';
@@ -2339,7 +2339,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || message AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE error_severity = ''ERROR'' AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2348,7 +2348,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || message AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND error_severity = ''ERROR'' AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2 ORDER BY 1,2; ';
@@ -2363,7 +2363,7 @@ FROM (
 	(
     	SELECT 
     		CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error 
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
 		WHERE message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
 		GROUP BY 1
      ) b
@@ -2372,7 +2372,7 @@ FROM (
 			date_trunc(tools.interval_to_field('$__interval'), log_time) AS time, 
 			CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error, 
 			count(*) AS value
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
   		WHERE (cluster_name = $ServerName OR 'All' = $ServerName) AND message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
   		GROUP BY 1,2
 ) e ON c.start_time = e.time AND c.ldap_error = e.ldap_error;    
@@ -2383,24 +2383,24 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
+ALTER FUNCTION logs.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
 
 --
--- Name: fatal_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: fatal_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE FUNCTION logs.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.fatal_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
-SELECT * FROM pgmonitor.fatal_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.fatal_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
+SELECT * FROM logs.fatal_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
 
 aka
 
-SELECT * FROM pgmonitor.fatal_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.fatal_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2439,7 +2439,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2448,7 +2448,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (cluster_name = ''' || cluster_name || E''' OR ''All'' = ''' || cluster_name || E''') AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2; ';
@@ -2460,7 +2460,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || message AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE error_severity = ''FATAL'' AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2469,7 +2469,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || message AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND error_severity = ''FATAL'' AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2 ORDER BY 1,2; ';
@@ -2484,7 +2484,7 @@ FROM (
 	(
     	SELECT 
     		CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error 
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
 		WHERE message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
 		GROUP BY 1
      ) b
@@ -2493,7 +2493,7 @@ FROM (
 			date_trunc(tools.interval_to_field('$__interval'), log_time) AS time, 
 			CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error, 
 			count(*) AS value
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
   		WHERE (cluster_name = $ServerName OR 'All' = $ServerName) AND message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
   		GROUP BY 1,2
 ) e ON c.start_time = e.time AND c.ldap_error = e.ldap_error;    
@@ -2504,10 +2504,10 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
+ALTER FUNCTION logs.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
 
 --
--- Name: granted_locks(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: granted_locks(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
 CREATE FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, "Server Nname" text, "Database Name" name, "Time" double precision, "PG Process ID" integer, "Application Name" text, "Transaction Start" timestamp with time zone, "Locks" text, "AutoVacuum" text)
@@ -2554,21 +2554,21 @@ $_X$;
 ALTER FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) OWNER TO grafana;
 
 --
--- Name: ldap_error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: ldap_error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
 /*
 SET application_name = 'Grafana';
-SELECT * FROM pgmonitor.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
-SELECT * FROM pgmonitor.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, 'minute', 'sum', False);
+SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, $ServerName, tools.interval_to_field('$__interval'), 'sum', True);
 
 aka
 
-SELECT * FROM pgmonitor.ldap_error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.ldap_error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2607,7 +2607,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2616,7 +2616,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN ''All'' = ''' || cluster_name || E''' THEN cluster_name || '' - '' ELSE '''' END || trim(split_part(message, '':'', 2)) AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (cluster_name = ''' || cluster_name || E''' OR ''All'' = ''' || cluster_name || E''') AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2; ';
@@ -2628,7 +2628,7 @@ BEGIN
     sql = sql || '( ';
     sql = sql || 'SELECT ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1 ';
     sql = sql || ') b ';
@@ -2637,7 +2637,7 @@ BEGIN
     sql = sql || E'date_trunc(''' || interval || E''', log_time) AS time, ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error, ';
     sql = sql || 'count(*) AS value ';
-    sql = sql || 'FROM pgmonitor.postgres_log ';
+    sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2 ORDER BY 1,2; ';
@@ -2652,7 +2652,7 @@ FROM (
 	(
     	SELECT 
     		CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error 
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
 		WHERE message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
 		GROUP BY 1
      ) b
@@ -2661,7 +2661,7 @@ FROM (
 			date_trunc(tools.interval_to_field('$__interval'), log_time) AS time, 
 			CASE WHEN 'All' = $ServerName THEN cluster_name || ' - ' ELSE '' END || trim(split_part(message, ':', 2)) AS ldap_error, 
 			count(*) AS value
-		FROM pgmonitor.postgres_log 
+		FROM logs.postgres_log 
   		WHERE (cluster_name = $ServerName OR 'All' = $ServerName) AND message LIKE 'LDAP login failed for user%' AND $__timeFilter(log_time)
   		GROUP BY 1,2
 ) e ON c.start_time = e.time AND c.ldap_error = e.ldap_error;    
@@ -2672,19 +2672,19 @@ END;
 $_X$;
 
 
-ALTER FUNCTION pgmonitor.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
+ALTER FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[], "interval" text, aggregate text, display_interval boolean) OWNER TO grafana;
 
 --
--- Name: update_pg_log_databases(); Type: FUNCTION; Schema: pgmonitor; Owner: grafana
+-- Name: update_pg_log_databases(); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION pgmonitor.update_pg_log_databases() RETURNS trigger
+CREATE FUNCTION logs.update_pg_log_databases() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
 --  variable_name datatype;
 BEGIN
-	INSERT INTO pgmonitor.postgres_log_databases 
+	INSERT INTO logs.postgres_log_databases 
 	(SELECT DISTINCT cluster_name, database_name, min(log_time) AS start_date, max(log_time) AS end_date  
 	FROM new_table
 	WHERE database_name IS NOT NULL
@@ -2694,14 +2694,14 @@ END;
 $$;
 
 
-ALTER FUNCTION pgmonitor.update_pg_log_databases() OWNER TO grafana;
+ALTER FUNCTION logs.update_pg_log_databases() OWNER TO grafana;
 
 
 
 
 
 -- Add Triggers
-CREATE TRIGGER postgres_log_tr BEFORE INSERT ON pgmonitor.postgres_log FOR EACH ROW EXECUTE PROCEDURE tools.postgres_log_trigger();
+CREATE TRIGGER postgres_log_tr BEFORE INSERT ON logs.postgres_log FOR EACH ROW EXECUTE PROCEDURE tools.postgres_log_trigger();
 
 -- Create list of tables with their settings that we want to turn into hypertables
 CREATE TABLE tools.hypertables (
@@ -2711,7 +2711,8 @@ CREATE TABLE tools.hypertables (
     time_column_name NAME,
     partitioning_column NAME,
     hash_partitions INTEGER DEFAULT 20,
-    chunk_time_interval INTERVAL DEFAULT INTERVAL '1 week'
+    chunk_time_interval INTERVAL DEFAULT INTERVAL '1 week',
+    drop_chunk_policy INTERVAL
 );
 COMMENT ON COLUMN tools.hypertables.hypertable_id IS 'This is the TimescaleDB hypertable id as seen in _timescaledb_catalog.hypertable.id';
 COMMENT ON COLUMN tools.hypertables.schema_name IS 'Schema Name of the Table that we want to turn into a hypertable.';
@@ -2720,30 +2721,43 @@ COMMENT ON COLUMN tools.hypertables.time_column_name IS 'Column Name of the Time
 COMMENT ON COLUMN tools.hypertables.partitioning_column IS 'Name of an additional column to be partitioned by. Normally we want to partition by cluster_name aka Server Name / Host Name';
 COMMENT ON COLUMN tools.hypertables.hash_partitions IS 'Numer of hash partitions to use for partitioning_column, must be > 0';
 COMMENT ON COLUMN tools.hypertables.chunk_time_interval IS 'Interval in event time that each chunk covers. Must be > 0. As of TimescaleDB v0.11.0, default is 7 days. For previous versions, default is 1 month.';
+COMMENT ON COLUMN tools.hypertables.drop_chunk_policy IS 'Drop chunks older than the given interval of the particular hypertable on a schedule in the background.';
+ALTER TABLE tools.hypertables OWNER TO grafana;
 
 -- Log Processing Tables
-INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval) VALUES
-('pgmonitor', 'archive_failure_log',        'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'autoanalyze_logs',           'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'autovacuum_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('pgmonitor', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week');
+INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy) VALUES
+('logs', 'archive_failure_log',        'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'autoanalyze_logs',           'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'autovacuum_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
+('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year');
 
 
--- pgmonitor Processing Tables
-INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval) VALUES
-('stats', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'autovacuum',                 'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'autovacuum_count',           'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'pg_database',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'pg_settings',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'pg_stat_activity',           'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'replication_status',         'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'table_stats',                'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 week'),
-('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 week');
+-- logs Processing Tables
+INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy) VALUES
+('stats', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'autovacuum',                 'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'autovacuum_count',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'pg_database',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'pg_settings',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'pg_stat_activity',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'replication_status',         'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'table_stats',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
+('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour');
+
+CREATE FUNCTION tools.timescaledb_enterprise()
+RETURNS boolean
+LANGUAGE sql
+AS $$
+    SELECT CASE WHEN edition = 'enterprise' AND expired IS FALSE AND expiration_time > now() THEN TRUE ELSE FALSE END FROM timescaledb_information.license;
+$$;
+
+
+ALTER FUNCTION tools.timescaledb_enterprise() OWNER TO grafana;
+
 
 UPDATE tools.hypertables ht
 SET 
@@ -2755,7 +2769,17 @@ FROM (
 
 SELECT * FROM tools.hypertables;
 
-DROP TABLE tools.hypertables;
+DO $$
+DECLARE
+BEGIN
+/*
+If the user has the Enterprise License of TimescaleDB, we will use this function, 
+otherwise the logs script will also perform this for comminity licensed versions.
+*/
+    IF tools.timescaledb_enterprise() THEN
+        SELECT add_drop_chunks_policy(schema_name || '.' || table_name, drop_chunk_policy) FROM tools.hypertables;
+    END IF;
+END $$;
 
 -- LOAD DATA INTO tools.query
 INSERT INTO tools.query ("query_name", "sql", "disabled", "maintenance_db_only", "pg_version", "run_order", "schema_name", "table_name")

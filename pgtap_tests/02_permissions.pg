@@ -16,12 +16,12 @@ SELECT has_role(:'test_user'::name);
 
 SELECT diag('Has Schema Tests');
 SELECT diag('=================================');
-SELECT has_schema('pgmonitor');
+SELECT has_schema('logs');
 SELECT has_schema('stats');
 SELECT has_schema('tools');
 
 SELECT diag('Schema Ownership Tests');
 SELECT diag('=================================');
-SELECT schema_owner_is ( 'pgmonitor', :'test_user'::name );
+SELECT schema_owner_is ( 'logs', :'test_user'::name );
 SELECT schema_owner_is ( 'tools', :'test_user'::name );
 SELECT schema_owner_is ( 'stats', :'test_user'::name );
