@@ -34,7 +34,7 @@ Extra Links
 
 ## Ubuntu Setup
 
-Append to ~/.bashrc
+Append to ~/.bashrc - Note some of this is done by commands further down as part of teh docker and kubernetes installations and setup. I need to rebuild the test platform and then note what is needed when.
 
 ```bash
 # Alias definitions.
@@ -68,7 +68,7 @@ complete -F __start_kubectl k
 alias d=docker
 ```
 
-## Setup Kubernetes on Ununtu
+## Setup on Ununtu
 
 ```bash
 sudo apt-get update -y && sudo apt-get install -y \
@@ -106,10 +106,9 @@ docker run --rm -ti hello-world
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 kubectl config set-cluster fake --server=https://5.6.7.8 --insecure-skip-tls-verify
-kubectl config set-credentials nobody 
+kubectl config set-credentials nobody
 kubectl config set-context fake --cluster=fake --namespace=default --user=nobody
 mkdir -p ~/.kube
 ln -sf /c/users/<YOUR_USER>/.kube/config ~/.kube/config
 kubectl cluster-info
 ```
-
