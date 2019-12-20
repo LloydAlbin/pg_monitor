@@ -26,6 +26,10 @@ COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex querie
 CREATE SCHEMA pgmonitor;
 ALTER SCHEMA pgmonitor OWNER TO grafana;
 
+-- Create pgmonitor schema
+CREATE SCHEMA stats;
+ALTER SCHEMA stats OWNER TO grafana;
+
 -- Create tools schema
 CREATE SCHEMA tools;
 ALTER SCHEMA tools OWNER TO grafana;

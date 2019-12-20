@@ -13,13 +13,13 @@
 SELECT diag('Table Ownership Tests');
 SELECT diag('=================================');
 SELECT table_owner_is ( table_schema, table_name, :'test_user'::name )
-FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmonitor', 'tools');
+FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema IN ('pgmonitor', 'stats', 'tools');
 
 SELECT diag('=================================');
 SELECT diag('View Ownership Tests');
 SELECT diag('=================================');
 SELECT view_owner_is ( table_schema, table_name, :'test_user'::name )
-FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema IN ('pgmonitor', 'tools');
+FROM information_schema.tables WHERE table_type = 'VIEW' AND table_schema IN ('pgmonitor', 'stats', 'tools');
 
 SELECT diag('=================================');
 SELECT diag('Function Ownership Tests');
@@ -27,4 +27,4 @@ SELECT diag('=================================');
 SELECT function_owner_is (n.nspname, p.proname, p.proargtypes::regtype[]::name[], :'test_user')
 FROM pg_catalog.pg_proc p
 LEFT JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
-WHERE n.nspname IN ('pgmonitor', 'tools');
+WHERE n.nspname IN ('pgmonitor', 'stats', 'tools');
