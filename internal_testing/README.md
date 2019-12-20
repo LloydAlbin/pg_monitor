@@ -22,9 +22,9 @@ In this build/testing environment I am using the following:
       * mardownlint v0.33.0
       * PostgreSQL v0.2.0
       * pgFormatter v1.10.0
-      * C/C++ v0.26.2
-      * C++ Intellisense v0.2.2
-      * Cloud Code v1.0.1
+      * C/C++ v0.26.2 *(Not needed for this project)*
+      * C++ Intellisense v0.2.2 *(Not needed for this project)*
+      * Cloud Code v1.0.1 *(Not needed for this project)*
       * YAML v0.6.1
 
 [Windows Setup Directions](WINDOWS_SETUP.md)
