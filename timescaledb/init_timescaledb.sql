@@ -1,3 +1,4 @@
+\set pgmonitor_version 2
 \set hash_partitions 20
 SET client_encoding = 'UTF8';
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -34,6 +35,12 @@ ALTER SCHEMA stats OWNER TO grafana;
 -- Create tools schema
 CREATE SCHEMA tools;
 ALTER SCHEMA tools OWNER TO grafana;
+
+CREATE TABLE tools.version (
+  db_version TEXT
+);
+ALTER TABLE tools.version OWNER TO grafana;
+INSERT INTO tools.version VALUES (:pgmonitor_version);
 
 -- TABLES: logs
 CREATE TABLE stats.pg_settings (
