@@ -1,10 +1,11 @@
 \set hash_partitions 20
 SET client_encoding = 'UTF8';
 SELECT pg_catalog.set_config('search_path', '', false);
-\set ON_ERROR_STOP true
 
 -- Create grafana user
 CREATE USER grafana LOGIN IN ROLE pg_monitor;
+
+\set ON_ERROR_STOP true
 
 -- Create pgmonitor_db database
 CREATE DATABASE pgmonitor_db WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US' LC_CTYPE = 'en_US';
@@ -2777,7 +2778,7 @@ If the user has the Enterprise License of TimescaleDB, we will use this function
 otherwise the logs script will also perform this for comminity licensed versions.
 */
     IF tools.timescaledb_enterprise() THEN
-        SELECT add_drop_chunks_policy(schema_name || '.' || table_name, drop_chunk_policy) FROM tools.hypertables;
+        PERFORM public.add_drop_chunks_policy((schema_name || '.' || table_name)::regclass, drop_chunk_policy, TRUE, TRUE, TRUE) FROM tools.hypertables;
     END IF;
 END $$;
 
