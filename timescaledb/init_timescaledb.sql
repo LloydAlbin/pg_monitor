@@ -2713,7 +2713,10 @@ CREATE TABLE tools.hypertables (
     partitioning_column NAME,
     hash_partitions INTEGER DEFAULT 20,
     chunk_time_interval INTERVAL DEFAULT INTERVAL '1 week',
-    drop_chunk_policy INTERVAL
+    drop_chunk_policy INTERVAL,
+    compress_chunk_policy INTERVAL,
+    compress_orderby TEXT,
+    compress_segmentby TEXT
 );
 COMMENT ON COLUMN tools.hypertables.hypertable_id IS 'This is the TimescaleDB hypertable id as seen in _timescaledb_catalog.hypertable.id';
 COMMENT ON COLUMN tools.hypertables.schema_name IS 'Schema Name of the Table that we want to turn into a hypertable.';
@@ -2723,31 +2726,34 @@ COMMENT ON COLUMN tools.hypertables.partitioning_column IS 'Name of an additiona
 COMMENT ON COLUMN tools.hypertables.hash_partitions IS 'Numer of hash partitions to use for partitioning_column, must be > 0';
 COMMENT ON COLUMN tools.hypertables.chunk_time_interval IS 'Interval in event time that each chunk covers. Must be > 0. As of TimescaleDB v0.11.0, default is 7 days. For previous versions, default is 1 month.';
 COMMENT ON COLUMN tools.hypertables.drop_chunk_policy IS 'Drop chunks older than the given interval of the particular hypertable on a schedule in the background.';
+COMMENT ON COLUMN tools.hypertables.compress_chunk_policy IS 'Compress chunks older than the given interval of the particular hypertable on a schedule in the background.';
+COMMENT ON COLUMN tools.hypertables.compress_orderby IS E'Order used by compression, specified in the same way as the ORDER BY clause in a SELECT query. The default is the descending order of the hypertable''s time column.';
+COMMENT ON COLUMN tools.hypertables.compress_segmentby IS 'Column list on which to key the compressed segments. An identifier representing the source of the data such as device_id or tags_id is usually a good candidate. The default is no segment by columns.';
 ALTER TABLE tools.hypertables OWNER TO grafana;
 
 -- Log Processing Tables
-INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy) VALUES
-('logs', 'archive_failure_log',        'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'autoanalyze_logs',           'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'autovacuum_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year'),
-('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year');
+INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy, compress_chunk_policy, compress_orderby, compress_segmentby) VALUES
+('logs', 'archive_failure_log',        'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'autoanalyze_logs',           'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'autovacuum_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name');
 
 
 -- logs Processing Tables
-INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy) VALUES
-('stats', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'autovacuum',                 'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'autovacuum_count',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'pg_database',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'pg_settings',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'pg_stat_activity',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'replication_status',         'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'table_stats',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour'),
-('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour');
+INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy, compress_chunk_policy, compress_orderby, compress_segmentby) VALUES
+('stats', 'autovacuum_thresholds',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'autovacuum',                 'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'autovacuum_count',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'pg_database',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'pg_settings',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'pg_stat_activity',           'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'replication_status',         'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'table_stats',                'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
+('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name');
 
 CREATE FUNCTION tools.timescaledb_enterprise()
 RETURNS boolean
@@ -2755,9 +2761,25 @@ LANGUAGE sql
 AS $$
     SELECT CASE WHEN edition = 'enterprise' AND expired IS FALSE AND expiration_time > now() THEN TRUE ELSE FALSE END FROM timescaledb_information.license;
 $$;
-
-
 ALTER FUNCTION tools.timescaledb_enterprise() OWNER TO grafana;
+
+
+CREATE FUNCTION tools.timescaledb_drop_chunks()
+RETURNS SETOF text
+LANGUAGE plpgsql
+AS $$
+DECLARE
+BEGIN
+  IF tools.timescaledb_enterprise() THEN
+    -- Update Intervals in case they were updated.
+
+    RETURN;
+  ELSE
+    -- Drop chunks older than the drop chunk policy
+    RETURN QUERY SELECT public.drop_chunks(drop_chunk_policy, schema_name || '.' || table_name) FROM tools.hypertables;
+  END IF;
+END $$;
+ALTER FUNCTION tools.timescaledb_drop_chunks() OWNER TO grafana;
 
 
 UPDATE tools.hypertables ht
@@ -2769,6 +2791,18 @@ FROM (
 ) a WHERE a.created = true AND ht.schema_name = a.schema_name AND ht.table_name = a.table_name;
 
 SELECT * FROM tools.hypertables;
+
+
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+    FOR r IN SELECT * FROM tools.hypertables WHERE compress_chunk_policy IS NOT NULL LOOP
+        EXECUTE 'ALTER TABLE ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || ' SET (timescaledb.compress, timescaledb.compress_orderby = ' || quote_literal(r.compress_orderby) || ', timescaledb.compress_segmentby = ' || quote_literal(r.compress_segmentby) || ')';
+    END LOOP;
+END $$;
+
+SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;
 
 DO $$
 DECLARE
