@@ -29,7 +29,7 @@ In this build/testing environment I am using the following:
 
 [Windows Setup Directions](WINDOWS_SETUP.md)
 
-## Testing
+## Testing Clean Install
 
 ```bash
 ###### DELETE GITHUB DATA ######
@@ -63,6 +63,27 @@ psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
 psql -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
 # Setup account with password
 psql -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+
+###### PGTAP ######
+# Must change directories to tune the pgtap tests.
+cd ~/pg_monitor/pgtap_tests/
+# Run the all the pgtap tests in the pgtap_tests directory
+pg_prove -v -h localhost -p 30002 -U postgres -d postgres .
+```
+
+## Testing Upgrade Install
+
+```bash
+###### TIMESCALEDB CLEANUP ######
+# Cleanup from previous Timescale DB Testing
+psql -h localhost -p 30002 -U postgres -d postgres -c "DROP DATABASE pgmonitor_db;"
+psql -h localhost -p 30002 -U postgres -d postgres -c "DROP DATABASE reports;"
+
+###### TIMESCALEDB SETUP ######
+# Init TimescaleDB
+createdb  -h localhost -p 30002 -U postgres -E UTF8 reports
+psql -h localhost -p 30002 -U postgres -d reports -f ~/pg_monitor/timescaledb/init_timescaledb_v1.sql
+psql -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/upgrade_timescaledb.sql
 
 ###### PGTAP ######
 # Must change directories to tune the pgtap tests.
