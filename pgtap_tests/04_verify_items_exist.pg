@@ -1,0 +1,122 @@
+\connect pgmonitor_db
+
+-- Setup Test Variables
+\set test_name 'permissions'
+\set test_user 'grafana'
+\set test_production_database 'pgmonitor_db'
+\set plan 74
+
+-- Install pgTAP, show diagnostics, and start common tests
+--\ir ../common/diagnostic.sql
+\i common/diagnostics.pg
+
+SELECT diag('Verify Table Exists');
+SELECT diag('=================================');
+CREATE TEMP TABLE verify_tables (
+    table_schema NAME,
+    table_name NAME
+);
+INSERT INTO verify_tables VALUES
+    ('logs', 'archive_failure_log'),
+    ('logs', 'autoanalyze_logs'),
+    ('logs', 'autovacuum_logs'),
+    ('logs', 'checkpoint_logs'),
+    ('logs', 'checkpoint_warning_logs'),
+    ('logs', 'lock_logs'),
+    ('logs', 'lock_message_types'),
+    ('logs', 'postgres_log'),
+    ('logs', 'postgres_log_databases'),
+    ('logs', 'postgres_log_databases_temp'),
+
+    ('stats', 'autovacuum'),
+    ('stats', 'autovacuum_count'),
+    ('stats', 'autovacuum_thresholds'),
+    ('stats', 'custom_table_settings'),
+    ('stats', 'granted_locks'),
+    ('stats', 'pg_database'),
+    ('stats', 'pg_settings'),
+    ('stats', 'pg_stat_activity'),
+    ('stats', 'replication_status'),
+    ('stats', 'table_stats'),
+
+    ('tools', 'build_items'),
+    ('tools', 'hypertables'),
+    ('tools', 'queries_disabled'),
+    ('tools', 'query'),
+    ('tools', 'servers'),
+    ('tools', 'version');
+SELECT has_table ( table_schema, table_name ) FROM verify_tables;
+
+SELECT diag('Verify View Exists');
+SELECT diag('=================================');
+CREATE TEMP TABLE verify_views (
+    view_schema NAME,
+    view_name NAME
+);
+INSERT INTO verify_views VALUES
+    ('logs', 'autovacuum_length'),
+    ('logs', 'databases'),
+    ('logs', 'hypertable'),
+    ('logs', 'last_log_entries'),
+
+    ('tools', 'pg_major_version'),
+    ('tools', 'table_size');
+SELECT has_view ( view_schema, view_name, 'View ' || quote_ident(view_schema) || '.' || quote_ident(view_name) || ' should exist' ) FROM verify_views;
+
+SELECT diag('Verify Function Exists');
+SELECT diag('=================================');
+CREATE TEMP TABLE verify_functions (
+    function_schema NAME,
+    function_name NAME,
+    function_args text[]
+);
+INSERT INTO verify_functions VALUES
+    --26
+    ( 'logs', 'autoanalyze_log', ARRAY['text', 'text', 'text', 'text', 'text', 'bigint'] ),
+    ( 'logs', 'autoanalyze_log_count', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autoanalyze_log_count_chart', ARRAY['text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_autoanalyze_count', ARRAY['text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log', ARRAY['text', 'text', 'text', 'text', 'text', 'bigint'] ),
+    ( 'logs', 'autovacuum_log_count', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log_count_chart', ARRAY['text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log_removed_size', ARRAY['text', 'text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log_removed_space_chart', ARRAY['text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log_tuples_removed', ARRAY['text', 'text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_log_tuples_removed_chart', ARRAY['text', 'text', 'text', 'text', 'text'] ),
+    ( 'logs', 'autovacuum_thresholds', ARRAY['text', 'text', 'text', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'checkpoint_buffers', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'checkpoint_files', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'checkpoint_logs', ARRAY['text', 'text', 'bigint'] ),
+    ( 'logs', 'checkpoint_wal_file_usage', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'checkpoint_warning_logs', ARRAY['text', 'text', 'bigint'] ),
+    ( 'logs', 'checkpoint_warning_logs_count', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'checkpoint_write_buffers', ARRAY['text', 'text', 'timestamp with time zone', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'connection_attempt_history', ARRAY['text', 'text', 'text[]', 'text', 'text', 'boolean', 'boolean'] ),
+    ( 'logs', 'connection_history', ARRAY['text', 'text', 'text[]', 'text', 'text', 'boolean', 'boolean'] ),
+    ( 'logs', 'custom_table_settings', ARRAY['text', 'text', 'timestamp with time zone', 'text'] ),
+    ( 'logs', 'error_history', ARRAY['text', 'text', 'text[]', 'text', 'text', 'boolean'] ),
+    ( 'logs', 'fatal_history', ARRAY['text', 'text', 'text[]', 'text', 'text', 'boolean'] ),
+    ( 'logs', 'ldap_error_history', ARRAY['text', 'text', 'text[]', 'text', 'text', 'boolean'] ),
+    ( 'logs', 'update_pg_log_databases', NULL ),
+
+    --4
+    ( 'stats', 'autovacuum', ARRAY['text', 'text', 'text', 'timestamp', 'text']::text[] ),
+    ( 'stats', 'granted_locks', ARRAY['text', 'text', 'timestamp with time zone', 'text']::text[] ),
+    ( 'stats', 'pg_stat_activity_active', ARRAY['text', 'text', 'timestamp with time zone', 'text']::text[] ),
+    ( 'stats', 'vacuum_settings', ARRAY['text', 'text', 'timestamp with time zone', 'text']::text[] ),
+
+    --12
+    ( 'tools', 'create_logs', NULL ),
+    ( 'tools', 'create_server_database_inherits', ARRAY['text', 'text']::text[] ),
+    ( 'tools', 'create_server_inherits', ARRAY['text']::text[] ),
+    ( 'tools', 'delete_logs', NULL ),
+    ( 'tools', 'field_list_check', ARRAY['text','text']::text[] ),
+    ( 'tools', 'generate_timestamps', ARRAY['text','text']::text[] ),
+    ( 'tools', 'group_by_interval', ARRAY['text','text']::text[] ),
+    ( 'tools', 'interval_to_field', ARRAY['text']::text[] ),
+    ( 'tools', 'parse_csv', ARRAY['text', 'boolean']::text[] ),
+    ( 'tools', 'postgres_log_trigger', NULL ),
+    ( 'tools', 'timescaledb_drop_chunks', NULL ),
+    ( 'tools', 'timescaledb_enterprise', NULL );
+SELECT has_function ( function_schema, function_name ) FROM verify_functions WHERE function_args IS NULL;
+SELECT has_function ( function_schema, function_name, function_args ) FROM verify_functions WHERE function_args IS NOT NULL;
