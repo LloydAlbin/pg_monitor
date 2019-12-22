@@ -100,7 +100,7 @@ echo "export DOCKER_HOST=tcp://localhost:2375" >> ~/.bashrc && source ~/.bashrc
 docker run --rm -ti hello-world
 ```
 
-## Setup Kubernetes on Ununtu
+## Setup Kubernetes on Ubuntu
 
 ```bash
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
@@ -111,4 +111,14 @@ kubectl config set-context fake --cluster=fake --namespace=default --user=nobody
 mkdir -p ~/.kube
 ln -sf /c/users/<YOUR_USER>/.kube/config ~/.kube/config
 kubectl cluster-info
+```
+
+## Upgrade Postgresql Client from 10 to 11
+
+```bash
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+RELEASE=$(lsb_release -cs)
+echo "deb http://apt.postgresql.org/pub/repos/apt/ ${RELEASE}"-pgdg main | sudo tee  /etc/apt/sources.list.d/pgdg.list
+sudo apt update
+sudo apt -y install postgresql-client-11
 ```
