@@ -93,3 +93,10 @@ cat  postgresql-2019-10-22_*.csv postgresql-2019-10-23_0*.csv postgresql-2019-10
 ## Postgres Password
 
 This script relies on you either having the [PGPASSWORD environment variable](https://www.postgresql.org/docs/11/libpq-envars.html) set or having a [.pgpass file](https://www.postgresql.org/docs/11/libpq-pgpass.html) in the postgres home directory.
+
+## Amazon RDS and Amazon Aurora PostgreSQL
+
+These articles talk about how to generate csv log files when using Amazon RDS or Aurora.
+
+[Working with RDS and Aurora PostgreSQL logs: Part 1](https://aws.amazon.com/blogs/database/working-with-rds-and-aurora-postgresql-logs-part-1/)
+[Working with RDS and Aurora PostgreSQL logs: Part 2](https://aws.amazon.com/blogs/database/working-with-rds-and-aurora-postgresql-logs-part-2/)
