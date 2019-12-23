@@ -4,6 +4,7 @@ RETURNS SETOF text AS
 $body$
 DECLARE
   r RECORD;
+  r2 RECORD;
   count BIGINT;
   sql TEXT;
 BEGIN
@@ -33,6 +34,20 @@ BEGIN
   	sql = sql || 'SELECT has_table ( ' || quote_literal(r.table_schema) || ', ' || quote_literal(r.table_name) || E'::NAME );\n';
   	sql = sql || 'SELECT table_owner_is ( ' || quote_literal(r.table_schema) || ', ' || quote_literal(r.table_name) || E'::NAME, ''grafana''::NAME);\n';
     count = count + 2;
+	  FOR r2 IN SELECT * FROM information_schema.columns WHERE table_schema = r.table_schema AND table_name = r.table_name ORDER BY ordinal_position LOOP
+        sql = sql || 'SELECT has_column( ' || quote_literal(r.table_schema) || ', ' || quote_literal(r.table_name) || E'::NAME, ' || quote_literal(r2.column_name) || E'::NAME, ''Column ' || quote_ident(r.table_schema) || '.' || quote_ident(r.table_name) || '.' || quote_ident(r2.column_name) || E' should exist'' );\n';
+        sql = sql || 'SELECT col_type_is( ' || quote_literal(r.table_schema) || ', ' || quote_literal(r.table_name) || E'::NAME, ' || quote_literal(r2.column_name) || '::NAME, ' || 
+        	CASE  
+            	WHEN r2.data_type = 'ARRAY' THEN quote_literal(
+                	CASE r2.udt_name 
+                    	WHEN '_text' 
+                        THEN 'text' 
+                        END || '[]') 
+            	WHEN r2.data_type = 'timestamp with time zone' AND r2.datetime_precision <> 6 THEN quote_literal('timestamp(' || r2.datetime_precision || ') with time zone')
+                ELSE quote_literal(r2.data_type) 
+            END || E' );\n';
+	    count = count + 2;
+	  END LOOP;
   END LOOP;
 
   sql = sql ||  E'\n';
