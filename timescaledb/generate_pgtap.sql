@@ -47,7 +47,7 @@ BEGIN
   sql = sql ||  E'\n';
   sql = sql || E'SELECT diag(''================================='');\n';
   sql = sql || E'SELECT diag(''Function Tests'');\n';
-  FOR r IN SELECT * FROM public.tap_funky WHERE schema IN ('logs', 'stats', 'tools') LOOP
+  FOR r IN SELECT * FROM public.tap_funky WHERE schema IN ('logs', 'stats', 'tools') AND "name" != 'generate_pgtap' LOOP
     IF r.args = '' THEN
       sql = sql || 'SELECT has_function ( ' || quote_literal(r.schema) || ', ' || quote_literal(r.name) || E'::NAME );\n';
     ELSE

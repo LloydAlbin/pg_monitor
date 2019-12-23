@@ -5,7 +5,7 @@
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 157
+\set plan 155
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -178,5 +178,3 @@ SELECT has_function ( 'tools', 'timescaledb_enterprise'::NAME );
 SELECT function_owner_is ( 'tools', 'timescaledb_enterprise'::NAME, '{}'::regtype[]::name[], 'grafana'::NAME);
 SELECT has_function ( 'tools', 'timescaledb_drop_chunks'::NAME );
 SELECT function_owner_is ( 'tools', 'timescaledb_drop_chunks'::NAME, '{}'::regtype[]::name[], 'grafana'::NAME);
-SELECT has_function ( 'tools', 'generate_pgtap'::NAME );
-SELECT function_owner_is ( 'tools', 'generate_pgtap'::NAME, '{}'::regtype[]::name[], 'postgres'::NAME);
