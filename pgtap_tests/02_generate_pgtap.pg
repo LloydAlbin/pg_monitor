@@ -5,7 +5,7 @@
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 689
+\set plan 751
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -615,16 +615,78 @@ SELECT diag('=================================');
 SELECT diag('View Tests');
 SELECT has_view ( 'logs', 'autovacuum_length'::NAME, 'View logs.autovacuum_length should exist' );
 SELECT view_owner_is ( 'logs', 'autovacuum_length'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'autovacuum_length'::NAME, 'cluster_name'::NAME, 'Column logs.autovacuum_length.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'autovacuum_length'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'autovacuum_length'::NAME, 'database_name'::NAME, 'Column logs.autovacuum_length.database_name should exist' );
+SELECT col_type_is( 'logs', 'autovacuum_length'::NAME, 'database_name'::NAME, 'name' );
+SELECT has_column( 'logs', 'autovacuum_length'::NAME, 'running_time'::NAME, 'Column logs.autovacuum_length.running_time should exist' );
+SELECT col_type_is( 'logs', 'autovacuum_length'::NAME, 'running_time'::NAME, 'integer' );
 SELECT has_view ( 'logs', 'databases'::NAME, 'View logs.databases should exist' );
 SELECT view_owner_is ( 'logs', 'databases'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'databases'::NAME, 'cluster_name'::NAME, 'Column logs.databases.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'databases'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'databases'::NAME, 'database_name'::NAME, 'Column logs.databases.database_name should exist' );
+SELECT col_type_is( 'logs', 'databases'::NAME, 'database_name'::NAME, 'name' );
 SELECT has_view ( 'logs', 'hypertable'::NAME, 'View logs.hypertable should exist' );
 SELECT view_owner_is ( 'logs', 'hypertable'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'hypertable'::NAME, 'table_schema'::NAME, 'Column logs.hypertable.table_schema should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'table_schema'::NAME, 'name' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'table_name'::NAME, 'Column logs.hypertable.table_name should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'table_name'::NAME, 'name' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'table_owner'::NAME, 'Column logs.hypertable.table_owner should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'table_owner'::NAME, 'name' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'num_dimensions'::NAME, 'Column logs.hypertable.num_dimensions should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'num_dimensions'::NAME, 'smallint' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'num_chunks'::NAME, 'Column logs.hypertable.num_chunks should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'num_chunks'::NAME, 'bigint' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'table_size'::NAME, 'Column logs.hypertable.table_size should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'table_size'::NAME, 'bigint' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'index_size'::NAME, 'Column logs.hypertable.index_size should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'index_size'::NAME, 'bigint' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'toast_size'::NAME, 'Column logs.hypertable.toast_size should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'toast_size'::NAME, 'bigint' );
+SELECT has_column( 'logs', 'hypertable'::NAME, 'total_size'::NAME, 'Column logs.hypertable.total_size should exist' );
+SELECT col_type_is( 'logs', 'hypertable'::NAME, 'total_size'::NAME, 'bigint' );
 SELECT has_view ( 'logs', 'last_log_entries'::NAME, 'View logs.last_log_entries should exist' );
 SELECT view_owner_is ( 'logs', 'last_log_entries'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'last_log_entries'::NAME, 'cluster_name'::NAME, 'Column logs.last_log_entries.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'last_log_entries'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'last_log_entries'::NAME, 'first_log_time'::NAME, 'Column logs.last_log_entries.first_log_time should exist' );
+SELECT col_type_is( 'logs', 'last_log_entries'::NAME, 'first_log_time'::NAME, 'timestamp with time zone' );
+SELECT has_column( 'logs', 'last_log_entries'::NAME, 'last_log_time'::NAME, 'Column logs.last_log_entries.last_log_time should exist' );
+SELECT col_type_is( 'logs', 'last_log_entries'::NAME, 'last_log_time'::NAME, 'timestamp with time zone' );
 SELECT has_view ( 'tools', 'pg_major_version'::NAME, 'View tools.pg_major_version should exist' );
 SELECT view_owner_is ( 'tools', 'pg_major_version'::NAME, 'grafana'::NAME);
+SELECT has_column( 'tools', 'pg_major_version'::NAME, 'major_version'::NAME, 'Column tools.pg_major_version.major_version should exist' );
+SELECT col_type_is( 'tools', 'pg_major_version'::NAME, 'major_version'::NAME, 'numeric' );
 SELECT has_view ( 'tools', 'table_size'::NAME, 'View tools.table_size should exist' );
 SELECT view_owner_is ( 'tools', 'table_size'::NAME, 'grafana'::NAME);
+SELECT has_column( 'tools', 'table_size'::NAME, 'log_time'::NAME, 'Column tools.table_size.log_time should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'log_time'::NAME, 'timestamp with time zone' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'cluster_name'::NAME, 'Column tools.table_size.cluster_name should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'database_name'::NAME, 'Column tools.table_size.database_name should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'database_name'::NAME, 'information_schema.sql_identifier' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'schema_name'::NAME, 'Column tools.table_size.schema_name should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'schema_name'::NAME, 'information_schema.sql_identifier' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'table_name'::NAME, 'Column tools.table_size.table_name should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'table_name'::NAME, 'information_schema.sql_identifier' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'name'::NAME, 'Column tools.table_size.name should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'name'::NAME, 'text' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'table_size'::NAME, 'Column tools.table_size.table_size should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'table_size'::NAME, 'bigint' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'table_size_pretty'::NAME, 'Column tools.table_size.table_size_pretty should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'table_size_pretty'::NAME, 'text' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'index_size'::NAME, 'Column tools.table_size.index_size should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'index_size'::NAME, 'bigint' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'index_size_pretty'::NAME, 'Column tools.table_size.index_size_pretty should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'index_size_pretty'::NAME, 'text' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'total_size'::NAME, 'Column tools.table_size.total_size should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'total_size'::NAME, 'bigint' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'total_size_pretty'::NAME, 'Column tools.table_size.total_size_pretty should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'total_size_pretty'::NAME, 'text' );
+SELECT has_column( 'tools', 'table_size'::NAME, 'time'::NAME, 'Column tools.table_size."time" should exist' );
+SELECT col_type_is( 'tools', 'table_size'::NAME, 'time'::NAME, 'timestamp with time zone' );
 
 SELECT diag('=================================');
 SELECT diag('Function Tests');
