@@ -39,6 +39,7 @@ LANGUAGE plpgsql;
 
 -- Install the TAP functions if it is not already installed.
 CREATE EXTENSION IF NOT EXISTS pgtap;
+\i common/update_pgtap.sql
 
 -- Set the role to the user you wish to run the tests as.
 CREATE TEMP TABLE __pgtap_db_server__ (server  text, username text, production_database text);

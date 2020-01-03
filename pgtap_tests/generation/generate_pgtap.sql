@@ -6,12 +6,13 @@ DECLARE
   r RECORD;
   r2 RECORD;
   count BIGINT;
+  function_col_test BOOLEAN;
   sql TEXT;
 BEGIN
   count = 0;
   sql = '';
 
-  CREATE EXTENSION IF NOT EXISTS pgtap;
+--  CREATE EXTENSION IF NOT EXISTS pgtap;
 
   sql = sql || E'SELECT diag(''================================='');\n';
   sql = sql || E'SELECT diag(''Role Tests'');\n';
@@ -44,6 +45,7 @@ BEGIN
                         THEN 'text' 
                         END || '[]') 
             	WHEN r2.data_type = 'timestamp with time zone' AND r2.datetime_precision <> 6 THEN quote_literal('timestamp(' || r2.datetime_precision || ') with time zone')
+                WHEN r2.domain_name IS NOT NULL THEN quote_literal(r2.domain_schema || '.' || r2.domain_name)
                 ELSE quote_literal(r2.data_type) 
             END || E' );\n';
 	    count = count + 2;
@@ -77,13 +79,28 @@ BEGIN
   sql = sql ||  E'\n';
   sql = sql || E'SELECT diag(''================================='');\n';
   sql = sql || E'SELECT diag(''Function Tests'');\n';
-  FOR r IN SELECT * FROM public.tap_funky WHERE schema IN ('logs', 'stats', 'tools') AND "name" != 'generate_pgtap' LOOP
+  FOR r IN SELECT * FROM public.tap_funky2 WHERE schema IN ('logs', 'stats', 'tools') AND "name" != 'generate_pgtap' LOOP
     IF r.args = '' THEN
       sql = sql || 'SELECT has_function ( ' || quote_literal(r.schema) || ', ' || quote_literal(r.name) || E'::NAME );\n';
     ELSE
       sql = sql || 'SELECT has_function ( ' || quote_literal(r.schema) || ', ' || quote_literal(r.name) || '::NAME, ' || quote_literal(r.args) || E' );\n';
     END IF;
   	sql = sql || 'SELECT function_owner_is ( ' || quote_literal(r.schema) || ', ' || quote_literal(r.name) || '::NAME, ' || quote_literal('{' || r.args || '}') || '::regtype[]::name[], ' || quote_literal(r.owner) || E'::NAME);\n';
+    IF r.returns != '' THEN
+      function_col_test = false;
+      FOR r2 IN SELECT *, unnest(return_arg_types) AS return_arg_type, unnest(return_arg_names) AS return_arg_name FROM public.tap_funky2 WHERE schema = r.schema AND "name" = r.name AND args = r.args LOOP
+        IF r2.return_arg_name IS NOT NULL THEN
+          sql = sql || 'SELECT function_has_column( ' || quote_literal(r2.schema) || ', ' || quote_literal(r2.name) || '::NAME, ' || quote_literal(r2.arg_types) || '::NAME[], ' || quote_literal(r2.return_arg_name) || E'::NAME );\n';
+          sql = sql || 'SELECT function_col_type_is( ' || quote_literal(r2.schema) || ', ' || quote_literal(r2.name) || '::NAME, ' || quote_literal(r2.arg_types) || '::NAME[], ' || quote_literal(r2.return_arg_name) || '::NAME , ' || quote_literal(r2.return_arg_type) || E'::NAME );\n';
+          function_col_test = true;
+          count = count + 2;
+        END IF;
+      END LOOP;
+      IF function_col_test = false THEN
+          sql = sql || 'SELECT function_returns_types( ' || quote_literal(r2.schema) || ', ' || quote_literal(r2.name) || '::NAME, ' || quote_literal(r2.arg_types) || '::NAME[], ' || quote_literal(r2.return_arg_types) || E'::NAME[] );\n';
+          count = count + 1;
+      END IF;
+    END IF;
     count = count + 2;
   END LOOP;
   
