@@ -434,45 +434,54 @@ RETURNS TEXT AS $$
     SELECT function_col_type_is( $1, $2, $3, $4, 'Column ' || quote_ident($1) || '(' || array_to_string($2, ',') || ').' || quote_ident($3) || ' should be type ' || $3 );
 $$ LANGUAGE SQL;
 
-ALTER EXTENSION pgtap ADD VIEW tap_funky2;
-ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[] );
-ALTER EXTENSION pgtap ADD FUNCTION _fcexists ( NAME, NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION _fcexists ( NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME, NAME[], NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME[], NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME, NAME[], NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME[], NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION _get_function_col_ns_type ( NAME, NAME, NAME[], NAME );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, NAME, TEXT, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, TEXT, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME[], NAME, TEXT, TEXT );
-ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME[], NAME, TEXT );
+DO $$
+DECLARE
+BEGIN
+
+    ALTER EXTENSION pgtap ADD VIEW tap_funky2;
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_types ( NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION _returns_names ( NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_types( NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[], TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_returns_names( NAME, NAME[] );
+    ALTER EXTENSION pgtap ADD FUNCTION _fcexists ( NAME, NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION _fcexists ( NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME, NAME[], NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME[], NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_has_column ( NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME, NAME[], NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME[], NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_hasnt_column ( NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION _get_function_col_ns_type ( NAME, NAME, NAME[], NAME );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, NAME, TEXT, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, TEXT, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME, NAME[], NAME, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME[], NAME, TEXT, TEXT );
+    ALTER EXTENSION pgtap ADD FUNCTION function_col_type_is ( NAME, NAME[], NAME, TEXT );
+
+EXCEPTION WHEN OTHERS THEN
+
+END
+$$;
