@@ -133,50 +133,6 @@ BEGIN
         ALTER VIEW reports.hypertable SET SCHEMA tools;
         ALTER VIEW tools.hypertable OWNER TO grafana;
 
-/*
-ok 45 - Function tools.postgres_log_trigger() should be owned by grafana
-ok 46 - Function tools.create_logs() should be owned by grafana
-ok 47 - Function tools.create_server_database_inherits(text, text) should be owned by grafana
-ok 48 - Function tools.create_server_inherits(text) should be owned by grafana
-ok 49 - Function tools.delete_logs() should be owned by grafana
-ok 50 - Function tools.field_list_check(text, text) should be owned by grafana
-ok 51 - Function logs.connection_attempt_history(text, text, text[], text, text, boolean, boolean) should be owned by grafana
-ok 52 - Function logs.connection_history(text, text, text[], text, text, boolean, boolean) should be owned by grafana
-ok 53 - Function tools.generate_timestamps(text, text) should be owned by grafana
-ok 54 - Function tools.group_by_interval(text, text) should be owned by grafana
-ok 55 - Function tools.interval_to_field(text) should be owned by grafana
-ok 56 - Function tools.parse_csv(text, boolean) should be owned by grafana
-ok 57 - Function logs.autoanalyze_log(text, text, text, text, text, bigint) should be owned by grafana
-ok 58 - Function logs.autoanalyze_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text) should be owned by grafana
-ok 59 - Function logs.autoanalyze_log_count_chart(text, text, text, text, text) should be owned by grafana
-ok 60 - Function logs.autovacuum_autoanalyze_count(text, text, text, text, text) should be owned by grafana
-ok 61 - Function logs.error_history(text, text, text[], text, text, boolean) should be owned by grafana
-ok 62 - Function logs.fatal_history(text, text, text[], text, text, boolean) should be owned by grafana
-ok 63 - Function logs.autovacuum_log(text, text, text, text, text, bigint) should be owned by grafana
-ok 64 - Function logs.autovacuum_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text) should be owned by grafana
-ok 65 - Function logs.autovacuum_log_count_chart(text, text, text, text, text) should be owned by grafana
-ok 66 - Function logs.autovacuum_log_removed_size(text, text, text, text, text, text) should be owned by grafana
-ok 67 - Function logs.autovacuum_log_removed_space_chart(text, text, text, text, text) should be owned by grafana
-ok 68 - Function logs.autovacuum_log_tuples_removed(text, text, text, text, text, text) should be owned by grafana
-ok 69 - Function logs.autovacuum_log_tuples_removed_chart(text, text, text, text, text) should be owned by grafana
-ok 70 - Function logs.autovacuum_thresholds(text, text, text, timestamp with time zone, text) should be owned by grafana
-ok 71 - Function logs.checkpoint_buffers(text, text, timestamp with time zone, timestamp with time zone, text) should be owned by grafana
-ok 72 - Function logs.checkpoint_files(text, text, timestamp with time zone, timestamp with time zone, text) should be owned by grafana
-ok 73 - Function logs.checkpoint_logs(text, text, bigint) should be owned by grafana
-ok 74 - Function logs.checkpoint_wal_file_usage(text, text, timestamp with time zone, timestamp with time zone, text) should be owned by grafana
-ok 75 - Function logs.checkpoint_warning_logs(text, text, bigint) should be owned by grafana
-ok 76 - Function stats.vacuum_settings(text, text, timestamp with time zone, text) should be owned by grafana
-ok 77 - Function logs.custom_table_settings(text, text, timestamp with time zone, text) should be owned by grafana
-ok 78 - Function logs.checkpoint_warning_logs_count(text, text, timestamp with time zone, timestamp with time zone, text) should be owned by grafana
-ok 79 - Function logs.checkpoint_write_buffers(text, text, timestamp with time zone, timestamp with time zone, text) should be owned by grafana
-ok 80 - Function stats.autovacuum(text, text, text, timestamp without time zone, text) should be owned by grafana
-ok 81 - Function stats.pg_stat_activity_active(text, text, timestamp with time zone, text) should be owned by grafana
-ok 82 - Function stats.granted_locks(text, text, timestamp with time zone, text) should be owned by grafana
-ok 83 - Function logs.ldap_error_history(text, text, text[], text, text, boolean) should be owned by grafana
-ok 84 - Function logs.update_pg_log_databases() should be owned by grafana
-ok 85 - Function tools.timescaledb_enterprise() should be owned by grafana
-ok 86 - Function tools.timescaledb_drop_chunks() should be owned by grafana
-*/
 
 END IF;
 

@@ -26,3 +26,29 @@ psql -h localhost -p 30002 -d pgmonitor_db -U postgres -f common/update_pgtap.sq
 psql -h localhost -p 30002 -d pgmonitor_db -U postgres -f generation/generate_pgtap.sql
 psql -h localhost -p 30002 -d pgmonitor_db -U postgres -qAtX -c 'SELECT * FROM tools.generate_pgtap();' -o 02_generated_pgtap.pg
 ```
+
+## Testing Upgrade of Database
+
+In this test we will load V1 of the database and then run the upgrade script. Finally we will unit test the final database to make sure it matches a fresh load of the current database configuration.
+
+```bash
+# If re-testing, get rid of our test databases
+dropdb -h localhost -p 30002 -U postgres reports
+dropdb -h localhost -p 30002 -U postgres pgmonitor_db
+
+# Create the grafana user, first time only
+psql -h localhost -d postgres -p 30002 -U postgres -c "CREATE ROLE grafana WITH PASSWORD 'pgpass' IN ROLE pg_monitor;"
+
+# Create database, Install V1 and then run the Upgrade
+createdb -h localhost -p 30002 -U postgres -E UTF8 -O grafana reports
+psql -h localhost -p 30002 -d reports -U postgres -f ~/pg_monitor/timescaledb/init_timescaledb_v1.sql
+psql -h localhost -p 30002 -d postgres -U postgres -f ~/pg_monitor/timescaledb/upgrade_timescaledb.sql
+
+# Install pgtap and our custom modifications
+psql -h localhost -p 30002 -d pgmonitor_db -U postgres -c 'CREATE EXTENSION IF NOT EXISTS pgtap;'
+psql -h localhost -p 30002 -d pgmonitor_db -U postgres -f ~/pg_monitor/pgtap_tests/common/update_pgtap.sql
+
+# Run the pgtap tests and then fix anything that has not been upgraded properly.
+cd ~/pg_monitor/pgtap_tests
+pg_prove -h localhost -p 30002 -d pgmonitor_db -U postgres *.pg
+```
