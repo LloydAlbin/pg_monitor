@@ -50,7 +50,9 @@ env:
     - PGPASSWORD=pgpass
     - PGPORT=30002
     - KUBEVERSION=v1.17.0
+    # https://kubernetes.io/docs/setup/release/notes/
     - MINIKUBEVERSION=v1.6.2
+    # https://github.com/kubernetes/minikube/tags
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
