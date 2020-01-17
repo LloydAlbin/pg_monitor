@@ -41,8 +41,8 @@ spec:
           value: "false"
         - name: GF_DATAPROXY_TIMEOUT
           value: "6000"
-        image: grafana/grafana:6.5.1
-        #image: grafana/grafana:6.5.1-ubuntu
+        image: grafana/grafana:6.5.3
+        #image: grafana/grafana:6.5.3-ubuntu
         imagePullPolicy: IfNotPresent
         name: pg-monitor-grafana
         ports:
