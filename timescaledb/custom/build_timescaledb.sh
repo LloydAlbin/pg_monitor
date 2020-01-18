@@ -237,8 +237,12 @@ timescaledb_build()
 		print_verbose 3 "Timescale Version: $VERSION"
 		
 		# Build Latest TimescaleDB Version
-		print_verbose 2 "Building Docker Image: $2/$3:latest-$5 in $1/timescaledb-docker"
-		docker build --no-cache=true --build-arg PG_VERSION=$4 -t $2/$3:latest-$5 $1/timescaledb-docker
+		print_verbose 2 "Building Docker Image: $2/$3:latest in $1/timescaledb-docker"
+		docker build --no-cache=true --build-arg PG_VERSION=$4 -t $2/$3:latest $1/timescaledb-docker
+
+		# Build Latest TimescaleDB Version for Specific Postgres Version
+		print_verbose 2 "Tagging Docker Image: $2/$3:latest-$5 from $2/$3:latest"
+		docker tag $2/$3:latest-$5 $2/$3:latest
 
 		# Tag exact TimescaleDB Version
 		print_verbose 2 "Tagging Docker Image: $2/$3:$VERSION-$5 from $2/$3:latest-$5"
