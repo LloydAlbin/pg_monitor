@@ -1,0 +1,52 @@
+\connect pgmonitor_db
+
+-- Setup Test Variables
+\set test_name 'data'
+\set test_user 'grafana'
+\set test_production_database 'pgmonitor_db'
+\set plan 2
+
+-- Install pgTAP, show diagnostics, and start common tests
+--\ir ../common/diagnostic.sql
+\i common/diagnostics.pg
+
+SELECT diag('=================================');
+SELECT diag('Test Connection Functions');
+
+SET TIME ZONE 'PST8PDT';
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_attempt_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:59''$$, ARRAY[''db1''], ''second'', ''avg'', False);',
+    $$VALUES
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
+        ('2020-01-18 19:00:05-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:10-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:15-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:20-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:25-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:30-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:35-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:40-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:45-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:50-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:01:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
+    $$,'Verify Data from function logs.connection_attempt_history');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:59''$$, ARRAY[''db1''], ''second'', ''avg'', False);',
+    $$VALUES
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
+        ('2020-01-18 19:00:05-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:10-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:15-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:20-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:25-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:30-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:35-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:40-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:45-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:50-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
+        ('2020-01-18 19:01:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
+    $$,'Verify Data from function logs.connection_history');
