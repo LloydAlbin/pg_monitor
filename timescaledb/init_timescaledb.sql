@@ -391,7 +391,7 @@ CREATE TABLE logs.postgres_log_databases_temp (
 ALTER TABLE logs.postgres_log_databases_temp OWNER TO grafana;
 
 -- VIEWS: pgmon
-CREATE VIEW logs.autovacuum_length AS
+CREATE VIEW stats.autovacuum_length AS
  SELECT b.cluster_name,
     b.database_name,
     COALESCE(max(b.running_time)) AS running_time
@@ -399,7 +399,7 @@ CREATE VIEW logs.autovacuum_length AS
            FROM stats.autovacuum) a
      LEFT JOIN stats.autovacuum b USING (log_time))
   GROUP BY b.cluster_name, b.database_name;
-ALTER TABLE logs.autovacuum_length OWNER TO grafana;
+ALTER TABLE stats.autovacuum_length OWNER TO grafana;
 
 
 -- TABLES: tools
@@ -462,16 +462,16 @@ ALTER TABLE ONLY tools.query
     ADD CONSTRAINT query_pkey UNIQUE (query_name, pg_version);
 
 -- VIEWS: pgmon
-CREATE VIEW logs.databases AS
+CREATE VIEW stats.databases AS
  SELECT DISTINCT cpd.cluster_name,
     cpd.database_name
    FROM (tools.servers s
      LEFT JOIN stats.pg_database cpd ON ((s.server_name = cpd.cluster_name)))
   WHERE (((s.read_all_databases IS TRUE) OR ((s.maintenance_database = cpd.database_name) AND (s.read_all_databases IS FALSE))) AND (cpd.database_name <> ALL (ARRAY['template0'::name, 'template1'::name, 'rdsadmin'::name])))
   ORDER BY cpd.cluster_name, cpd.database_name;
-ALTER TABLE logs.databases OWNER TO grafana;
+ALTER TABLE stats.databases OWNER TO grafana;
 
-CREATE VIEW logs.hypertable AS
+CREATE VIEW tools.hypertable AS
  SELECT ht.schema_name AS table_schema,
     ht.table_name,
     t.tableowner AS table_owner,
@@ -490,7 +490,7 @@ CREATE VIEW logs.hypertable AS
             WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
             ELSE NULL::text
         END)::regclass) size(table_size, index_size, toast_size, total_size) ON (true));
-ALTER TABLE logs.hypertable OWNER TO grafana;
+ALTER TABLE tools.hypertable OWNER TO grafana;
 
 CREATE VIEW logs.last_log_entries AS
  SELECT postgres_log.cluster_name,
@@ -1981,7 +1981,7 @@ SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log
 
 aka
 
-SELECT * FROM logs.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2013,6 +2013,7 @@ DECLARE
 	sql TEXT;
 BEGIN
 --	RAISE NOTICE 'cluster_name: %', cluster_name;
+/* -- Old non-TimescaleDB code
 	sql := E'SELECT a.start_time AS "Time", b.cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(' || aggregate || '(c.count),0)::BIGINT AS "Connections" ';
     sql = sql || E'FROM tools.generate_timestamps(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || '''), $$' || grafana_time_filter || '$$) a (start_time, end_time) ';
     sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM logs.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
@@ -2023,6 +2024,14 @@ BEGIN
     sql = sql || 'AND ' || grafana_time_filter || ' GROUP BY 1,2) c ';
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
     sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
+*/    
+
+	sql := E'SELECT time_bucket_gapfill(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || ''')::interval, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0)::BIGINT AS "Connections" ';
+    sql = sql || 'FROM logs.postgres_log ';
+    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
+    sql = sql || 'AND ' || grafana_time_filter || ' ';
+    sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
+     
 --    RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
 END;
@@ -2045,7 +2054,7 @@ SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$
 
 aka
 
-SELECT * FROM logs.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, 'sqltest', 'second', 'avg', False);
+SELECT * FROM logs.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], 'second', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2077,6 +2086,7 @@ DECLARE
 	sql TEXT;
 BEGIN
 --	RAISE NOTICE 'cluster_name: %', cluster_name;
+/* -- Old non-TimescaleDB code
 	sql := E'SELECT a.start_time AS "Time", b.cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(' || aggregate || '(c.count),0)::BIGINT AS "Connections" ';
     sql = sql || E'FROM tools.generate_timestamps(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || '''), $$' || grafana_time_filter || '$$) a (start_time, end_time) ';
     sql = sql || E'CROSS JOIN (SELECT DISTINCT cluster_name FROM logs.postgres_log WHERE ' || grafana_time_filter || E' AND ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[]) b ';
@@ -2087,6 +2097,13 @@ BEGIN
     sql = sql || 'AND ' || grafana_time_filter || ' GROUP BY 1,2) c ';
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
     sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
+*/    
+	sql := E'SELECT time_bucket_gapfill(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || ''')::interval, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0)::BIGINT AS "Connections" ';
+    sql = sql || 'FROM logs.postgres_log ';
+    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
+    sql = sql || 'AND ' || grafana_time_filter || ' ';
+    sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
+
 --    RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
 END;

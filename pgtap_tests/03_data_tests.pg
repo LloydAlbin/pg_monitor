@@ -29,8 +29,7 @@ SELECT results_eq(
         ('2020-01-18 19:00:40-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
         ('2020-01-18 19:00:45-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
         ('2020-01-18 19:00:50-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
-        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
-        ('2020-01-18 19:01:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
+        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
     $$,'Verify Data from function logs.connection_attempt_history');
 
 SELECT results_eq(
@@ -47,6 +46,5 @@ SELECT results_eq(
         ('2020-01-18 19:00:40-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
         ('2020-01-18 19:00:45-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
         ('2020-01-18 19:00:50-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
-        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
-        ('2020-01-18 19:01:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
+        ('2020-01-18 19:00:55-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint)
     $$,'Verify Data from function logs.connection_history');
