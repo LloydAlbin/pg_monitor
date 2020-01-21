@@ -1971,17 +1971,17 @@ ALTER FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time
 -- Name: connection_attempt_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], 'second', 'avg', False);
-SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '1s', 'avg', False);
+SELECT * FROM logs.connection_attempt_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '$__interval', 'sum', True);
 
 aka
 
-SELECT * FROM logs.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], 'second', 'avg', False);
+SELECT * FROM logs.connection_attempt_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], '1s', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2026,13 +2026,21 @@ BEGIN
     sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
 */    
 
-	sql := E'SELECT time_bucket(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || ''')::interval, "Time1") AS "Time", "Server", max("Connections1")::BIGINT AS "Connections" FROM ( ';
-	sql = sql || E'SELECT time_bucket_gapfill((''1'' || ''' || interval || ''')::interval, log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections1" ';
-    sql = sql || 'FROM logs.postgres_log ';
-    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
-    sql = sql || 'AND ' || grafana_time_filter || ' ';
-    sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
-    sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
+  IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
+	    sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
+      sql = sql || 'FROM logs.postgres_log ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
+      sql = sql || 'AND ' || grafana_time_filter || ' ';
+      sql = sql || 'GROUP BY "Time","Server" ORDER BY "Time","Server";';
+  ELSE
+	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", "Server", COALESCE(' || aggregate || '("Connections1"),0)::BIGINT AS "Connections" FROM ( ';
+	    sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", count(*) AS "Connections1" ';
+      sql = sql || 'FROM logs.postgres_log ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
+      sql = sql || 'AND ' || grafana_time_filter || ' ';
+      sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
+      sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
+  END IF;
      
 --    RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
@@ -2051,12 +2059,12 @@ CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filt
     AS $_X$
 /*
 SET application_name = 'Grafana';
-SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], 'second', 'avg', False);
-SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '1s', 'avg', False);
+SELECT * FROM logs.connection_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '$__interval', 'sum', True);
 
 aka
 
-SELECT * FROM logs.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], 'second', 'avg', False);
+SELECT * FROM logs.connection_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], '1s', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2100,8 +2108,8 @@ BEGIN
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
     sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
 */
-  IF grafana_interval::interval = interval::interval THEN
-	    sql := E'SELECT time_bucket_gapfill(''' || interval || '''::interval, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
+  IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
+	    sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
       sql = sql || 'FROM logs.postgres_log ';
       sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
       sql = sql || 'AND ' || grafana_time_filter || ' ';
@@ -2115,7 +2123,8 @@ BEGIN
       sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
       sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
   END IF;
---    RAISE NOTICE 'SQL: %', sql;
+
+--  RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
 END;
 $_X$;
