@@ -4,7 +4,7 @@
 \set test_name 'data'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 14
+\set plan 22
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -149,6 +149,109 @@ SELECT results_eq(
 
 SELECT diag('=================================');
 SELECT diag('Test logs.ldap_error_history()');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''15m'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 15:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 3::bigint),
+        ('2020-01-13 15:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 15:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 1::bigint),
+        ('2020-01-13 15:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 15:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 15:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 16:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 16:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:15:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 16:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 16:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:30:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint),
+        ('2020-01-13 16:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 16:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:45:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 1s sum to 15m');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 1s sum to 1h');
+
+SELECT todo( 'This test will fail until the bug #1645 is fixed in TimescaleDB', 1 );
+-- https://github.com/timescale/timescaledb/issues/1645
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1d'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    $$VALUES
+        ('2020-01-13 00:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 00:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
+        ('2020-01-13 00:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 1s sum to 1d');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''5h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    $$VALUES
+        ('2020-01-13 12:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 12:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
+        ('2020-01-13 12:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 1s sum to 5h');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''sum'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 15m sum to 1h');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''min'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 1::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 15m min to 1h');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''max'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 3::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 15m max to 1h');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''avg'', False);',
+    $$VALUES
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 2::bigint),
+        ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
+        ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
+    $$,'Verify Data from function logs.ldap_error_history - 15m avg to 1h');
 
 /*
 -- WRONG RESULTS
