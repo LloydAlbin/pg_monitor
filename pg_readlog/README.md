@@ -100,3 +100,15 @@ These articles talk about how to generate csv log files when using Amazon RDS or
 
 [Working with RDS and Aurora PostgreSQL logs: Part 1](https://aws.amazon.com/blogs/database/working-with-rds-and-aurora-postgresql-logs-part-1/)
 [Working with RDS and Aurora PostgreSQL logs: Part 2](https://aws.amazon.com/blogs/database/working-with-rds-and-aurora-postgresql-logs-part-2/)
+[Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide//install-linux.html)
+[Accessing Logs files with AWS CLI](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html)
+
+The following are my notes for being able to write a future example, but they are not an example to be used at this time.
+
+```bash
+sudo apt install awscli
+aws rds download-db-log-file-portion \
+    --db-instance-identifier myexampledb \
+    --starting-token 0 --output text \
+    --log-file-name log/ERROR.4 > errorlog.txt
+```
