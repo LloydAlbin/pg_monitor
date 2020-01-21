@@ -2046,7 +2046,7 @@ ALTER FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_ti
 -- Name: connection_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::interval, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2099,15 +2099,22 @@ BEGIN
     sql = sql || 'AND ' || grafana_time_filter || ' GROUP BY 1,2) c ';
     sql = sql || 'ON c.log_time BETWEEN a.start_time AND a.end_time AND b.cluster_name = c.cluster_name ';
     sql = sql || 'GROUP BY 1,2 ORDER BY 1,2;';
-*/    
-	sql := E'SELECT time_bucket(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || ''')::interval, "Time1") AS "Time", "Server", max("Connections1")::BIGINT AS "Connections" FROM ( ';
-	sql = sql || E'SELECT time_bucket_gapfill((''1'' || ''' || interval || ''')::interval, log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections1" ';
-    sql = sql || 'FROM logs.postgres_log ';
-    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
-    sql = sql || 'AND ' || grafana_time_filter || ' ';
-    sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
-    sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
-
+*/
+  IF grafana_interval::interval = interval::interval THEN
+	    sql := E'SELECT time_bucket_gapfill(''' || interval || '''::interval, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
+      sql = sql || 'FROM logs.postgres_log ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
+      sql = sql || 'AND ' || grafana_time_filter || ' ';
+      sql = sql || 'GROUP BY "Time","Server" ORDER BY "Time","Server";';
+  ELSE
+	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", "Server", COALESCE(' || aggregate || '("Connections1"),0)::BIGINT AS "Connections" FROM ( ';
+	    sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", count(*) AS "Connections1" ';
+      sql = sql || 'FROM logs.postgres_log ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
+      sql = sql || 'AND ' || grafana_time_filter || ' ';
+      sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
+      sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
+  END IF;
 --    RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
 END;
