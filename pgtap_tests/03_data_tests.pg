@@ -146,3 +146,131 @@ SELECT results_eq(
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1 - 15m Inverval - sum'::text,5::bigint)
     $$,'Verify Data from function logs.connection_history - 1h sum to 15m with Interval Display and Agregate Display');
+
+SELECT diag('=================================');
+SELECT diag('Test logs.ldap_error_history()');
+
+/*
+-- WRONG RESULTS
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1d', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'sum', False);
+NOTICE:  SQL: SELECT time_bucket_gapfill(CASE WHEN '1d'::interval >= '1s'::interval THEN '1d'::interval ELSE '1s'::interval END, log_time) AS "Time", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, COALESCE(count(*),0) AS "Errors" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error 
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-12 16:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-12 16:00:00-08 | db1 - LDAP login failed for user       |      3
+ 2020-01-12 16:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1d', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'max', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1d'::interval >= '1s'::interval THEN '1d'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(max("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-12 16:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-12 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-12 16:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1d', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'min', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1d'::interval >= '1s'::interval THEN '1d'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(min("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-12 16:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-12 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-12 16:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1d', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'avg', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1d'::interval >= '1s'::interval THEN '1d'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(avg("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-12 16:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-12 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-12 16:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'max', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1h'::interval >= '1s'::interval THEN '1h'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(max("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 15:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-13 15:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 15:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'min', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1h'::interval >= '1s'::interval THEN '1h'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(min("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 15:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-13 15:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 15:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'sum', False);
+NOTICE:  SQL: SELECT time_bucket_gapfill(CASE WHEN '1h'::interval >= '1s'::interval THEN '1h'::interval ELSE '1s'::interval END, log_time) AS "Time", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, COALESCE(count(*),0) AS "Errors" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error 
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 15:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-13 15:00:00-08 | db1 - LDAP login failed for user       |      3
+ 2020-01-13 15:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('1h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'avg', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '1h'::interval >= '1s'::interval THEN '1h'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(avg("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 15:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-13 15:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 15:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+
+-- BUG RESULTS, NEED TO TEST FOR THESE BAD RESULTS
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('4h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'avg', False);
+NOTICE:  SQL: SELECT time_bucket(CASE WHEN '4h'::interval >= '1s'::interval THEN '4h'::interval ELSE '1s'::interval END, "Time1") AS "Time", ldap_error, COALESCE(avg("Errors1"),0)::BIGINT AS "Errors" FROM ( SELECT time_bucket_gapfill('1s', log_time) AS "Time1", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, count(*) AS "Errors1" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ) a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 12:00:00-08 | db1 - Invalid credentials              |      0
+ 2020-01-13 12:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 12:00:00-08 | db1 - could not search LDAP for filter |      1
+ 2020-01-13 16:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 16:00:00-08 | db1 - LDAP login failed for user       |      1
+ 2020-01-13 16:00:00-08 | db1 - could not search LDAP for filter |      0
+(6 rows)
+
+
+pgmonitor_db=# SELECT * FROM logs.ldap_error_history('5h', $$log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59'$$, ARRAY['db1','db2'], '1s', 'sum', False);
+NOTICE:  SQL: SELECT time_bucket_gapfill(CASE WHEN '5h'::interval >= '1s'::interval THEN '5h'::interval ELSE '1s'::interval END, log_time) AS "Time", CASE WHEN array_length('{db1,db2}'::text[], 1) > 1 THEN cluster_name || ' - ' ELSE '' END || CASE WHEN message LIKE E'%Can''t contact LDAP server' THEN trim(split_part(message, '"', 1)) ELSE trim(split_part(message, ':', 2)) END AS ldap_error, COALESCE(count(*),0) AS "Errors" FROM logs.postgres_log WHERE ARRAY[cluster_name] <@ '{db1,db2}'::text[] AND (message LIKE 'LDAP login failed for user%' OR message LIKE E'%Can''t contact LDAP server') AND log_time BETWEEN '2020-01-13T15:00:00' AND '2020-01-13T16:59:59' GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error 
+          time          |              LDAP Errors               | Errors 
+------------------------+----------------------------------------+--------
+ 2020-01-13 12:00:00-08 | db1 - Invalid credentials              |      1
+ 2020-01-13 12:00:00-08 | db1 - LDAP login failed for user       |      4
+ 2020-01-13 12:00:00-08 | db1 - could not search LDAP for filter |      1
+(3 rows)
+
+*/

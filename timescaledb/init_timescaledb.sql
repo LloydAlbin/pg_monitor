@@ -2054,7 +2054,7 @@ ALTER FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_ti
 -- Name: connection_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::interval, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2602,18 +2602,18 @@ ALTER FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timet
 -- Name: ldap_error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
 /*
 SET application_name = 'Grafana';
-SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], 'minute', 'sum', False);
-SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], tools.interval_to_field('$__interval'), 'sum', True);
+SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '1m', 'sum', False);
+SELECT * FROM logs.ldap_error_history('$__interval', $$$__timeFilter(log_time)$$, ARRAY[$ServerName]::text[], '$__interval', 'sum', True);
 
 aka
 
-SELECT * FROM logs.ldap_error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], 'second', 'avg', False);
+SELECT * FROM logs.ldap_error_history('5s', $$log_time BETWEEN '2019-03-11T19:45:08Z' AND '2019-03-11T22:45:08Z'$$, ARRAY['sqltest'], '1s', 'avg', False);
 
 $__interval is the resolution of the graph. This is set by Grafana based on width and and time line for the graph being displayed
 $__timeFilter(log_time) is the time period you have specified at the top of the page
@@ -2666,15 +2666,25 @@ BEGIN
     sql = sql || 'GROUP BY 1,2 ';
     sql = sql || ') e ON e.time BETWEEN c.start_time AND c.end_time AND c.ldap_error = e.ldap_error GROUP BY 1,2 ORDER BY 1,2; ';
 */
-	sql := E'SELECT time_bucket(tools.group_by_interval(''' || grafana_interval || E''', ''' || interval || ''')::interval, "Time1") AS "Time", ldap_error, max("Errors1")::BIGINT AS "Errors" FROM ( ';
-	sql = sql || E'SELECT time_bucket_gapfill((''1'' || ''' || interval || ''')::interval, log_time) AS "Time1", ';
+  IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
+  	sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", ';
     sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error, ';
-    sql = sql || 'COALESCE(count(*),0) AS "Errors1" ';
+    sql = sql || 'COALESCE(count(*),0) AS "Errors" ';
+    sql = sql || 'FROM logs.postgres_log ';
+    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
+    sql = sql || 'GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error ';
+  ELSE
+	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", ldap_error, COALESCE(' || aggregate || '("Errors1"),0)::BIGINT AS "Errors" FROM ( ';
+  	sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", ';
+    sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error, ';
+    sql = sql || 'count(*) AS "Errors1" ';
     sql = sql || 'FROM logs.postgres_log ';
     sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
     sql = sql || 'GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ';
     sql = sql || ') a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;';
-    
+  END IF;
+
+--  RAISE NOTICE 'SQL: %', sql;
 	RETURN QUERY EXECUTE sql;
 END;
 $_X$;
