@@ -1,3 +1,20 @@
+IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
+  	sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", ';
+    sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error, ';
+    sql = sql || 'COALESCE(count(*),0) AS "Errors" ';
+    sql = sql || 'FROM logs.postgres_log ';
+    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
+    sql = sql || 'GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error ';
+  ELSE
+	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", ldap_error, COALESCE(' || aggregate || '("Errors1"),0)::BIGINT AS "Errors" FROM ( ';
+  	sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", ';
+    sql = sql || E'CASE WHEN array_length(''' || cluster_name::text || E'''::text[], 1) > 1 THEN cluster_name || '' - '' ELSE '''' END || CASE WHEN message LIKE E''%Can''''t contact LDAP server'' THEN trim(split_part(message, ''"'', 1)) ELSE trim(split_part(message, '':'', 2)) END AS ldap_error, ';
+    sql = sql || 'count(*) AS "Errors1" ';
+    sql = sql || 'FROM logs.postgres_log ';
+    sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND (message LIKE ''LDAP login failed for user%'' OR message LIKE E''%Can''''t contact LDAP server'') AND ' || grafana_time_filter || ' ';
+    sql = sql || 'GROUP BY "Time1",ldap_error ORDER BY "Time1",ldap_error ';
+    sql = sql || ') a GROUP BY "Time",ldap_error ORDER BY "Time",ldap_error;';
+  END IF;
 -- USE SELECT * FROM tools.generate_pgtap(); TO GENERATE THIS FILE
 \connect pgmonitor_db
 
@@ -171,7 +188,7 @@ SELECT col_type_is( 'logs', 'postgres_log_databases_temp'::NAME, 'max'::NAME, 't
 SELECT has_table ( 'logs', 'autovacuum_logs'::NAME );
 SELECT table_owner_is ( 'logs', 'autovacuum_logs'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'autovacuum_logs'::NAME, 'log_time'::NAME, 'Column logs.autovacuum_logs.log_time should exist' );
-SELECT col_type_is( 'logs', 'autovacuum_logs'::NAME, 'log_time'::NAME, 'timestamp(3) with time zone' );
+SELECT col_type_is( 'logs', 'autovacuum_logs'::NAME, 'log_time'::NAME, 'timestamp with time zone' );
 SELECT has_column( 'logs', 'autovacuum_logs'::NAME, 'cluster_name'::NAME, 'Column logs.autovacuum_logs.cluster_name should exist' );
 SELECT col_type_is( 'logs', 'autovacuum_logs'::NAME, 'cluster_name'::NAME, 'text' );
 SELECT has_column( 'logs', 'autovacuum_logs'::NAME, 'database_name'::NAME, 'Column logs.autovacuum_logs.database_name should exist' );
