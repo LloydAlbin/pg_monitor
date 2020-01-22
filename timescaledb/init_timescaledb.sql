@@ -2857,6 +2857,16 @@ otherwise the logs script will also perform this for comminity licensed versions
     END IF;
 END $$;
 
+-- Continous Aggregates must be created after the hypertables are created.
+
+CREATE VIEW logs.connection_received_logs_summary
+WITH (timescaledb.continuous)
+AS
+SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name;
+--ALTER TABLE logs.connection_received_logs_summary OWNER TO grafana;
+
 -- LOAD DATA INTO tools.query
 INSERT INTO tools.query ("query_name", "sql", "disabled", "maintenance_db_only", "pg_version", "run_order", "schema_name", "table_name")
 VALUES 
