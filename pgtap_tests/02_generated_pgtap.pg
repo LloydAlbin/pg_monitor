@@ -5,7 +5,7 @@
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 1157
+\set plan 1165
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -42,16 +42,6 @@ SELECT has_column( 'logs', 'autoanalyze_logs'::NAME, 'cpu_user'::NAME, 'Column l
 SELECT col_type_is( 'logs', 'autoanalyze_logs'::NAME, 'cpu_user'::NAME, 'numeric' );
 SELECT has_column( 'logs', 'autoanalyze_logs'::NAME, 'elasped_seconds'::NAME, 'Column logs.autoanalyze_logs.elasped_seconds should exist' );
 SELECT col_type_is( 'logs', 'autoanalyze_logs'::NAME, 'elasped_seconds'::NAME, 'numeric' );
-SELECT has_table ( 'logs', 'checkpoint_warning_logs'::NAME );
-SELECT table_owner_is ( 'logs', 'checkpoint_warning_logs'::NAME, 'grafana'::NAME);
-SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'log_time'::NAME, 'Column logs.checkpoint_warning_logs.log_time should exist' );
-SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'log_time'::NAME, 'timestamp with time zone' );
-SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'cluster_name'::NAME, 'Column logs.checkpoint_warning_logs.cluster_name should exist' );
-SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'cluster_name'::NAME, 'text' );
-SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'seconds'::NAME, 'Column logs.checkpoint_warning_logs.seconds should exist' );
-SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'seconds'::NAME, 'integer' );
-SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'hint'::NAME, 'Column logs.checkpoint_warning_logs.hint should exist' );
-SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'hint'::NAME, 'text' );
 SELECT has_table ( 'logs', 'checkpoint_logs'::NAME );
 SELECT table_owner_is ( 'logs', 'checkpoint_logs'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'checkpoint_logs'::NAME, 'log_time'::NAME, 'Column logs.checkpoint_logs.log_time should exist' );
@@ -132,16 +122,6 @@ SELECT has_column( 'logs', 'postgres_log'::NAME, 'location'::NAME, 'Column logs.
 SELECT col_type_is( 'logs', 'postgres_log'::NAME, 'location'::NAME, 'text' );
 SELECT has_column( 'logs', 'postgres_log'::NAME, 'application_name'::NAME, 'Column logs.postgres_log.application_name should exist' );
 SELECT col_type_is( 'logs', 'postgres_log'::NAME, 'application_name'::NAME, 'text' );
-SELECT has_table ( 'logs', 'postgres_log_databases'::NAME );
-SELECT table_owner_is ( 'logs', 'postgres_log_databases'::NAME, 'grafana'::NAME);
-SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'cluster_name'::NAME, 'Column logs.postgres_log_databases.cluster_name should exist' );
-SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'cluster_name'::NAME, 'text' );
-SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'database_name'::NAME, 'Column logs.postgres_log_databases.database_name should exist' );
-SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'database_name'::NAME, 'text' );
-SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'start_date'::NAME, 'Column logs.postgres_log_databases.start_date should exist' );
-SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'start_date'::NAME, 'timestamp with time zone' );
-SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'end_date'::NAME, 'Column logs.postgres_log_databases.end_date should exist' );
-SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'end_date'::NAME, 'timestamp with time zone' );
 SELECT has_table ( 'logs', 'archive_failure_log'::NAME );
 SELECT table_owner_is ( 'logs', 'archive_failure_log'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'archive_failure_log'::NAME, 'cluster_name'::NAME, 'Column logs.archive_failure_log.cluster_name should exist' );
@@ -158,6 +138,16 @@ SELECT has_table ( 'logs', 'lock_message_types'::NAME );
 SELECT table_owner_is ( 'logs', 'lock_message_types'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'lock_message_types'::NAME, 'message'::NAME, 'Column logs.lock_message_types.message should exist' );
 SELECT col_type_is( 'logs', 'lock_message_types'::NAME, 'message'::NAME, 'text' );
+SELECT has_table ( 'logs', 'postgres_log_databases'::NAME );
+SELECT table_owner_is ( 'logs', 'postgres_log_databases'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'cluster_name'::NAME, 'Column logs.postgres_log_databases.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'database_name'::NAME, 'Column logs.postgres_log_databases.database_name should exist' );
+SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'database_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'start_date'::NAME, 'Column logs.postgres_log_databases.start_date should exist' );
+SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'start_date'::NAME, 'timestamp with time zone' );
+SELECT has_column( 'logs', 'postgres_log_databases'::NAME, 'end_date'::NAME, 'Column logs.postgres_log_databases.end_date should exist' );
+SELECT col_type_is( 'logs', 'postgres_log_databases'::NAME, 'end_date'::NAME, 'timestamp with time zone' );
 SELECT has_table ( 'logs', 'postgres_log_databases_temp'::NAME );
 SELECT table_owner_is ( 'logs', 'postgres_log_databases_temp'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'postgres_log_databases_temp'::NAME, 'cluster_name'::NAME, 'Column logs.postgres_log_databases_temp.cluster_name should exist' );
@@ -220,6 +210,16 @@ SELECT has_column( 'logs', 'autovacuum_logs'::NAME, 'cpu_user'::NAME, 'Column lo
 SELECT col_type_is( 'logs', 'autovacuum_logs'::NAME, 'cpu_user'::NAME, 'numeric' );
 SELECT has_column( 'logs', 'autovacuum_logs'::NAME, 'elasped_seconds'::NAME, 'Column logs.autovacuum_logs.elasped_seconds should exist' );
 SELECT col_type_is( 'logs', 'autovacuum_logs'::NAME, 'elasped_seconds'::NAME, 'numeric' );
+SELECT has_table ( 'logs', 'checkpoint_warning_logs'::NAME );
+SELECT table_owner_is ( 'logs', 'checkpoint_warning_logs'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'log_time'::NAME, 'Column logs.checkpoint_warning_logs.log_time should exist' );
+SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'log_time'::NAME, 'timestamp with time zone' );
+SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'cluster_name'::NAME, 'Column logs.checkpoint_warning_logs.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'seconds'::NAME, 'Column logs.checkpoint_warning_logs.seconds should exist' );
+SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'seconds'::NAME, 'integer' );
+SELECT has_column( 'logs', 'checkpoint_warning_logs'::NAME, 'hint'::NAME, 'Column logs.checkpoint_warning_logs.hint should exist' );
+SELECT col_type_is( 'logs', 'checkpoint_warning_logs'::NAME, 'hint'::NAME, 'text' );
 SELECT has_table ( 'logs', 'lock_logs'::NAME );
 SELECT table_owner_is ( 'logs', 'lock_logs'::NAME, 'grafana'::NAME);
 SELECT has_column( 'logs', 'lock_logs'::NAME, 'lock_type'::NAME, 'Column logs.lock_logs.lock_type should exist' );
@@ -278,6 +278,14 @@ SELECT has_column( 'logs', 'lock_logs'::NAME, 'location'::NAME, 'Column logs.loc
 SELECT col_type_is( 'logs', 'lock_logs'::NAME, 'location'::NAME, 'text' );
 SELECT has_column( 'logs', 'lock_logs'::NAME, 'application_name'::NAME, 'Column logs.lock_logs.application_name should exist' );
 SELECT col_type_is( 'logs', 'lock_logs'::NAME, 'application_name'::NAME, 'text' );
+SELECT has_table ( 'logs', 'connection_received_logs'::NAME );
+SELECT table_owner_is ( 'logs', 'connection_received_logs'::NAME, 'grafana'::NAME);
+SELECT has_column( 'logs', 'connection_received_logs'::NAME, 'log_time'::NAME, 'Column logs.connection_received_logs.log_time should exist' );
+SELECT col_type_is( 'logs', 'connection_received_logs'::NAME, 'log_time'::NAME, 'timestamp with time zone' );
+SELECT has_column( 'logs', 'connection_received_logs'::NAME, 'cluster_name'::NAME, 'Column logs.connection_received_logs.cluster_name should exist' );
+SELECT col_type_is( 'logs', 'connection_received_logs'::NAME, 'cluster_name'::NAME, 'text' );
+SELECT has_column( 'logs', 'connection_received_logs'::NAME, 'connection_from'::NAME, 'Column logs.connection_received_logs.connection_from should exist' );
+SELECT col_type_is( 'logs', 'connection_received_logs'::NAME, 'connection_from'::NAME, 'text' );
 SELECT has_table ( 'stats', 'pg_settings'::NAME );
 SELECT table_owner_is ( 'stats', 'pg_settings'::NAME, 'grafana'::NAME);
 SELECT has_column( 'stats', 'pg_settings'::NAME, 'log_time'::NAME, 'Column stats.pg_settings.log_time should exist' );

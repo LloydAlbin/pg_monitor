@@ -65,9 +65,13 @@ psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
 psql -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
 # Setup account with password
 psql -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+# Remove Compresses Chunks Policy
+psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.remove_compress_chunks_policy((schema_name || '.' || table_name)::regclass) FROM tools.hypertables;"
 # Load Test Data
 cat ~/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
 cat ~/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+# Add Compresses Chunks Policy
+psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;"
 
 ###### PGTAP ######
 # Must change directories to tune the pgtap tests.

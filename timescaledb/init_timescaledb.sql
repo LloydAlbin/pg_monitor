@@ -214,6 +214,18 @@ ALTER TABLE stats.autovacuum_thresholds OWNER TO grafana;
 CREATE INDEX autovacuum_thresholds_cluster_name_log_time_idx ON stats.autovacuum_thresholds USING btree (cluster_name, log_time DESC);
 CREATE INDEX autovacuum_thresholds_log_time_idx ON stats.autovacuum_thresholds USING btree (log_time DESC);
 
+-- 2020-01-18 19:00:00.020 PST,,,118584,"pc1.yourdomain.com:34462",5e23c630.1cf38,1,"",2020-01-18 19:00:00 PST,,0,LOG,00000,
+-- "connection received: host=pc1.yourdomain.com port=34462",,,,,,,,,""
+
+CREATE TABLE logs.connection_received_logs (
+    log_time timestamp with time zone NOT NULL,
+    cluster_name text,
+    connection_from text
+);
+ALTER TABLE logs.connection_received_logs OWNER TO grafana;
+CREATE INDEX connection_received_logs_cluster_name_time_idx ON logs.connection_received_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX connection_received_logs_time_idx ON logs.connection_received_logs USING btree (log_time DESC);
+
 CREATE TABLE logs.autoanalyze_logs (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
@@ -714,6 +726,17 @@ BEGIN
         NEW.process_id,
         NEW.message,
         NEW.detail
+    );
+    	RETURN NULL;
+
+
+	ELSIF (NEW.message LIKE 'connection received%') THEN
+	-- Move connections received from logs.postgres_log into the logs.connection_received_logs
+
+    INSERT INTO logs.connection_received_logs VALUES (
+        NEW.log_time,
+    	NEW.cluster_name,
+        NEW.connection_from
     );
     	RETURN NULL;
 
@@ -2028,15 +2051,15 @@ BEGIN
 
   IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
 	    sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
-      sql = sql || 'FROM logs.postgres_log ';
-      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
+      sql = sql || 'FROM logs.connection_received_logs ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] ';
       sql = sql || 'AND ' || grafana_time_filter || ' ';
       sql = sql || 'GROUP BY "Time","Server" ORDER BY "Time","Server";';
   ELSE
 	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", "Server", COALESCE(' || aggregate || '("Connections1"),0)::BIGINT AS "Connections" FROM ( ';
 	    sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", count(*) AS "Connections1" ';
-      sql = sql || 'FROM logs.postgres_log ';
-      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection received%'' ';
+      sql = sql || 'FROM logs.connection_received_logs ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] ';
       sql = sql || 'AND ' || grafana_time_filter || ' ';
       sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
       sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
@@ -2756,7 +2779,8 @@ INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partit
 ('logs', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
 ('logs', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
 ('logs', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name');
+('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'connection_received_logs',   'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name, connection_from');
 
 
 -- logs Processing Tables
