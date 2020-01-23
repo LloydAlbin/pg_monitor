@@ -736,7 +736,7 @@ BEGIN
     INSERT INTO logs.connection_received_logs VALUES (
         NEW.log_time,
     	NEW.cluster_name,
-        NEW.connection_from
+        split_part(NEW.connection_from, ':', 1)
     );
     	RETURN NULL;
 
