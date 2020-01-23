@@ -2860,7 +2860,7 @@ END $$;
 -- Continous Aggregates must be created after the hypertables are created.
 
 CREATE VIEW logs.connection_received_logs_summary
-WITH (timescaledb.continuous)
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
 AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
