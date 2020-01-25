@@ -749,6 +749,38 @@ END;
 $$;
 ALTER FUNCTION tools.postgres_log_trigger() OWNER TO grafana;
 
+/*
+CREATE FUNCTION tools.time_bucket(bucket_width interval, ts timestamptz, offset_interval interval = '0s', origin timestamptz = '2000-01-03'::timestamptz) RETURNS timestamptz
+    AS $$
+SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)));
+$$
+LANGUAGE 'sql'
+IMMUTABLE
+RETURNS NULL ON NULL INPUT
+SECURITY INVOKER;
+ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamptz) OWNER TO grafana;
+
+CREATE FUNCTION tools.time_bucket(bucket_width interval, ts timestamp, offset_interval interval = '0s', origin timestamp = '2000-01-03'::timestamp) RETURNS timestamp
+    AS $$
+SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)))::timestamp;
+$$
+LANGUAGE 'sql'
+IMMUTABLE
+RETURNS NULL ON NULL INPUT
+SECURITY INVOKER;
+ALTER FUNCTION tools.time_bucket(interval, timestamp, interval, timestamp) OWNER TO grafana;
+
+CREATE FUNCTION tools.time_bucket(bucket_width interval, ts date, offset_interval interval = '0s', origin date = '2000-01-03') RETURNS date
+    AS $$
+SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)))::date;
+$$
+LANGUAGE 'sql'
+IMMUTABLE
+RETURNS NULL ON NULL INPUT
+SECURITY INVOKER;
+ALTER FUNCTION tools.time_bucket(interval, date, interval, date) OWNER TO grafana;
+*/
+
 CREATE FUNCTION tools.create_logs() RETURNS void
     LANGUAGE plpgsql
     AS $$
@@ -796,9 +828,9 @@ WHERE table_schema = 'logs' AND t.table_type = 'BASE TABLE' AND query.maintenanc
   END LOOP;
 END;
 $_$;
-ALTER FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) OWNER TO grafana;
+ALTER FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) OWNER TO grafana;
 
-CREATE FUNCTION tools.create_server_inherits("server_name" text) RETURNS void
+CREATE FUNCTION tools.create_server_inherits("server_name" text) RETURNS void
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -816,7 +848,7 @@ BEGIN
   END LOOP;
 END;
 $_$;
-ALTER FUNCTION tools.create_server_inherits("server_name" text) OWNER TO grafana;
+ALTER FUNCTION tools.create_server_inherits("server_name" text) OWNER TO grafana;
 
 CREATE FUNCTION tools.delete_logs() RETURNS void
     LANGUAGE plpgsql
