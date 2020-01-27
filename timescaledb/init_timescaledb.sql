@@ -749,37 +749,171 @@ END;
 $$;
 ALTER FUNCTION tools.postgres_log_trigger() OWNER TO grafana;
 
+CREATE OR REPLACE FUNCTION tools.time_bucket (
+  bucket_width interval,
+  ts timestamptz,
+  "offset" interval = '00:00:00'::interval,
+  origin timestamptz = '0001-01-01 00:00:00+00'::timestamptz
+)
+RETURNS TIMESTAMPTZ AS
+$body$
 /*
-CREATE FUNCTION tools.time_bucket(bucket_width interval, ts timestamptz, offset_interval interval = '0s', origin timestamptz = '2000-01-03'::timestamptz) RETURNS timestamptz
-    AS $$
-SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)));
-$$
-LANGUAGE 'sql'
+millenium = 1000 years
+century = 100 years
+decade = 10 years
+1.5 years aka 1 year 6 months or 18 months
+year aka 12 months
+half year aka 6 months
+quarter aka 3 months
+months = months
+*/
+DECLARE
+  months integer;
+  bucket_months integer;
+  bucket_month integer;
+BEGIN
+	IF EXTRACT(MONTH FROM bucket_width) >= 1 OR EXTRACT(YEAR FROM bucket_width) >= 1 THEN
+    origin := origin + ((0-date_part('timezone_hour', now()))::text || ' hours')::interval;
+      bucket_months :=
+          (EXTRACT(MONTH FROM bucket_width) + -- months	
+          (EXTRACT(YEAR FROM bucket_width) * 12)); -- years
+      months := (((EXTRACT(YEAR FROM ts)-EXTRACT(YEAR FROM origin))*12)+EXTRACT(MONTH FROM ts)-1);
+      bucket_month := floor(months/bucket_months)*bucket_months;
+      
+      RETURN make_timestamptz(
+          (EXTRACT(YEAR FROM origin)+floor(bucket_month/12))::integer, -- year
+          (bucket_month%12)+1, -- month
+          1, --day
+          0, -- hour
+          0, -- minute
+          0, --second
+          'Z');
+	ELSE
+      CASE 
+      WHEN "offset" > '0s'::interval THEN
+	      RETURN public.time_bucket(bucket_width, ts-"offset") + "offset";
+      WHEN origin <> '0001-01-01T00:00:00Z'::timestamptz THEN
+	      RETURN public.time_bucket(bucket_width, ts, origin);
+      ELSE
+	      RETURN public.time_bucket(bucket_width, ts);
+      END CASE;
+    END IF;
+END;
+$body$
+LANGUAGE 'plpgsql'
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamptz) OWNER TO grafana;
 
-CREATE FUNCTION tools.time_bucket(bucket_width interval, ts timestamp, offset_interval interval = '0s', origin timestamp = '2000-01-03'::timestamp) RETURNS timestamp
-    AS $$
-SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)))::timestamp;
-$$
-LANGUAGE 'sql'
+CREATE OR REPLACE FUNCTION tools.time_bucket (
+  bucket_width interval,
+  ts timestamp,
+  "offset" interval = '00:00:00'::interval,
+  origin timestamp = '0001-01-01 00:00:00'::timestamp
+)
+RETURNS TIMESTAMP AS
+$body$
+/*
+millenium = 1000 years
+century = 100 years
+decade = 10 years
+1.5 years aka 1 year 6 months or 18 months
+year aka 12 months
+half year aka 6 months
+quarter aka 3 months
+months = months
+*/
+DECLARE
+  months integer;
+  bucket_months integer;
+  bucket_month integer;
+BEGIN
+	IF EXTRACT(MONTH FROM bucket_width) >= 1 OR EXTRACT(YEAR FROM bucket_width) >= 1 THEN
+      bucket_months :=
+          (EXTRACT(MONTH FROM bucket_width) + -- months	
+          (EXTRACT(YEAR FROM bucket_width) * 12)); -- years
+      months := (((EXTRACT(YEAR FROM ts)-EXTRACT(YEAR FROM origin))*12)+EXTRACT(MONTH FROM ts)-1);
+      bucket_month := floor(months/bucket_months)*bucket_months;
+      
+      RETURN make_timestamp(
+          (EXTRACT(YEAR FROM origin)+floor(bucket_month/12))::integer, -- year
+          (bucket_month%12)+1, -- month
+          1, --day
+          0, -- hour
+          0, -- minute
+          0 --second
+          );
+	ELSE
+      CASE 
+      WHEN "offset" > '0s'::interval THEN
+	      RETURN public.time_bucket(bucket_width, ts-"offset") + "offset";
+      WHEN origin <> '0001-01-01T00:00:00'::timestamp THEN
+	      RETURN public.time_bucket(bucket_width, ts, origin);
+      ELSE
+	      RETURN public.time_bucket(bucket_width, ts);
+      END CASE;
+    END IF;
+END;
+$body$
+LANGUAGE 'plpgsql'
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, timestamp, interval, timestamp) OWNER TO grafana;
 
-CREATE FUNCTION tools.time_bucket(bucket_width interval, ts date, offset_interval interval = '0s', origin date = '2000-01-03') RETURNS date
-    AS $$
-SELECT to_timestamp((floor(((EXTRACT (EPOCH FROM (ts + offset_interval))) - (0 - (EXTRACT (EPOCH FROM origin))))/(EXTRACT (EPOCH FROM bucket_width)))*(EXTRACT (EPOCH FROM bucket_width)))+(EXTRACT (EPOCH FROM origin)))::date;
-$$
-LANGUAGE 'sql'
+CREATE OR REPLACE FUNCTION tools.time_bucket (
+  bucket_width interval,
+  ts date,
+  "offset" interval = '00:00:00'::interval,
+  origin date = '0001-01-01'::date
+)
+RETURNS DATE AS
+$body$
+/*
+millenium = 1000 years
+century = 100 years
+decade = 10 years
+1.5 years aka 1 year 6 months or 18 months
+year aka 12 months
+half year aka 6 months
+quarter aka 3 months
+months = months
+*/
+DECLARE
+  months integer;
+  bucket_months integer;
+  bucket_month integer;
+BEGIN
+	IF EXTRACT(MONTH FROM bucket_width) >= 1 OR EXTRACT(YEAR FROM bucket_width) >= 1 THEN
+      bucket_months :=
+          (EXTRACT(MONTH FROM bucket_width) + -- months	
+          (EXTRACT(YEAR FROM bucket_width) * 12)); -- years
+      months := (((EXTRACT(YEAR FROM ts)-EXTRACT(YEAR FROM origin))*12)+EXTRACT(MONTH FROM ts)-1);
+      bucket_month := floor(months/bucket_months)*bucket_months;
+      
+      RETURN make_date(
+          (EXTRACT(YEAR FROM origin)+floor(bucket_month/12))::integer, -- year
+          (bucket_month%12)+1, -- month
+          1 --day
+          );
+	ELSE
+      CASE 
+      WHEN "offset" > '0s'::interval THEN
+	      RETURN public.time_bucket(bucket_width, ts-"offset") + "offset";
+      WHEN origin <> '0001-01-01'::date THEN
+	      RETURN public.time_bucket(bucket_width, ts, origin);
+      ELSE
+	      RETURN public.time_bucket(bucket_width, ts);
+      END CASE;
+    END IF;
+END;
+$body$
+LANGUAGE 'plpgsql'
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, date, interval, date) OWNER TO grafana;
-*/
 
 CREATE FUNCTION tools.create_logs() RETURNS void
     LANGUAGE plpgsql

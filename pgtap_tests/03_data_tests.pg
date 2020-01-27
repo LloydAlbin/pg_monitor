@@ -4,20 +4,17 @@
 \set test_name 'data'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 22
+\set plan 69
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
 \i common/diagnostics.pg
 
-SELECT diag('SET TIME ZONE PST8PDT');
-SET TIME ZONE 'PST8PDT';
-
 SELECT diag('=================================');
 SELECT diag('Test logs.connection_attempt_history()');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:59''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_attempt_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:00:59-08''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
         ('2020-01-18 19:00:05-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
@@ -34,7 +31,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.connection_attempt_history - 1s avg to 5s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''1s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:11''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_attempt_history(''1s'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:00:11-08''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
         ('2020-01-18 19:00:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
@@ -51,31 +48,31 @@ SELECT results_eq(
     $$,'Verify Data from function logs.connection_attempt_history - 1s avg to 1s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''min'', False);',
+    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''min'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint)
     $$,'Verify Data from function logs.connection_attempt_history - 15m min to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''max'', False);',
+    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''max'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,3::bigint)
     $$,'Verify Data from function logs.connection_attempt_history - 15m max to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,2::bigint)
     $$,'Verify Data from function logs.connection_attempt_history - 15m avg to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''sum'', True);',
+    E'SELECT * FROM logs.connection_attempt_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''sum'', True);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1 - 1h Inverval'::text,5::bigint)
     $$,'Verify Data from function logs.connection_attempt_history - 15m sum to 1h with Interrval Display');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_attempt_history(''15m'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''1h'', ''sum'', True, true);',
+    E'SELECT * FROM logs.connection_attempt_history(''15m'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''1h'', ''sum'', True, true);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1 - 15m Inverval - sum'::text,5::bigint)
     $$,'Verify Data from function logs.connection_attempt_history - 1h sum to 15m with Interval Display and Agregate Display');
@@ -84,7 +81,7 @@ SELECT diag('=================================');
 SELECT diag('Test logs.connection_history()');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:59''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_history(''5s'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:00:59-08''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
         ('2020-01-18 19:00:05-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
@@ -101,7 +98,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.connection_history - 1s avg to 5s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''1s'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:00:11''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_history(''1s'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:00:11-08''$$, ARRAY[''db1''], ''1s'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
         ('2020-01-18 19:00:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,0::bigint),
@@ -118,31 +115,31 @@ SELECT results_eq(
     $$,'Verify Data from function logs.connection_history - 1s avg to 1s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''min'', False);',
+    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''min'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint)
     $$,'Verify Data from function logs.connection_history - 15m min to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''max'', False);',
+    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''max'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,3::bigint)
     $$,'Verify Data from function logs.connection_history - 15m max to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''avg'', False);',
+    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''avg'', False);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,2::bigint)
     $$,'Verify Data from function logs.connection_history - 15m avg to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''15m'', ''sum'', True);',
+    E'SELECT * FROM logs.connection_history(''1h'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''15m'', ''sum'', True);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1 - 1h Inverval'::text,5::bigint)
     $$,'Verify Data from function logs.connection_history - 15m sum to 1h with Interrval Display');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_history(''15m'', $$log_time BETWEEN ''2020-01-18T19:00:00'' AND ''2020-01-18T19:59:59''$$, ARRAY[''db1''], ''1h'', ''sum'', True, true);',
+    E'SELECT * FROM logs.connection_history(''15m'', $$log_time BETWEEN ''2020-01-18T19:00:00-08'' AND ''2020-01-18T19:59:59-08''$$, ARRAY[''db1''], ''1h'', ''sum'', True, true);',
     $$VALUES
         ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1 - 15m Inverval - sum'::text,5::bigint)
     $$,'Verify Data from function logs.connection_history - 1h sum to 15m with Interval Display and Agregate Display');
@@ -151,7 +148,7 @@ SELECT diag('=================================');
 SELECT diag('Test logs.ldap_error_history()');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''15m'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''15m'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 0::bigint),
@@ -180,7 +177,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 1s sum to 15m');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
@@ -194,7 +191,7 @@ SELECT todo( 'This test will fail until the bug #1645 is fixed in TimescaleDB', 
 -- https://github.com/timescale/timescaledb/issues/1645
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1d'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1d'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
     $$VALUES
         ('2020-01-13 00:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
         ('2020-01-13 00:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
@@ -202,7 +199,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 1s sum to 1d');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''5h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''5h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''1s'', ''sum'', False);',
     $$VALUES
         ('2020-01-13 12:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 1::bigint),
         ('2020-01-13 12:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
@@ -210,7 +207,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 1s sum to 5h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''sum'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''15m'', ''sum'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 4::bigint),
@@ -221,7 +218,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 15m sum to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''min'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''15m'', ''min'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 1::bigint),
@@ -232,7 +229,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 15m min to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''max'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''15m'', ''max'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 3::bigint),
@@ -243,7 +240,7 @@ SELECT results_eq(
     $$,'Verify Data from function logs.ldap_error_history - 15m max to 1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00'' AND ''2020-01-13T16:59:59''$$, ARRAY[''db1'',''db2''], ''15m'', ''avg'', False);',
+    E'SELECT * FROM logs.ldap_error_history(''1h'', $$log_time BETWEEN ''2020-01-13T15:00:00-08'' AND ''2020-01-13T16:59:59-08''$$, ARRAY[''db1'',''db2''], ''15m'', ''avg'', False);',
     $$VALUES
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - Invalid credentials'::text, 0::bigint),
         ('2020-01-13 15:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - LDAP login failed for user'::text, 2::bigint),
@@ -253,7 +250,9 @@ SELECT results_eq(
         ('2020-01-13 16:00:00-08'::TIMESTAMP WITH TIME ZONE, 'db1 - could not search LDAP for filter'::text, 0::bigint)
     $$,'Verify Data from function logs.ldap_error_history - 15m avg to 1h');
 
-/*
+SELECT diag('=================================');
+SELECT diag('SET TIME ZONE PST8PDT');
+SET TIME ZONE 'PST8PDT';
 
 SELECT diag('=================================');
 SELECT diag('Test tools.time_bucket(interval, timestamptz, interval, timestamptz)');
@@ -284,28 +283,163 @@ SELECT results_eq(
 
 -- Note: Every 30 days starting on 1/1/1970
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
-        ('2019-12-10T00:00:00+00'::timestamptz)
+        ('2019-12-19T00:00:00Z'::timestamptz)
     $$,'Verify Data from function tools.time_bucket - 30d');
+
+-- Note: Every 45 days starting on 1/1/1970
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2019-12-19T00:00:00Z'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 45d');
+
+-- Note: months starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 month''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1 month');
+
+-- Note: months starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''2 months''::interval, ''2020-02-02T12:22:23''::timestamptz);',
+    $$VALUES
+        ('2020-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 2 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1 year');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year 6 months''::interval, ''2019-11-02 12:22:23 UTC''::timestamptz);',
+    $$VALUES
+        ('2018-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1 year 6 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2021-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 10 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2001-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 100 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2001-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1000 years');
+
+SELECT diag('=================================');
+SELECT diag('RESET TIME ZONE');
+RESET TIME ZONE;
+
+SELECT diag('=================================');
+SELECT diag('Test tools.time_bucket(interval, timestamptz, interval, timestamptz)');
+
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1m''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-02 12:22:00-00'::TIMESTAMPTZ)
+    $$,'Verify Data from function tools.time_bucket - 1m');
+
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''15m''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-02 12:15:00-00'::TIMESTAMPTZ)
+    $$,'Verify Data from function tools.time_bucket - 15m');
+
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1h''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-02 12:00:00-00'::TIMESTAMPTZ)
+    $$,'Verify Data from function tools.time_bucket - 1h');
+
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1d''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-02 00:00:00-00'::TIMESTAMPTZ)
+    $$,'Verify Data from function tools.time_bucket - 1d');
 
 -- Note: Every 30 days starting on 1/1/1970
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1 month''::interval, ''2020-01-02T12:22:23''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
-        ('2019-12-10T00:00:00+00'::timestamptz)
+        ('2019-12-19T00:00:00Z'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 30d');
+
+-- Note: Every 45 days starting on 1/1/1970
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2019-12-19T00:00:00Z'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 45d');
+
+-- Note: months starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 month''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-01 00:00:00-00'::timestamptz)
     $$,'Verify Data from function tools.time_bucket - 1 month');
 
+-- Note: months starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''2 months''::interval, ''2020-02-02T12:22:23''::timestamptz);',
     $$VALUES
-        ('2020-01-01T12:00:00+00'::timestamptz)
+        ('2020-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 2 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-01-01 00:00:00-00'::timestamptz)
     $$,'Verify Data from function tools.time_bucket - 1 year');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year 6 months''::interval, ''2019-11-02 12:22:23 UTC''::timestamptz);',
+    $$VALUES
+        ('2018-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1 year 6 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2021-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 10 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2001-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 100 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2001-01-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1000 years');
 
 SELECT diag('=================================');
 SELECT diag('Test tools.time_bucket(interval, timestamp, interval, timestamp)');
-
-SELECT todo( 'This test will fail until I take into account the users timezone', 7 );
 
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1m''::interval, ''2020-01-02T12:22:23Z''::timestamp);',
@@ -335,21 +469,57 @@ SELECT results_eq(
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02T12:22:23''::timestamp);',
     $$VALUES
-        ('2019-12-09T16:00:00'::timestamp)
+        ('2019-12-19 00:00:00'::timestamp)
     $$,'Verify Data from function tools.time_bucket - 30d');
 
--- Note: Every 30 days starting on 1/1/1970
+-- Note: months starting on 1/1/0001
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 month''::interval, ''2020-01-02T12:22:23''::timestamp);',
     $$VALUES
-        ('2019-12-09T16:00:00'::timestamp)
+        ('2020-01-01 00:00:00'::timestamp)
     $$,'Verify Data from function tools.time_bucket - 1 month');
 
+-- Note: months starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''2 months''::interval, ''2020-02-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2020-01-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 2 months');
+
+-- Note: years starting on 1/1/0001
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23''::timestamp);',
     $$VALUES
-        ('2020-01-01T12:00:00'::timestamp)
+        ('2020-01-01 00:00:00'::timestamp)
     $$,'Verify Data from function tools.time_bucket - 1 year');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year 6 months''::interval, ''2019-11-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2018-07-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 1 year 6 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2021-01-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 10 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2001-01-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 100 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2001-01-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 1000 years');
 
 SELECT diag('=================================');
 SELECT diag('Test tools.time_bucket(interval, date, interval, date)');
@@ -357,26 +527,61 @@ SELECT diag('Test tools.time_bucket(interval, date, interval, date)');
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1d''::interval, ''2020-01-02''::date);',
     $$VALUES
-        ('2020-01-01'::DATE)
+        ('2020-01-02'::DATE)
     $$,'Verify Data from function tools.time_bucket - 1d');
 
 -- Note: Every 30 days starting on 1/1/1970
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''30d''::interval, ''2020-01-02''::date);',
     $$VALUES
-        ('2019-12-09'::DATE)
+        ('2019-12-19'::DATE)
     $$,'Verify Data from function tools.time_bucket - 30d');
 
--- Note: Every 30 days starting on 1/1/1970
+-- Note: months starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''2 months''::interval, ''2020-02-02''::date);',
+    $$VALUES
+        ('2020-01-01'::DATE)
+    $$,'Verify Data from function tools.time_bucket - 2 months');
+
+-- Note: months starting on 1/1/0001
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 month''::interval, ''2020-01-02''::date);',
     $$VALUES
-        ('2019-12-09'::DATE)
+        ('2020-01-01'::DATE)
     $$,'Verify Data from function tools.time_bucket - 1 month');
 
+-- Note: years starting on 1/1/0001
 SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02''::date);',
     $$VALUES
         ('2020-01-01'::DATE)
     $$,'Verify Data from function tools.time_bucket - 1 year');
-*/
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 year 6 months''::interval, ''2019-11-02''::date);',
+    $$VALUES
+        ('2018-07-01'::DATE)
+    $$,'Verify Data from function tools.time_bucket - 1 year 6 months');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02''::date);',
+    $$VALUES
+        ('2021-01-01'::DATE)
+    $$,'Verify Data from function tools.time_bucket - 10 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02''::date);',
+    $$VALUES
+        ('2001-01-01'::DATE)
+    $$,'Verify Data from function tools.time_bucket - 100 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02''::date);',
+    $$VALUES
+        ('2001-01-01'::DATE)
+    $$,'Verify Data from function tools.time_bucket - 1000 years');
