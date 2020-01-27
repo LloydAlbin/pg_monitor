@@ -4,7 +4,7 @@
 \set test_name 'data'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 69
+\set plan 81
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -311,6 +311,20 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.25 year''::interval, ''2020-10-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-10-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - .25 year (Quarter)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.5 year''::interval, ''2020-10-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - .5 year (Half Year)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2020-01-01 00:00:00-00'::timestamptz)
@@ -325,24 +339,31 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''1.5 years''::interval, ''2019-11-02 12:22:23 UTC''::timestamptz);',
+    $$VALUES
+        ('2018-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1.5 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 decade''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2021-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 10 years');
+    $$,'Verify Data from function tools.time_bucket - 1 decade');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''1 century''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2001-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 100 years');
+    $$,'Verify Data from function tools.time_bucket - 1 century');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''10 century''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2001-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 1000 years');
+    $$,'Verify Data from function tools.time_bucket - 10 century (1 millenium)');
 
 SELECT diag('=================================');
 SELECT diag('RESET TIME ZONE');
@@ -405,6 +426,20 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.25 year''::interval, ''2020-10-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-10-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - .25 year (Quarter)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.5 year''::interval, ''2020-10-02T12:22:23Z''::timestamptz);',
+    $$VALUES
+        ('2020-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - .5 year (Half Year)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2020-01-01 00:00:00-00'::timestamptz)
@@ -419,24 +454,31 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''1.5 years''::interval, ''2019-11-02 12:22:23 UTC''::timestamptz);',
+    $$VALUES
+        ('2018-07-01 00:00:00-00'::timestamptz)
+    $$,'Verify Data from function tools.time_bucket - 1.5 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 decade''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2021-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 10 years');
+    $$,'Verify Data from function tools.time_bucket - 1 decade');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''1 century''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2001-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 100 years');
+    $$,'Verify Data from function tools.time_bucket - 1 century');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
+    E'SELECT * FROM tools.time_bucket(''10 century''::interval, ''2022-01-02T12:22:23Z''::timestamptz);',
     $$VALUES
         ('2001-01-01 00:00:00-00'::timestamptz)
-    $$,'Verify Data from function tools.time_bucket - 1000 years');
+    $$,'Verify Data from function tools.time_bucket - 10 century (1 millenium)');
 
 SELECT diag('=================================');
 SELECT diag('Test tools.time_bucket(interval, timestamp, interval, timestamp)');
@@ -488,6 +530,20 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.25 year''::interval, ''2020-10-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2020-10-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - .25 year (Quarter)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.5 year''::interval, ''2020-10-02T12:22:23''::timestamp);',
+    $$VALUES
+        ('2020-07-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - .5 year (Half Year)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02T12:22:23''::timestamp);',
     $$VALUES
         ('2020-01-01 00:00:00'::timestamp)
@@ -502,24 +558,31 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    E'SELECT * FROM tools.time_bucket(''1.5 years''::interval, ''2019-11-02 12:22:23''::timestamp);',
+    $$VALUES
+        ('2018-07-01 00:00:00'::timestamp)
+    $$,'Verify Data from function tools.time_bucket - 1.5 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 decade''::interval, ''2022-01-02T12:22:23''::timestamp);',
     $$VALUES
         ('2021-01-01 00:00:00'::timestamp)
-    $$,'Verify Data from function tools.time_bucket - 10 years');
+    $$,'Verify Data from function tools.time_bucket - 1 decade');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    E'SELECT * FROM tools.time_bucket(''1 century''::interval, ''2022-01-02T12:22:23''::timestamp);',
     $$VALUES
         ('2001-01-01 00:00:00'::timestamp)
-    $$,'Verify Data from function tools.time_bucket - 100 years');
+    $$,'Verify Data from function tools.time_bucket - 1 century');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02T12:22:23''::timestamp);',
+    E'SELECT * FROM tools.time_bucket(''10 century''::interval, ''2022-01-02T12:22:23''::timestamp);',
     $$VALUES
         ('2001-01-01 00:00:00'::timestamp)
-    $$,'Verify Data from function tools.time_bucket - 1000 years');
+    $$,'Verify Data from function tools.time_bucket - 10 century (1 millenium)');
 
 SELECT diag('=================================');
 SELECT diag('Test tools.time_bucket(interval, date, interval, date)');
@@ -553,6 +616,20 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.25 year''::interval, ''2020-10-02''::date);',
+    $$VALUES
+        ('2020-10-01'::date)
+    $$,'Verify Data from function tools.time_bucket - .25 year (Quarter)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''.5 year''::interval, ''2020-10-02''::date);',
+    $$VALUES
+        ('2020-07-01'::date)
+    $$,'Verify Data from function tools.time_bucket - .5 year (Half Year)');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
     E'SELECT * FROM tools.time_bucket(''1 year''::interval, ''2020-01-02''::date);',
     $$VALUES
         ('2020-01-01'::DATE)
@@ -567,21 +644,28 @@ SELECT results_eq(
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''10 years''::interval, ''2022-01-02''::date);',
+    E'SELECT * FROM tools.time_bucket(''1.5 years''::interval, ''2019-11-02''::date);',
+    $$VALUES
+        ('2018-07-01'::date)
+    $$,'Verify Data from function tools.time_bucket - 1.5 years');
+
+-- Note: years starting on 1/1/0001
+SELECT results_eq(
+    E'SELECT * FROM tools.time_bucket(''1 decade''::interval, ''2022-01-02''::date);',
     $$VALUES
         ('2021-01-01'::DATE)
-    $$,'Verify Data from function tools.time_bucket - 10 years');
+    $$,'Verify Data from function tools.time_bucket - 1 decade');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''100 years''::interval, ''2022-01-02''::date);',
+    E'SELECT * FROM tools.time_bucket(''1 century''::interval, ''2022-01-02''::date);',
     $$VALUES
         ('2001-01-01'::DATE)
-    $$,'Verify Data from function tools.time_bucket - 100 years');
+    $$,'Verify Data from function tools.time_bucket - 1 century');
 
 -- Note: years starting on 1/1/0001
 SELECT results_eq(
-    E'SELECT * FROM tools.time_bucket(''1000 years''::interval, ''2022-01-02''::date);',
+    E'SELECT * FROM tools.time_bucket(''10 century''::interval, ''2022-01-02''::date);',
     $$VALUES
         ('2001-01-01'::DATE)
-    $$,'Verify Data from function tools.time_bucket - 1000 years');
+    $$,'Verify Data from function tools.time_bucket - 10 century (1 millenium)');

@@ -758,13 +758,13 @@ CREATE OR REPLACE FUNCTION tools.time_bucket (
 RETURNS TIMESTAMPTZ AS
 $body$
 /*
-millenium = 1000 years
-century = 100 years
-decade = 10 years
+millenium = 1000 years = 10 century
+1 century = 100 years
+1 decade = 10 years
 1.5 years aka 1 year 6 months or 18 months
 year aka 12 months
-half year aka 6 months
-quarter aka 3 months
+half year aka 6 months = .5 year
+quarter aka 3 months = .25 year
 months = months
 */
 DECLARE
@@ -815,13 +815,13 @@ CREATE OR REPLACE FUNCTION tools.time_bucket (
 RETURNS TIMESTAMP AS
 $body$
 /*
-millenium = 1000 years
-century = 100 years
-decade = 10 years
+millenium = 1000 years = 10 century
+1 century = 100 years
+1 decade = 10 years
 1.5 years aka 1 year 6 months or 18 months
 year aka 12 months
-half year aka 6 months
-quarter aka 3 months
+half year aka 6 months = .5 year
+quarter aka 3 months = .25 year
 months = months
 */
 DECLARE
@@ -871,13 +871,13 @@ CREATE OR REPLACE FUNCTION tools.time_bucket (
 RETURNS DATE AS
 $body$
 /*
-millenium = 1000 years
-century = 100 years
-decade = 10 years
+millenium = 1000 years = 10 century
+1 century = 100 years
+1 decade = 10 years
 1.5 years aka 1 year 6 months or 18 months
 year aka 12 months
-half year aka 6 months
-quarter aka 3 months
+half year aka 6 months = .5 year
+quarter aka 3 months = .25 year
 months = months
 */
 DECLARE
