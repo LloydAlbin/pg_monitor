@@ -24,6 +24,8 @@ SELECT pg_catalog.set_config('search_path', '', false);
 CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
 COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
 
+SET ROLE grafana;
+
 -- Create logs schema
 CREATE SCHEMA logs;
 ALTER SCHEMA logs OWNER TO grafana;
@@ -3031,7 +3033,7 @@ AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
 GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name;
---ALTER TABLE logs.connection_received_logs_summary OWNER TO grafana;
+ALTER TABLE logs.connection_received_logs_summary OWNER TO grafana;
 
 -- LOAD DATA INTO tools.query
 INSERT INTO tools.query ("query_name", "sql", "disabled", "maintenance_db_only", "pg_version", "run_order", "schema_name", "table_name")
