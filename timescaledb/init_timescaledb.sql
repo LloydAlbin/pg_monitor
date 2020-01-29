@@ -3018,10 +3018,10 @@ DECLARE
 BEGIN
 /*
 If the user has the Enterprise License of TimescaleDB, we will use this function, 
-otherwise the logs script will also perform this for comminity licensed versions.
+otherwise the logs script will also perform this for the Community Edition.
 */
     IF tools.timescaledb_enterprise() THEN
-        PERFORM public.add_drop_chunks_policy((schema_name || '.' || table_name)::regclass, drop_chunk_policy, TRUE, TRUE, TRUE) FROM tools.hypertables;
+        PERFORM public.add_drop_chunks_policy((schema_name || '.' || table_name)::regclass, drop_chunk_policy, TRUE, TRUE, FALSE) FROM tools.hypertables;
     END IF;
 END $$;
 
