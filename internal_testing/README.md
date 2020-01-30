@@ -72,7 +72,7 @@ cat ~/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -h localhost -p 30002 -U 
 cat ~/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
 # Add Compresses Chunks Policy
 psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;"
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT alter_job_schedule(job_id, next_start=>now()) FROM _timescaledb_config.bgw_policy_compress_chunks p INNER JOIN _timescaledb_catalog.hypertable h ON (h.id = p.hypertable_id);"
+psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(5);SELECT alter_job_schedule(job_id, next_start=>now()) FROM _timescaledb_config.bgw_policy_compress_chunks p INNER JOIN _timescaledb_catalog.hypertable h ON (h.id = p.hypertable_id);"
 
 ###### PGTAP ######
 # Must change directories to tune the pgtap tests.

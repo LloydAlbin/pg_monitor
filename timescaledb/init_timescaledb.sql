@@ -228,6 +228,31 @@ ALTER TABLE logs.connection_received_logs OWNER TO grafana;
 CREATE INDEX connection_received_logs_cluster_name_time_idx ON logs.connection_received_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX connection_received_logs_time_idx ON logs.connection_received_logs USING btree (log_time DESC);
 
+CREATE TABLE logs.connection_authorized_logs (
+    log_time timestamp with time zone NOT NULL,
+    cluster_name text,
+    connection_from text,
+    database_name text,
+    user_name text,
+    application_name text
+);
+ALTER TABLE logs.connection_authorized_logs OWNER TO grafana;
+CREATE INDEX connection_authorized_logs_cluster_name_time_idx ON logs.connection_authorized_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX connection_authorized_logs_time_idx ON logs.connection_authorized_logs USING btree (log_time DESC);
+
+CREATE TABLE logs.connection_disconnection_logs (
+    log_time timestamp with time zone NOT NULL,
+    cluster_name text,
+    connection_from text,
+    database_name text,
+    user_name text,
+    application_name text,
+    session_time time
+);
+ALTER TABLE logs.connection_disconnection_logs OWNER TO grafana;
+CREATE INDEX connection_disconnection_logs_cluster_name_time_idx ON logs.connection_disconnection_logs USING btree (cluster_name, log_time DESC);
+CREATE INDEX connection_disconnection_logs_time_idx ON logs.connection_disconnection_logs USING btree (log_time DESC);
+
 CREATE TABLE logs.autoanalyze_logs (
     log_time timestamp with time zone NOT NULL,
     cluster_name text,
@@ -739,6 +764,36 @@ BEGIN
         NEW.log_time,
     	NEW.cluster_name,
         split_part(NEW.connection_from, ':', 1)
+    );
+    	RETURN NULL;
+
+
+	ELSIF (NEW.message LIKE 'connection authorized%') THEN
+	-- Move connections authorized from logs.postgres_log into the logs.connection_authorized_logs
+
+    INSERT INTO logs.connection_authorized_logs VALUES (
+        NEW.log_time,
+    	NEW.cluster_name,
+        split_part(NEW.connection_from, ':', 1),
+        NEW.database_name,
+        NEW.user_name,
+        NEW.application_name
+    );
+    	RETURN NULL;
+
+
+	ELSIF (NEW.message LIKE 'disconnection%') THEN
+	-- Move connections disconnection from logs.postgres_log into the logs.connection_disconnection_logs
+
+    INSERT INTO logs.connection_disconnection_logs VALUES (
+        NEW.log_time,
+    	NEW.cluster_name,
+        split_part(NEW.connection_from, ':', 1),
+        NEW.database_name,
+        NEW.user_name,
+        NEW.application_name,
+        (regexp_match(NEW.message, 'session time: ([0-9\.:]+)'))[1]::time
+--        split_part(NEW.message, ' ', 4)
     );
     	RETURN NULL;
 
@@ -2301,15 +2356,15 @@ BEGIN
 */
   IF grafana_interval::interval = interval::interval OR aggregate ILIKE 'sum' THEN
 	    sql := E'SELECT time_bucket_gapfill(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, log_time) AS "Time", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", COALESCE(count(*),0) AS "Connections" ';
-      sql = sql || 'FROM logs.postgres_log ';
-      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
+      sql = sql || 'FROM logs.connection_authorized_logs ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] ';
       sql = sql || 'AND ' || grafana_time_filter || ' ';
       sql = sql || 'GROUP BY "Time","Server" ORDER BY "Time","Server";';
   ELSE
 	  sql := E'SELECT time_bucket(CASE WHEN ''' || grafana_interval || E'''::interval >= ''' || interval || E'''::interval THEN ''' || grafana_interval || E'''::interval ELSE ''' || interval || E'''::interval END, "Time1") AS "Time", "Server", COALESCE(' || aggregate || '("Connections1"),0)::BIGINT AS "Connections" FROM ( ';
 	    sql = sql || E'SELECT time_bucket_gapfill(''' || interval || ''', log_time) AS "Time1", cluster_name || CASE WHEN ' || display_interval || ' THEN '' - ' || grafana_interval || E' Inverval'' ELSE '''' END || CASE WHEN ' || display_aggregate || ' THEN '' - ' || aggregate || E''' ELSE '''' END AS "Server", count(*) AS "Connections1" ';
-      sql = sql || 'FROM logs.postgres_log ';
-      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] AND message LIKE ''connection authorized%'' ';
+      sql = sql || 'FROM logs.connection_authorized_logs ';
+      sql = sql || E'WHERE ARRAY[cluster_name] <@ ''' || cluster_name::text || E'''::text[] ';
       sql = sql || 'AND ' || grafana_time_filter || ' ';
       sql = sql || 'GROUP BY "Time1","Server" ORDER BY "Time1","Server" ';
       sql = sql || ') a GROUP BY "Time","Server" ORDER BY "Time","Server";';
@@ -2941,14 +2996,16 @@ ALTER TABLE tools.hypertables OWNER TO grafana;
 
 -- Log Processing Tables
 INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partitioning_column, hash_partitions, chunk_time_interval, drop_chunk_policy, compress_chunk_policy, compress_orderby, compress_segmentby) VALUES
-('logs', 'archive_failure_log',        'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'autoanalyze_logs',           'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'autovacuum_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'checkpoint_logs',            'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'checkpoint_warning_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'lock_logs',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'postgres_log',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
-('logs', 'connection_received_logs',   'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name, connection_from');
+('logs', 'archive_failure_log',           'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'autoanalyze_logs',              'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'autovacuum_logs',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'checkpoint_logs',               'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'checkpoint_warning_logs',       'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'lock_logs',                     'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'postgres_log',                  'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name'),
+('logs', 'connection_received_logs',      'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name, connection_from'),
+('logs', 'connection_authorized_logs',    'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name, connection_from, database_name, user_name'),
+('logs', 'connection_disconnection_logs', 'log_time', 'cluster_name', 20, INTERVAL '1 week', INTERVAL '1 year', INTERVAL '1 month', 'log_time DESC', 'cluster_name, connection_from, database_name, user_name');
 
 
 -- logs Processing Tables
@@ -3027,13 +3084,203 @@ END $$;
 
 -- Continous Aggregates must be created after the hypertables are created.
 
-CREATE VIEW logs.connection_received_logs_summary
+CREATE VIEW logs.connection_received_logs_summary_1s
 WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
 AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
 GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name;
-ALTER TABLE logs.connection_received_logs_summary OWNER TO grafana;
+ALTER TABLE logs.connection_received_logs_summary_1s OWNER TO grafana;
+
+CREATE VIEW logs.connection_received_logs_summary_1m
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1m OWNER TO grafana;
+
+CREATE VIEW logs.connection_received_logs_summary_1h
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1h OWNER TO grafana;
+
+CREATE VIEW logs.connection_received_logs_summary_1d
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY public.time_bucket('1d'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1d OWNER TO grafana;
+
+/* -- ERROR:  no valid bucketing function found for continuous aggregate query
+CREATE VIEW logs.connection_received_logs_summary_1mon
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_received_logs_summary_1y
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1y OWNER TO grafana;
+*/
+
+CREATE VIEW logs.connection_received_logs_summary_1mon
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs_summary_1d
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name
+ORDER BY tools.time_bucket('1 month'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_received_logs_summary_1y
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
+FROM logs.connection_received_logs_summary_1d
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name
+ORDER BY tools.time_bucket('1 year'::interval, log_time), cluster_name;
+ALTER TABLE logs.connection_received_logs_summary_1y OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1s
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1s OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1m
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1m OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1h
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1h OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1d
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY public.time_bucket('1d'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1d OWNER TO grafana;
+
+/* -- ERROR:  no valid bucketing function found for continuous aggregate query
+CREATE VIEW logs.connection_authorized_logs_summary_1mon
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1y
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1y OWNER TO grafana;
+*/
+
+CREATE VIEW logs.connection_authorized_logs_summary_1mon
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs_summary_1d
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, connection_from 
+ORDER BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_authorized_logs_summary_1y
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
+FROM logs.connection_authorized_logs_summary_1d
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, connection_from
+ORDER BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, connection_from;
+ALTER TABLE logs.connection_authorized_logs_summary_1y OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1s
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1s OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1m
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1m OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1h
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1h OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1d
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY public.time_bucket('1d'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1d OWNER TO grafana;
+
+/* -- ERROR:  no valid bucketing function found for continuous aggregate query
+CREATE VIEW logs.connection_disconnection_logs_summary_1mon
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1y
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1y OWNER TO grafana;
+*/
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1mon
+AS
+SELECT tools.time_bucket('1 month'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs_summary_1d
+GROUP BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, application_name
+ORDER BY tools.time_bucket('1 month'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1mon OWNER TO grafana;
+
+CREATE VIEW logs.connection_disconnection_logs_summary_1y
+AS
+SELECT tools.time_bucket('1 year'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
+FROM logs.connection_disconnection_logs_summary_1d
+GROUP BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, application_name
+ORDER BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database_name, user_name, application_name;
+ALTER TABLE logs.connection_disconnection_logs_summary_1y OWNER TO grafana;
 
 -- LOAD DATA INTO tools.query
 INSERT INTO tools.query ("query_name", "sql", "disabled", "maintenance_db_only", "pg_version", "run_order", "schema_name", "table_name")
