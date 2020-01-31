@@ -3082,10 +3082,21 @@ otherwise the logs script will also perform this for the Community Edition.
     END IF;
 END $$;
 
--- Continous Aggregates must be created after the hypertables are created.
+/*
+Continous Aggregates must be created after the hypertables are created.
+
+Refresh Interval sets how often the Continous Aggregates is updated (timescaledb.refresh_interval)
+timescaledb.refresh_interval Default is twice the value used in the time_bucket. 1s = 2s, 1d = 2d
+
+Refresh Continous Aggregates when time_bucket('1h', log_time) < max(log_time) - timescaledb.refresh_lag
+
+The timescaledb.max_interval_per_job parameter is used when we want to limit the amount of data processed 
+by an update of the continuous aggregate and use smaller or bigger batch sizes (the batching is 
+done automatically by TimescaleDB). timescaledb.max_interval_per_job specifies the batch size.
+*/
 
 CREATE VIEW logs.connection_received_logs_summary_1s
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '30s')
 AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
@@ -3093,7 +3104,7 @@ GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name;
 ALTER TABLE logs.connection_received_logs_summary_1s OWNER TO grafana;
 
 CREATE VIEW logs.connection_received_logs_summary_1m
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
@@ -3101,7 +3112,7 @@ GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name;
 ALTER TABLE logs.connection_received_logs_summary_1m OWNER TO grafana;
 
 CREATE VIEW logs.connection_received_logs_summary_1h
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
@@ -3109,7 +3120,7 @@ GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name;
 ALTER TABLE logs.connection_received_logs_summary_1h OWNER TO grafana;
 
 CREATE VIEW logs.connection_received_logs_summary_1d
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, count(*) AS "count"
 FROM logs.connection_received_logs
@@ -3151,7 +3162,7 @@ ORDER BY tools.time_bucket('1 year'::interval, log_time), cluster_name;
 ALTER TABLE logs.connection_received_logs_summary_1y OWNER TO grafana;
 
 CREATE VIEW logs.connection_authorized_logs_summary_1s
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '30s')
 AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
 FROM logs.connection_authorized_logs
@@ -3159,7 +3170,7 @@ GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_authorized_logs_summary_1s OWNER TO grafana;
 
 CREATE VIEW logs.connection_authorized_logs_summary_1m
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
 FROM logs.connection_authorized_logs
@@ -3167,7 +3178,7 @@ GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_authorized_logs_summary_1m OWNER TO grafana;
 
 CREATE VIEW logs.connection_authorized_logs_summary_1h
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
 FROM logs.connection_authorized_logs
@@ -3175,7 +3186,7 @@ GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_authorized_logs_summary_1h OWNER TO grafana;
 
 CREATE VIEW logs.connection_authorized_logs_summary_1d
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, database_name, user_name, connection_from, count(*) AS "count"
 FROM logs.connection_authorized_logs
@@ -3217,7 +3228,7 @@ ORDER BY tools.time_bucket('1 year'::interval, log_time), cluster_name, database
 ALTER TABLE logs.connection_authorized_logs_summary_1y OWNER TO grafana;
 
 CREATE VIEW logs.connection_disconnection_logs_summary_1s
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '30s')
 AS
 SELECT public.time_bucket('1s'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
 FROM logs.connection_disconnection_logs
@@ -3225,7 +3236,7 @@ GROUP BY public.time_bucket('1s'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_disconnection_logs_summary_1s OWNER TO grafana;
 
 CREATE VIEW logs.connection_disconnection_logs_summary_1m
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1m'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
 FROM logs.connection_disconnection_logs
@@ -3233,7 +3244,7 @@ GROUP BY public.time_bucket('1m'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_disconnection_logs_summary_1m OWNER TO grafana;
 
 CREATE VIEW logs.connection_disconnection_logs_summary_1h
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1h'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
 FROM logs.connection_disconnection_logs
@@ -3241,7 +3252,7 @@ GROUP BY public.time_bucket('1h'::interval, log_time), cluster_name, database_na
 ALTER TABLE logs.connection_disconnection_logs_summary_1h OWNER TO grafana;
 
 CREATE VIEW logs.connection_disconnection_logs_summary_1d
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d')
+WITH (timescaledb.continuous, timescaledb.max_interval_per_job = '1d', timescaledb.refresh_lag = '1d', timescaledb.refresh_interval = '2m')
 AS
 SELECT public.time_bucket('1d'::interval, log_time) AS log_time, cluster_name, database_name, user_name, application_name, count(*) AS "count"
 FROM logs.connection_disconnection_logs
