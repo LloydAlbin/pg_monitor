@@ -4,13 +4,11 @@
 \set test_name 'data'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 99
+\set plan 102
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
 \i common/diagnostics.pg
-
-SELECT pg_sleep(300); -- Sleep for 3 minutes so that the 1m continuous aggregate have time to populate
 
 SELECT diag('');
 SELECT diag('Test logs.connection_attempt_history()');
@@ -695,229 +693,268 @@ SELECT diag('Test Continuous Aggregates');
 SELECT diag('=================================');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1s ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1s ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1s');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1m ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1m ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint),
-        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1m');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1m');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1h ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1h ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-19 03:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,5::bigint),
-        ('2020-01-18 03:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,2::bigint),
-        ('2020-01-19 03:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,5::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1h');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1d ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1d ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,5::bigint),
-        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,2::bigint),
-        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,5::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1d');
-
-SELECT todo('Check Results', 2);
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1d');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1mon ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1w ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,5::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,5::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,2::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1mon');
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,4::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1w');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_received_logs_summary_1y ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1mon ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,5::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,5::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,2::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_received_logs_summary_1y');
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,4::numeric),
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1mon');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1s ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_received_logs_1y ORDER BY log_time, cluster_name, connection_from;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1s');
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,4::numeric),
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_received_logs_1y');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1m ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1s ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1m');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::bigint),
+        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1h ORDER BY log_time, cluster_name, database_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1m ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-19 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2019-09-19 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-19 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2020-01-19 03:00:00+00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1h');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::bigint),
+        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,1::bigint),
+        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1m');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1d ORDER BY log_time, cluster_name, database_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1h ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-19 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2019-09-19 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-18 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-19 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2020-01-19 00:00:00+00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1d');
-
-SELECT todo('Check Results', 2);
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1h');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1mon ORDER BY log_time, cluster_name, database_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1d ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1mon');
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1d');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_authorized_logs_summary_1y ORDER BY log_time, cluster_name, database_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1w ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'pc1.yourdomain.com'::text,4::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'pc1.yourdomain.com'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'pc2.yourdomain.com'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_summary_1y');
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1w');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1s ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1mon ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-18 19:00:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1s');
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::numeric),
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1mon');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1m ORDER BY log_time, cluster_name;',
+    E'SELECT * FROM logs.connection_authorized_logs_1y ORDER BY log_time, cluster_name, connection_from, database_name, user_name;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1m');
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::numeric),
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_authorized_logs_1y');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1h ORDER BY log_time, cluster_name, database_name, user_name;',
+    E'SELECT * FROM logs.connection_disconnection_logs_1s ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
     $$VALUES
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1h');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:56:01-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-17 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-18 19:00:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:56:01-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1s');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1d ORDER BY log_time, cluster_name, database_name, user_name;',
+    E'SELECT * FROM logs.connection_disconnection_logs_1m ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
     $$VALUES
-        ('2019-09-18 17:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2019-09-18 17:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-17 16:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-17 16:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-18 16:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2020-01-18 16:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1d');
-
-SELECT todo('Check Results', 2);
-
-SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1mon ORDER BY log_time, cluster_name, database_name, user_name;',
-    $$VALUES
-        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1mon');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:16:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:18:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:19:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2019-09-18 20:56:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-17 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:16:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:18:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:19:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 19:56:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1m');
 
 SELECT results_eq(
-    E'SELECT * FROM logs.connection_disconnection_logs_summary_1y ORDER BY log_time, cluster_name, database_name, user_name;',
+    E'SELECT * FROM logs.connection_disconnection_logs_1h ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
     $$VALUES
-        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
-        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
-    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_summary_1y');
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2019-09-18 20:00:00-07'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-17 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2020-01-18 19:00:00-08'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1h');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_disconnection_logs_1d ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
+    $$VALUES
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2019-09-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-18 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2020-01-19 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1d');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_disconnection_logs_1w ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
+    $$VALUES
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2019-09-16 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::bigint),
+        ('2020-01-13 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::bigint)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1w');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_disconnection_logs_1mon ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
+    $$VALUES
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::numeric),
+        ('2019-09-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1mon');
+
+SELECT results_eq(
+    E'SELECT * FROM logs.connection_disconnection_logs_1y ORDER BY log_time, cluster_name, connection_from, database_name, user_name, application_name;',
+    $$VALUES
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::numeric),
+        ('2019-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc1.yourdomain.com'::text,'database1'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,4::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db1'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::numeric),
+        ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric)
+    $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1y');

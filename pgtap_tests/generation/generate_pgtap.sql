@@ -43,7 +43,9 @@ BEGIN
                 	CASE r2.udt_name 
                     	WHEN '_text' 
                         THEN 'text' 
-                        END || '[]') 
+                    	WHEN '_bool' 
+                        THEN 'boolean' 
+                  END || '[]') 
             	WHEN r2.data_type = 'timestamp with time zone' AND r2.datetime_precision <> 6 THEN quote_literal('timestamp(' || r2.datetime_precision || ') with time zone')
                 WHEN r2.domain_name IS NOT NULL THEN quote_literal(r2.domain_schema || '.' || r2.domain_name)
                 ELSE quote_literal(r2.data_type) 

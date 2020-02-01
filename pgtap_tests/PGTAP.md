@@ -25,6 +25,7 @@ psql -h localhost -p 30002 -d pgmonitor_db -U postgres -c 'CREATE EXTENSION IF N
 psql -h localhost -p 30002 -d pgmonitor_db -U postgres -f common/update_pgtap.sql
 psql -h localhost -p 30002 -d pgmonitor_db -U postgres -f generation/generate_pgtap.sql
 psql -h localhost -p 30002 -d pgmonitor_db -U postgres -qAtX -c 'SELECT * FROM tools.generate_pgtap();' -o 02_generated_pgtap.pg
+psql -h localhost -p 30002 -d pgmonitor_db -U postgres -c 'DROP EXTENSION IF EXISTS pgtap;'
 ```
 
 ## Testing Upgrade of Database
