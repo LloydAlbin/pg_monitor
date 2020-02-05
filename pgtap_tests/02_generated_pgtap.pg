@@ -1604,8 +1604,8 @@ SELECT function_has_column( 'logs', 'autovacuum_log_tuples_removed_chart'::NAME,
 SELECT function_col_type_is( 'logs', 'autovacuum_log_tuples_removed_chart'::NAME, '{text,text,text,text,text}'::NAME[], 'tuples_removed'::NAME , 'bigint'::NAME );
 SELECT has_function ( 'logs', 'autovacuum_thresholds'::NAME, 'text,text,text,timestamp with time zone,text' );
 SELECT function_owner_is ( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,timestamp with time zone,text}'::regtype[]::name[], 'grafana'::NAME);
-SELECT function_has_column( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'log_time'::NAME );
-SELECT function_col_type_is( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'log_time'::NAME , 'timestamp with time zone'::NAME );
+SELECT function_has_column( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'time'::NAME );
+SELECT function_col_type_is( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'time'::NAME , 'timestamp with time zone'::NAME );
 SELECT function_has_column( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'name'::NAME );
 SELECT function_col_type_is( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'name'::NAME , 'text'::NAME );
 SELECT function_has_column( 'logs', 'autovacuum_thresholds'::NAME, '{text,text,text,"timestamp with time zone",text}'::NAME[], 'n_tup_ins'::NAME );
@@ -1854,8 +1854,8 @@ SELECT function_has_column( 'stats', 'vacuum_settings'::NAME, '{text,text,"times
 SELECT function_col_type_is( 'stats', 'vacuum_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'pending_restart'::NAME , 'boolean'::NAME );
 SELECT has_function ( 'logs', 'custom_table_settings'::NAME, 'text,text,timestamp with time zone,text' );
 SELECT function_owner_is ( 'logs', 'custom_table_settings'::NAME, '{text,text,timestamp with time zone,text}'::regtype[]::name[], 'grafana'::NAME);
-SELECT function_has_column( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'log_time'::NAME );
-SELECT function_col_type_is( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'log_time'::NAME , 'timestamp with time zone'::NAME );
+SELECT function_has_column( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'time'::NAME );
+SELECT function_col_type_is( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'time'::NAME , 'timestamp with time zone'::NAME );
 SELECT function_has_column( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'cluster_name'::NAME );
 SELECT function_col_type_is( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'cluster_name'::NAME , 'text'::NAME );
 SELECT function_has_column( 'logs', 'custom_table_settings'::NAME, '{text,text,"timestamp with time zone",text}'::NAME[], 'database_name'::NAME );

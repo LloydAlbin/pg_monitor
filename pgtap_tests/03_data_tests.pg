@@ -11,6 +11,25 @@
 \i common/diagnostics.pg
 
 SELECT diag('');
+SELECT diag('Sleep until materialized views are finished being refreshed.');
+DO $$
+DECLARE
+	r RECORD;
+BEGIN
+	LOOP
+        SELECT * INTO r FROM timescaledb_information.continuous_aggregate_stats 
+        WHERE (view_name::text LIKE 'logs.postgres_log_%'
+        OR view_name::text LIKE 'logs.connection_%')
+        AND (completed_threshold < '2020-01-18 19:56:01.401 PST' 
+        OR completed_threshold IS NULL);
+		IF NOT FOUND THEN
+        	EXIT;
+		END IF;
+        PERFORM pg_sleep(30); -- Sleep for 30 seconds and then re-test
+    END LOOP;
+END $$;
+
+SELECT diag('');
 SELECT diag('Test logs.connection_attempt_history()');
 SELECT diag('=================================');
 
