@@ -4,7 +4,7 @@
 \set test_name 'data'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 102
+\set plan 117
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -977,3 +977,83 @@ SELECT results_eq(
         ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc1.yourdomain.com'::text,'database2'::text,'user1'::text,'PostgreSQL JDBC Driver'::text,1::numeric),
         ('2020-01-01 00:00:00-00'::TIMESTAMP WITH TIME ZONE,'db2'::text,'pc2.yourdomain.com'::text,'postgres'::text,'user2'::text,'psql'::text,1::numeric)
     $$,'Verify Data from continuous aggregate logs.connection_disconnection_logs_1y');
+
+
+SELECT diag('');
+SELECT diag('Test tools.field_list_check(TEXT[], BOOLEAN, BOOLEAN)');
+SELECT diag('=================================');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(NULL);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - NULL');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$$$]]);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Empty String $$');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', NULL]]);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - NULL for String');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''test''$$]]);',
+    $$VALUES (E'test IN (''test'')')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Single Test String');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$]]);',
+    $$VALUES (E'test IN (''testing'', ''test'')')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Double Test String');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing''$$]]);',
+    $$VALUES (E'test IN (''testing'')')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Single Test String 2');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''All''$$]]);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - All String');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''NULL''$$]]);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - NULL Quoted String $$');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$NULL$$]]);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - NULL String $$');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''All''$$]], TRUE);',
+    $$VALUES ('')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - All String - TRUE');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$], ARRAY[''testing'', $$''testing2'', ''test2''$$]]);',
+    $$VALUES (E'test IN (''testing'', ''test'') AND testing IN (''testing2'', ''test2'')')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Two Arrays');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$], ARRAY[''testing'', $$''testing2'', ''test2''$$], ARRAY[''tester'', $$''NULL''$$]]);',
+    $$VALUES (E'test IN (''testing'', ''test'') AND testing IN (''testing2'', ''test2'')')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Three Arrays, one being NULL String');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$], ARRAY[''testing'', $$''testing2'', ''test2''$$], ARRAY[''tester'', $$''NULL''$$]], TRUE);',
+    $$VALUES (E'test IN (''testing'', ''test'') AND testing IN (''testing2'', ''test2'') AND')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Three Arrays, one being NULL String - TRUE');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$], ARRAY[''testing'', $$''testing2'', ''test2''$$], ARRAY[NULL, NULL]], TRUE);',
+    $$VALUES (E'test IN (''testing'', ''test'') AND testing IN (''testing2'', ''test2'') AND')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Three Arrays, one being NULL, NULL - TRUE');
+
+SELECT results_eq(
+    E'SELECT tools.field_list_check(ARRAY[ARRAY[''test'', $$''testing'', ''test''$$], ARRAY[''testing'', $$''testing2'', ''test2''$$], ARRAY[NULL, NULL]], TRUE, TRUE);',
+    $$VALUES (E'WHERE test IN (''testing'', ''test'') AND testing IN (''testing2'', ''test2'') AND')
+    $$,'Verify tools.field_list_check(TEXT[], BOOLEAN) - Three Arrays, one being NULL, NULL - TRUE - TRUE');

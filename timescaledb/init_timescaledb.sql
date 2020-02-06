@@ -1113,6 +1113,81 @@ $_$;
 ALTER FUNCTION tools.field_list_check(field_in text, list_in text) OWNER TO grafana;
 COMMENT ON FUNCTION tools.field_list_check(field_in text, list_in text) IS 'This function is used when wanting to filter by Grafana Variables.';
 
+CREATE OR REPLACE FUNCTION tools.field_list_check (
+  checks text [],
+  add_and boolean = false,
+  add_where boolean = false
+)
+RETURNS text AS
+$body$
+/*
+Using this function:
+When creating Grafana Variables:
+Set Multi-value = TRUE
+Set Include All option = TRUE
+Set Custom all value = NULL
+
+Function Testing:
+SELECT tools.field_list_check(NULL); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$$$]]); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', NULL]]); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'test'$$]]); -- 'test IN ('test')'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing', 'test'$$]]); -- 'test IN ('testing', 'test')'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing'$$]]); -- 'test IN ('testing')'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'All'$$]]); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'NULL'$$]]); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$NULL$$]]); -- ''
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'All'$$]], TRUE); -- ''
+
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing', 'test'$$], ARRAY['testing', $$'testing2', 'test2'$$]]); -- 'test IN ('testing', 'test') AND testing IN ('testing2', 'test2')'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing', 'test'$$], ARRAY['testing', $$'testing2', 'test2'$$], ARRAY['tester', $$'NULL'$$]]); -- 'test IN ('testing', 'test') AND testing IN ('testing2', 'test2')'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing', 'test'$$], ARRAY['testing', $$'testing2', 'test2'$$], ARRAY['tester', $$'NULL'$$]], TRUE); -- 'test IN ('testing', 'test') AND testing IN ('testing2', 'test2') AND'
+SELECT tools.field_list_check(ARRAY[ARRAY['test', $$'testing', 'test'$$], ARRAY['testing', $$'testing2', 'test2'$$], ARRAY[NULL, NULL]], TRUE); -- 'test IN ('testing', 'test') AND testing IN ('testing2', 'test2') AND'
+-- Returns: TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE
+*/
+
+DECLARE
+  sql TEXT := '';
+  i INTEGER := 0;
+BEGIN
+  IF checks IS NULL THEN
+  	RETURN '';
+  END IF;
+  
+  WHILE i < array_length(checks, 1) LOOP
+  	i = i + 1;
+    IF checks[i][1] IS NULL THEN
+      CONTINUE;
+    END IF;
+    IF checks[i][2] IS NULL THEN
+      CONTINUE;
+    END IF;
+    IF checks[i][2] IN ('NULL', E'''NULL''', 'All', E'''All''', '') THEN
+      CONTINUE;
+    END IF;
+    sql = sql || CASE WHEN length(sql) > 0 THEN ' AND ' ELSE '' END || checks[i][1] || ' IN (' || checks[i][2] || ')';
+  END LOOP;
+
+  IF length(sql) > 0 AND add_and THEN
+  	sql = sql || ' AND';
+  END IF;
+
+  IF length(sql) > 0 AND add_where THEN
+  	sql = 'WHERE ' || sql;
+  END IF;
+
+  RETURN sql;
+END;
+$body$
+LANGUAGE 'plpgsql'
+IMMUTABLE
+CALLED ON NULL INPUT
+SECURITY INVOKER
+PARALLEL SAFE;
+COMMENT ON FUNCTION tools.field_list_check(checks text [], add_and boolean, add_where boolean)
+IS 'This function is used when wanting to filter by Grafana Variables.';
+ALTER FUNCTION tools.field_list_check (checks text [], add_and boolean, add_where boolean)
+  OWNER TO grafana;
 
 CREATE FUNCTION tools.generate_timestamps("interval" text, "between" text) RETURNS TABLE(start_time timestamp with time zone, end_time timestamp with time zone)
     LANGUAGE plpgsql IMMUTABLE
@@ -1526,34 +1601,23 @@ BEGIN
   sql := E'SELECT * FROM logs.autovacuum_logs a
 WHERE 
     ' || grafana_time_filter || '
-';
-IF cluster_name_in IS NOT NULL AND cluster_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
-sql = sql || '    AND cluster_name IN (' || cluster_name_in::text || E') 
-';
-END IF;
-IF database_name_in IS NOT NULL AND database_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
-sql = sql || '    AND database_name IN (' || database_name_in::text || E') 
-';
-END IF;
-IF schema_name_in IS NOT NULL AND schema_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
-sql = sql || '    AND schema_name IN (' || schema_name_in::text || E') 
-';
-END IF;
-IF table_name_in IS NOT NULL AND table_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
-sql = sql || '    AND table_name IN (' || table_name_in::text || E') 
-';
-END IF;
+' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
+ORDER BY log_time
+LIMIT ' || query_limit || ';';
+  RAISE NOTICE 'SQL: %', sql;
+  RETURN QUERY EXECUTE sql;
+END;
 /*
 sql = sql || '    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
     AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
     AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
 */
-sql = sql || 'ORDER BY log_time
-LIMIT ' || query_limit || ';';
---  RAISE NOTICE 'SQL: %', sql;
-  RETURN QUERY EXECUTE sql;
-END;
 $_X$;
 
 

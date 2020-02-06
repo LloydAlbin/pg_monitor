@@ -5,7 +5,7 @@
 \set test_name 'permissions'
 \set test_user 'grafana'
 \set test_production_database 'pgmonitor_db'
-\set plan 1894
+\set plan 1897
 
 -- Install pgTAP, show diagnostics, and start common tests
 --\ir ../common/diagnostic.sql
@@ -1445,6 +1445,9 @@ SELECT function_returns_types( 'tools', 'delete_logs'::NAME, '{NULL}'::NAME[], '
 SELECT has_function ( 'tools', 'field_list_check'::NAME, 'text,text' );
 SELECT function_owner_is ( 'tools', 'field_list_check'::NAME, '{text,text}'::regtype[]::name[], 'grafana'::NAME);
 SELECT function_returns_types( 'tools', 'field_list_check'::NAME, '{text,text}'::NAME[], '{boolean}'::NAME[] );
+SELECT has_function ( 'tools', 'field_list_check'::NAME, 'text[],boolean,boolean' );
+SELECT function_owner_is ( 'tools', 'field_list_check'::NAME, '{text[],boolean,boolean}'::regtype[]::name[], 'grafana'::NAME);
+SELECT function_returns_types( 'tools', 'field_list_check'::NAME, '{text[],boolean,boolean}'::NAME[], '{text}'::NAME[] );
 SELECT has_function ( 'tools', 'generate_timestamps'::NAME, 'text,text' );
 SELECT function_owner_is ( 'tools', 'generate_timestamps'::NAME, '{text,text}'::regtype[]::name[], 'grafana'::NAME);
 SELECT function_has_column( 'tools', 'generate_timestamps'::NAME, '{text,text}'::NAME[], 'start_time'::NAME );
