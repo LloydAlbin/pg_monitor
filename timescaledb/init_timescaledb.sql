@@ -297,6 +297,8 @@ CREATE TABLE logs.autovacuum_logs (
 ALTER TABLE logs.autovacuum_logs OWNER TO grafana;
 CREATE INDEX autovacuum_logs_cluster_name_time_idx ON logs.autovacuum_logs USING btree (cluster_name, log_time DESC);
 CREATE INDEX autovacuum_logs_time_idx ON logs.autovacuum_logs USING btree (log_time DESC);
+CREATE INDEX autovacuum_logs_idx ON logs.autovacuum_logs
+  USING btree (log_time, cluster_name, database_name, schema_name, table_name);
 
 CREATE TABLE logs.lock_logs (
     lock_type text,
@@ -1524,11 +1526,30 @@ BEGIN
   sql := E'SELECT * FROM logs.autovacuum_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+';
+IF cluster_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+sql = sql || '    AND cluster_name IN (' || cluster_name_in::text || E') 
+';
+END IF;
+IF database_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+sql = sql || '    AND database_name IN (' || database_name_in::text || E') 
+';
+END IF;
+IF schema_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+sql = sql || '    AND schema_name IN (' || schema_name_in::text || E') 
+';
+END IF;
+IF table_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+sql = sql || '    AND table_name IN (' || table_name_in::text || E') 
+';
+END IF;
+/*
+sql = sql || '    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
     AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
     AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
     AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
-LIMIT ' || query_limit || ';';
+*/
+sql = sql || 'LIMIT ' || query_limit || ';';
 --  RAISE NOTICE 'SQL: %', sql;
   RETURN QUERY EXECUTE sql;
 END;
