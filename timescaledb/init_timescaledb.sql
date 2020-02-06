@@ -1527,19 +1527,19 @@ BEGIN
 WHERE 
     ' || grafana_time_filter || '
 ';
-IF cluster_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+IF cluster_name_in IS NOT NULL AND cluster_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
 sql = sql || '    AND cluster_name IN (' || cluster_name_in::text || E') 
 ';
 END IF;
-IF database_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+IF database_name_in IS NOT NULL AND database_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
 sql = sql || '    AND database_name IN (' || database_name_in::text || E') 
 ';
 END IF;
-IF schema_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+IF schema_name_in IS NOT NULL AND schema_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
 sql = sql || '    AND schema_name IN (' || schema_name_in::text || E') 
 ';
 END IF;
-IF table_name_in NOT IN (E'''All''', 'All', 'NULL') THEN
+IF table_name_in IS NOT NULL AND table_name_in NOT IN (E'''All''', 'All', E'''NULL''', 'NULL', '') THEN
 sql = sql || '    AND table_name IN (' || table_name_in::text || E') 
 ';
 END IF;
@@ -1549,7 +1549,8 @@ sql = sql || '    AND tools.field_list_check(cluster_name, $$' || cluster_name_i
     AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
     AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
 */
-sql = sql || 'LIMIT ' || query_limit || ';';
+sql = sql || 'ORDER BY log_time
+LIMIT ' || query_limit || ';';
 --  RAISE NOTICE 'SQL: %', sql;
   RETURN QUERY EXECUTE sql;
 END;
