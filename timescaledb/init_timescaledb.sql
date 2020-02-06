@@ -565,7 +565,7 @@ CREATE VIEW tools.pg_major_version AS
 ALTER TABLE tools.pg_major_version OWNER TO grafana;
 
 -- Trigger to process RAW log records into specialized tables.
-CREATE FUNCTION tools.postgres_log_trigger() RETURNS trigger
+CREATE OR REPLACE FUNCTION tools.postgres_log_trigger() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -974,7 +974,7 @@ RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, date, interval, date) OWNER TO grafana;
 
-CREATE FUNCTION tools.create_logs() RETURNS void
+CREATE OR REPLACE FUNCTION tools.create_logs() RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -999,7 +999,7 @@ END;
 $$;
 ALTER FUNCTION tools.create_logs() OWNER TO grafana;
 
-CREATE FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) RETURNS void
+CREATE OR REPLACE FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) RETURNS void
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -1023,7 +1023,7 @@ END;
 $_$;
 ALTER FUNCTION tools.create_server_database_inherits("server_name" text, database_name text) OWNER TO grafana;
 
-CREATE FUNCTION tools.create_server_inherits("server_name" text) RETURNS void
+CREATE OR REPLACE FUNCTION tools.create_server_inherits("server_name" text) RETURNS void
     LANGUAGE plpgsql
     AS $_$
 DECLARE
@@ -1043,7 +1043,7 @@ END;
 $_$;
 ALTER FUNCTION tools.create_server_inherits("server_name" text) OWNER TO grafana;
 
-CREATE FUNCTION tools.delete_logs() RETURNS void
+CREATE OR REPLACE FUNCTION tools.delete_logs() RETURNS void
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -1071,7 +1071,7 @@ END;
 $$;
 ALTER FUNCTION tools.delete_logs() OWNER TO grafana;
 
-CREATE FUNCTION tools.field_list_check(field_in text, list_in text) RETURNS boolean
+CREATE OR REPLACE FUNCTION tools.field_list_check(field_in text, list_in text) RETURNS boolean
     LANGUAGE plpgsql IMMUTABLE
     AS $_$
 /*
@@ -1189,7 +1189,7 @@ IS 'This function is used when wanting to filter by Grafana Variables.';
 ALTER FUNCTION tools.field_list_check (checks text [], add_and boolean, add_where boolean)
   OWNER TO grafana;
 
-CREATE FUNCTION tools.generate_timestamps("interval" text, "between" text) RETURNS TABLE(start_time timestamp with time zone, end_time timestamp with time zone)
+CREATE OR REPLACE FUNCTION tools.generate_timestamps("interval" text, "between" text) RETURNS TABLE(start_time timestamp with time zone, end_time timestamp with time zone)
     LANGUAGE plpgsql IMMUTABLE
     AS $_X$
 /*
@@ -1236,7 +1236,7 @@ END;
 $_X$;
 ALTER FUNCTION tools.generate_timestamps("interval" text, "between" text) OWNER TO grafana;
 
-CREATE FUNCTION tools.group_by_interval(grafana_interval text, "interval" text) RETURNS text
+CREATE OR REPLACE FUNCTION tools.group_by_interval(grafana_interval text, "interval" text) RETURNS text
     LANGUAGE sql IMMUTABLE STRICT
     AS $_$
 /*
@@ -1264,14 +1264,14 @@ SELECT CASE WHEN $1::interval >= ('1 ' || $2)::interval THEN $1 ELSE ('1 ' || $2
 $_$;
 ALTER FUNCTION tools.group_by_interval(grafana_interval text, "interval" text) OWNER TO grafana;
 
-CREATE FUNCTION tools.interval_to_field(grafana_interval text) RETURNS text
+CREATE OR REPLACE FUNCTION tools.interval_to_field(grafana_interval text) RETURNS text
     LANGUAGE sql STRICT
     AS $_$
 SELECT substring($1 FROM '[a-zA-Z]+');
 $_$;
 ALTER FUNCTION tools.interval_to_field(grafana_interval text) OWNER TO grafana;
 
-CREATE FUNCTION tools.parse_csv(s text, raise_on_error boolean DEFAULT true) RETURNS text[]
+CREATE OR REPLACE FUNCTION tools.parse_csv(s text, raise_on_error boolean DEFAULT true) RETURNS text[]
     LANGUAGE plpgsql IMMUTABLE STRICT
     AS $$
 /*
@@ -1348,7 +1348,7 @@ ALTER FUNCTION tools.parse_csv(s text, raise_on_error boolean) OWNER TO grafana;
 
 -- FUNCTIONS logs
 
-CREATE FUNCTION logs.autoanalyze_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
+CREATE OR REPLACE FUNCTION logs.autoanalyze_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -1392,7 +1392,7 @@ ALTER FUNCTION logs.autoanalyze_log(grafana_time_filter text, cluster_name_in te
 -- Name: autoanalyze_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE OR REPLACE FUNCTION logs.autoanalyze_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1445,7 +1445,7 @@ ALTER FUNCTION logs.autoanalyze_log_count(grafana_interval text, grafana_time_fi
 -- Name: autoanalyze_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
+CREATE OR REPLACE FUNCTION logs.autoanalyze_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1501,7 +1501,7 @@ ALTER FUNCTION logs.autoanalyze_log_count_chart(grafana_time_filter text, cluste
 -- Name: autovacuum_autoanalyze_count(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, vacuum bigint, "analyze" bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_autoanalyze_count(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, vacuum bigint, "analyze" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1575,7 +1575,7 @@ ALTER FUNCTION logs.autovacuum_autoanalyze_count(grafana_time_filter text, clust
 -- Name: autovacuum_log(text, text, text, text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, index_scans bigint, pages_removed bigint, removed_size bigint, pages_remain bigint, pages_remain_size bigint, skipped_due_to_pins bigint, skipped_frozen bigint, tuples_removed bigint, tuples_remain bigint, tuples_dead bigint, oldest_xmin bigint, buffer_hits bigint, buffer_misses bigint, buffer_dirtied bigint, buffer_dirtied_size bigint, avg_read_rate numeric, avg_write_rate numeric, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, database_name_in text DEFAULT NULL::text, schema_name_in text DEFAULT NULL::text, table_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name text, schema_name text, table_name text, index_scans bigint, pages_removed bigint, removed_size bigint, pages_remain bigint, pages_remain_size bigint, skipped_due_to_pins bigint, skipped_frozen bigint, tuples_removed bigint, tuples_remain bigint, tuples_dead bigint, oldest_xmin bigint, buffer_hits bigint, buffer_misses bigint, buffer_dirtied bigint, buffer_dirtied_size bigint, avg_read_rate numeric, avg_write_rate numeric, cpu_system numeric, cpu_user numeric, elasped_seconds numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -1601,7 +1601,7 @@ BEGIN
   sql := E'SELECT * FROM logs.autovacuum_logs a
 WHERE 
     ' || grafana_time_filter || '
-' || tools.field_list_check(ARRAY[
+AND ' || tools.field_list_check(ARRAY[
 	ARRAY['cluster_name', cluster_name_in], 
     ARRAY['database_name', database_name_in], 
     ARRAY['schema_name', schema_name_in], 
@@ -1627,7 +1627,7 @@ ALTER FUNCTION logs.autovacuum_log(grafana_time_filter text, cluster_name_in tex
 -- Name: autovacuum_log_count(text, text, timestamp with time zone, timestamp with time zone, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1680,7 +1680,7 @@ ALTER FUNCTION logs.autovacuum_log_count(grafana_interval text, grafana_time_fil
 -- Name: autovacuum_log_count_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_count_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, count bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1736,7 +1736,7 @@ ALTER FUNCTION logs.autovacuum_log_count_chart(grafana_time_filter text, cluster
 -- Name: autovacuum_log_removed_size(text, text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, removed_size bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_removed_size(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, removed_size bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1786,7 +1786,7 @@ ALTER FUNCTION logs.autovacuum_log_removed_size(grafana_interval text, grafana_t
 -- Name: autovacuum_log_removed_space_chart(text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, removed_size bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_removed_space_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, removed_size bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1840,7 +1840,7 @@ ALTER FUNCTION logs.autovacuum_log_removed_space_chart(grafana_time_filter text,
 -- Name: autovacuum_log_tuples_removed(text, text, text, text, text, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, tuples_removed bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, tuples_removed bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1886,7 +1886,7 @@ $_X$;
 
 ALTER FUNCTION logs.autovacuum_log_tuples_removed(grafana_interval text, grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) OWNER TO grafana;
 
-CREATE FUNCTION logs.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, tuples_removed bigint)
+CREATE OR REPLACE FUNCTION logs.autovacuum_log_tuples_removed_chart(grafana_time_filter text, cluster_name_in text, database_name_in text, schema_name_in text, table_name_in text) RETURNS TABLE("time" timestamp with time zone, table_name text, tuples_removed bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1940,7 +1940,7 @@ ALTER FUNCTION logs.autovacuum_log_tuples_removed_chart(grafana_time_filter text
 -- Name: autovacuum_thresholds(text, text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE("time" timestamp with time zone, name text, n_tup_ins bigint, n_tup_upd bigint, n_tup_del bigint, n_live_tup bigint, n_dead_tup bigint, reltuples real, av_threshold double precision, last_vacuum timestamp with time zone, last_analyze timestamp with time zone, av_neaded boolean, pct_dead numeric)
+CREATE OR REPLACE FUNCTION logs.autovacuum_thresholds(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE("time" timestamp with time zone, name text, n_tup_ins bigint, n_tup_upd bigint, n_tup_del bigint, n_live_tup bigint, n_dead_tup bigint, reltuples real, av_threshold double precision, last_vacuum timestamp with time zone, last_analyze timestamp with time zone, av_neaded boolean, pct_dead numeric)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -1993,7 +1993,7 @@ ALTER FUNCTION logs.autovacuum_thresholds(server_name text, database_name text, 
 -- Name: checkpoint_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint, write numeric, sync numeric, total numeric)
+CREATE OR REPLACE FUNCTION logs.checkpoint_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint, write numeric, sync numeric, total numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2039,7 +2039,7 @@ ALTER FUNCTION logs.checkpoint_buffers(grafana_interval text, grafana_time_filte
 -- Name: checkpoint_files(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files_added bigint, files_removed bigint, files_recycled bigint, sync_files bigint, sync_longest numeric, sync_avg numeric)
+CREATE OR REPLACE FUNCTION logs.checkpoint_files(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files_added bigint, files_removed bigint, files_recycled bigint, sync_files bigint, sync_longest numeric, sync_avg numeric)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2087,7 +2087,7 @@ ALTER FUNCTION logs.checkpoint_files(grafana_interval text, grafana_time_filter 
 -- Name: checkpoint_logs(text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer integer, files_added integer, files_removed integer, files_recycled integer, write numeric, sync numeric, total numeric, sync_files integer, sync_longest numeric, sync_avg numeric, distance integer, estimate integer)
+CREATE OR REPLACE FUNCTION logs.checkpoint_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer integer, files_added integer, files_removed integer, files_recycled integer, write numeric, sync numeric, total numeric, sync_files integer, sync_longest numeric, sync_avg numeric, distance integer, estimate integer)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2125,7 +2125,7 @@ ALTER FUNCTION logs.checkpoint_logs(grafana_time_filter text, cluster_name_in te
 -- Name: checkpoint_wal_file_usage(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files bigint)
+CREATE OR REPLACE FUNCTION logs.checkpoint_wal_file_usage(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, files bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2179,7 +2179,7 @@ ALTER FUNCTION logs.checkpoint_wal_file_usage(grafana_interval text, grafana_tim
 -- Name: checkpoint_warning_logs(text, text, bigint); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, seconds integer, hint text)
+CREATE OR REPLACE FUNCTION logs.checkpoint_warning_logs(grafana_time_filter text, cluster_name_in text DEFAULT NULL::text, query_limit bigint DEFAULT 100000) RETURNS TABLE("time" timestamp with time zone, cluster_name text, seconds integer, hint text)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2217,7 +2217,7 @@ ALTER FUNCTION logs.checkpoint_warning_logs(grafana_time_filter text, cluster_na
 -- Name: checkpoint_warning_logs_count(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
+CREATE OR REPLACE FUNCTION logs.checkpoint_warning_logs_count(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, count bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2260,7 +2260,7 @@ ALTER FUNCTION logs.checkpoint_warning_logs_count(grafana_interval text, grafana
 -- Name: checkpoint_write_buffers(text, text, timestamp with time zone, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint)
+CREATE OR REPLACE FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time_filter text, grafana_from_time timestamp with time zone, grafana_to_time timestamp with time zone, cluster_name_in text DEFAULT NULL::text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, wbuffer bigint)
     LANGUAGE plpgsql
     AS $_X$
 /*
@@ -2303,7 +2303,7 @@ ALTER FUNCTION logs.checkpoint_write_buffers(grafana_interval text, grafana_time
 -- Name: connection_attempt_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE OR REPLACE FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2386,7 +2386,7 @@ ALTER FUNCTION logs.connection_attempt_history(grafana_interval text, grafana_ti
 -- Name: connection_history(text, text, text[], text, text, boolean, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
+CREATE OR REPLACE FUNCTION logs.connection_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false, display_aggregate boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "Server" text, "Connections" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2468,7 +2468,7 @@ ALTER FUNCTION logs.connection_history(grafana_interval text, grafana_time_filte
 -- Name: autovacuum(text, text, text, timestamp without time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, vacuum boolean, "analyze" boolean, running_time integer, phase text, heap_blks_total bigint, heap_blks_total_size bigint, heap_blks_scanned bigint, heap_blks_scanned_pct numeric, heap_blks_vacuumed bigint, heap_blks_vacuumed_pct numeric, index_vacuum_count bigint, max_dead_tuples bigint, num_dead_tuples bigint, backend_start timestamp with time zone, wait_event_type text, wait_event text, state text, backend_xmin xid)
+CREATE OR REPLACE FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuums text, grafana_timeto timestamp without time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, name text, vacuum boolean, "analyze" boolean, running_time integer, phase text, heap_blks_total bigint, heap_blks_total_size bigint, heap_blks_scanned bigint, heap_blks_scanned_pct numeric, heap_blks_vacuumed bigint, heap_blks_vacuumed_pct numeric, index_vacuum_count bigint, max_dead_tuples bigint, num_dead_tuples bigint, backend_start timestamp with time zone, wait_event_type text, wait_event text, state text, backend_xmin xid)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2524,7 +2524,7 @@ ALTER FUNCTION stats.autovacuum(server_name text, database_name text, all_vacuum
 -- Name: pg_stat_activity_active(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, database_name text, pid integer, state text, application_name text, backend_type text, wait_event_type text, wait_event text, backend_start timestamp with time zone, xact_start timestamp with time zone, query_start timestamp with time zone, state_change timestamp with time zone, backend_xmin xid)
+CREATE OR REPLACE FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, database_name text, pid integer, state text, application_name text, backend_type text, wait_event_type text, wait_event text, backend_start timestamp with time zone, xact_start timestamp with time zone, query_start timestamp with time zone, state_change timestamp with time zone, backend_xmin xid)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2566,7 +2566,7 @@ ALTER FUNCTION stats.pg_stat_activity_active(server_name text, db_name text, gra
 -- Name: vacuum_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, name text, setting text, unit text, category text, short_desc text, extra_desc text, context text, vartype text, source text, min_val text, max_val text, enumvals text[], boot_val text, reset_val text, sourcefile text, sourceline integer, pending_restart boolean)
+CREATE OR REPLACE FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, cluster_name text, name text, setting text, unit text, category text, short_desc text, extra_desc text, context text, vartype text, source text, min_val text, max_val text, enumvals text[], boot_val text, reset_val text, sourcefile text, sourceline integer, pending_restart boolean)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2605,7 +2605,7 @@ ALTER FUNCTION stats.vacuum_settings(server_name text, db_name text, grafana_tim
 -- Name: custom_table_settings(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name name, table_name text, table_setting text)
+CREATE OR REPLACE FUNCTION logs.custom_table_settings(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE("time" timestamp with time zone, cluster_name text, database_name name, table_name text, table_setting text)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2645,7 +2645,7 @@ ALTER FUNCTION logs.custom_table_settings(server_name text, db_name text, grafan
 -- Name: error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE OR REPLACE FUNCTION logs.error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
@@ -2766,7 +2766,7 @@ ALTER FUNCTION logs.error_history(grafana_interval text, grafana_time_filter tex
 -- Name: fatal_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE OR REPLACE FUNCTION logs.fatal_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT 'second'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
@@ -2887,7 +2887,7 @@ ALTER FUNCTION logs.fatal_history(grafana_interval text, grafana_time_filter tex
 -- Name: granted_locks(text, text, timestamp with time zone, text); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, "Server Nname" text, "Database Name" name, "Time" double precision, "PG Process ID" integer, "Application Name" text, "Transaction Start" timestamp with time zone, "Locks" text, "AutoVacuum" text)
+CREATE OR REPLACE FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timeto timestamp with time zone, grafana_refresh text) RETURNS TABLE(log_time timestamp with time zone, "Server Nname" text, "Database Name" name, "Time" double precision, "PG Process ID" integer, "Application Name" text, "Transaction Start" timestamp with time zone, "Locks" text, "AutoVacuum" text)
     LANGUAGE plpgsql STRICT
     AS $_X$
 /*
@@ -2934,7 +2934,7 @@ ALTER FUNCTION stats.granted_locks(server_name text, db_name text, grafana_timet
 -- Name: ldap_error_history(text, text, text[], text, text, boolean); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
+CREATE OR REPLACE FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filter text, cluster_name text[] DEFAULT '{''All''::text}'::text[], "interval" text DEFAULT '1s'::text, aggregate text DEFAULT 'avg'::text, display_interval boolean DEFAULT false) RETURNS TABLE("time" timestamp with time zone, "LDAP Errors" text, "Errors" bigint)
     LANGUAGE plpgsql STRICT
     AS $_X$
 -- THIS FUNCTION HAS NOT BEEN FINISHED WRITTEN
@@ -3028,7 +3028,7 @@ ALTER FUNCTION logs.ldap_error_history(grafana_interval text, grafana_time_filte
 -- Name: update_pg_log_databases(); Type: FUNCTION; Schema: logs; Owner: grafana
 --
 
-CREATE FUNCTION logs.update_pg_log_databases() RETURNS trigger
+CREATE OR REPLACE FUNCTION logs.update_pg_log_databases() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -3116,7 +3116,7 @@ INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partit
 ('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
 ('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name');
 
-CREATE FUNCTION tools.timescaledb_enterprise()
+CREATE OR REPLACE FUNCTION tools.timescaledb_enterprise()
 RETURNS boolean
 LANGUAGE sql
 AS $$
@@ -3125,7 +3125,7 @@ $$;
 ALTER FUNCTION tools.timescaledb_enterprise() OWNER TO grafana;
 
 
-CREATE FUNCTION tools.timescaledb_drop_chunks()
+CREATE OR REPLACE FUNCTION tools.timescaledb_drop_chunks()
 RETURNS SETOF text
 LANGUAGE plpgsql
 AS $$
