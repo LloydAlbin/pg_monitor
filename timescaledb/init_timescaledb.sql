@@ -1071,48 +1071,6 @@ END;
 $$;
 ALTER FUNCTION tools.delete_logs() OWNER TO grafana;
 
-CREATE OR REPLACE FUNCTION tools.field_list_check(field_in text, list_in text) RETURNS boolean
-    LANGUAGE plpgsql IMMUTABLE
-    AS $_$
-/*
-Using this function:
-When creating Grafana Variables:
-Set Multi-value = TRUE
-Set Include All option = TRUE
-Set Custom all value = NULL
-
-Function Testing:
-SELECT 
-	tools.field_list_check('test', NULL),
-	tools.field_list_check('test', $$$$),
-    tools.field_list_check('test', $$'test'$$),
-    tools.field_list_check('test', $$'testing', 'test'$$),
-    tools.field_list_check('test', $$'testing'$$),
-    tools.field_list_check('test', $$NULL$$);
--- Returns: TRUE, TRUE, TRUE, TRUE, FALSE, TRUE
-*/
-
-DECLARE
-  sql TEXT;
-  r RECORD;
-BEGIN
-  IF list_in = '' THEN 
-  	RETURN TRUE;
-  END IF;
-  IF list_in = 'NULL' THEN 
-  	RETURN TRUE;
-  END IF;
-  IF list_in IS NULL THEN 
-  	RETURN TRUE;
-  END IF;
-  sql := E'SELECT CASE WHEN ''' || field_in || E''' IN (' || list_in|| ') THEN TRUE ELSE FALSE END AS field_check';
-  EXECUTE sql INTO r;
-  RETURN r.field_check;
-END;
-$_$;
-ALTER FUNCTION tools.field_list_check(field_in text, list_in text) OWNER TO grafana;
-COMMENT ON FUNCTION tools.field_list_check(field_in text, list_in text) IS 'This function is used when wanting to filter by Grafana Variables.';
-
 CREATE OR REPLACE FUNCTION tools.field_list_check (
   checks text [],
   add_and boolean = false,
@@ -1374,10 +1332,12 @@ BEGIN
   sql := E'SELECT * FROM logs.autoanalyze_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 ORDER BY 1  DESC    
 LIMIT ' || query_limit || ';';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -1426,10 +1386,12 @@ FROM
   logs.autoanalyze_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name';
 
@@ -1479,10 +1441,12 @@ FROM
   logs.autoanalyze_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY CASE WHEN $$' || cluster_name_in::text || E'$$ = ''NULL'' THEN cluster_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || database_name_in::text || E'$$ = ''NULL'' THEN database_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || schema_name_in::text || E'$$ = ''NULL'' THEN schema_name || ''.'' ELSE '''' END || 
@@ -1529,37 +1493,45 @@ FROM (
 	SELECT time_bucket(''1h'',time) AS "time"
 	FROM logs.autovacuum_logs
     WHERE ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 	UNION 
 	SELECT time_bucket(''1h'',time) AS "time"
 	FROM logs.autoanalyze_logs
     WHERE ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 ) a
 LEFT JOIN (
 	SELECT time_bucket(''1h'',time) AS "time", count(*) 
 	FROM logs.autovacuum_logs
     WHERE ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 	GROUP BY time_bucket(''1h'',time)
 ) b USING ("time") 
 LEFT JOIN (
 	SELECT time_bucket(''1h'',time) AS "time", count(*) 
 	FROM logs.autoanalyze_logs
     WHERE ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$)
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 	GROUP BY time_bucket(''1h'',time)
 ) c USING ("time")   
 ORDER BY 1;';
@@ -1612,12 +1584,6 @@ LIMIT ' || query_limit || ';';
   RAISE NOTICE 'SQL: %', sql;
   RETURN QUERY EXECUTE sql;
 END;
-/*
-sql = sql || '    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
-*/
 $_X$;
 
 
@@ -1661,10 +1627,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY 1,2';
 
@@ -1714,10 +1682,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY CASE WHEN $$' || cluster_name_in::text || E'$$ = ''NULL'' THEN cluster_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || database_name_in::text || E'$$ = ''NULL'' THEN database_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || schema_name_in::text || E'$$ = ''NULL'' THEN schema_name || ''.'' ELSE '''' END || 
@@ -1767,10 +1737,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY time_bucket(''' || grafana_interval || ''',time), cluster_name
 ORDER BY time, cluster_name';
 
@@ -1818,10 +1790,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY    CASE WHEN $$' || cluster_name_in::text || E'$$ = ''NULL'' THEN cluster_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || database_name_in::text || E'$$ = ''NULL'' THEN database_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || schema_name_in::text || E'$$ = ''NULL'' THEN schema_name || ''.'' ELSE '''' END || 
@@ -1871,10 +1845,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY time_bucket(''' || grafana_interval || ''',time), cluster_name
 ORDER BY time, cluster_name';
 
@@ -1918,10 +1894,12 @@ FROM
   logs.autovacuum_logs
 WHERE
   ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-    AND tools.field_list_check(database_name, $$' || database_name_in::text || E'$$) 
-    AND tools.field_list_check(schema_name, $$' || schema_name_in::text || E'$$) 
-    AND tools.field_list_check(table_name, $$' || table_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in], 
+    ARRAY['database_name', database_name_in], 
+    ARRAY['schema_name', schema_name_in], 
+    ARRAY['table_name', table_name_in]
+    ]) || '
 GROUP BY CASE WHEN $$' || cluster_name_in::text || E'$$ = ''NULL'' THEN cluster_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || database_name_in::text || E'$$ = ''NULL'' THEN database_name || ''.'' ELSE '''' END || 
    CASE WHEN $$' || schema_name_in::text || E'$$ = ''NULL'' THEN schema_name || ''.'' ELSE '''' END || 
@@ -2024,7 +2002,9 @@ BEGIN
 FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2072,7 +2052,9 @@ BEGIN
 FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2110,7 +2092,9 @@ BEGIN
   sql := E'SELECT * FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 ORDER BY 1  DESC    
 LIMIT ' || query_limit || ';';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2155,7 +2139,9 @@ BEGIN
 FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2202,7 +2188,9 @@ BEGIN
   sql := E'SELECT * FROM logs.checkpoint_warning_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 ORDER BY 1  DESC    
 LIMIT ' || query_limit || ';';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2245,7 +2233,9 @@ BEGIN
 FROM logs.checkpoint_warning_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
@@ -2288,7 +2278,9 @@ BEGIN
 FROM logs.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
-    AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
+AND ' || tools.field_list_check(ARRAY[
+	ARRAY['cluster_name', cluster_name_in] 
+    ]) || '
 GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
 ORDER BY time, cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
