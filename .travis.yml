@@ -17,6 +17,9 @@ addons:
     packages:
       - postgresql-client
       - perl
+      - python3
+      - python3-psycopg2
+      - python3-daemon
 #      - libcurl4-openssl-dev
 #      - libelf-dev
 #      - libdw-dev

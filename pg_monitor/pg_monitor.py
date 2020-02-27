@@ -29,7 +29,7 @@ import sys
 # Setting up command line argument parser
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("-h", "--host", help="database host or socket directory (default: \"localhost\")")
-parser.add_argument("-d", "--dbname", help="database server database (default: \"reports\")")
+parser.add_argument("-d", "--dbname", help="database server database (default: \"pgmonitor_db\")")
 parser.add_argument("-p", "--port", help="database server port (default: \"5432\")")
 parser.add_argument("-s", "--server", help="restrict to specific tools.servers.server_name and changes --pid-file to --server (default: all)")
 parser.add_argument("-U", "--user", help="database user name (default: \"" + scharp_py_tools.pgpass.get_default_user() + "\")")
@@ -45,12 +45,12 @@ parser.add_argument("-j", "--jobs", help="number of job to run simultaneously", 
 parser.add_argument("--daemon", help="run in daemon mode (default: \"False\"", action="store_true")
 parser.add_argument("-l", "--log", help="set the file file location and name (default: \"none\")")
 parser.add_argument("-w", "--wait", help="set the length between starting each loop (default: \"none\", No looping)", type=int)
-parser.add_argument("--pid-file", help="set pid file location (default: \"pg_monitor2.pid'\")")
+parser.add_argument("--pid-file", help="set pid file location (default: \"pg_monitor.pid'\")")
 parser.add_argument("--help", help="show this help message and exit", action="store_true")
 args = parser.parse_args()
 
 if args.version:
-    print ("pg_monitor2.py 0.03")
+    print ("pg_monitor.py 0.03")
     exit()
 
 if args.help:
@@ -90,8 +90,8 @@ def getMonitorStats(reports_server, reports_database, reports_port, reports_user
     else:
         logger.info("Performing Maintenance DB: %s, %s, %s, %s, xxxx, %s, %s, %s, %s, xxxx, %s, %s", reports_server, reports_database, reports_port, reports_user, get_stats_from_server_name, get_stats_from_server, get_stats_from_database, get_stats_from_port, get_stats_from_user, is_maintenance_db)
 
-    logger.info("Connecting to Reports DB (Reading): psycopg2:database=%s, host=%s, port=%s, user=%s", reports_database, reports_server, reports_port, reports_user);
-    # reports_read = psycopg2.connect(host=reports_server,port=reports_port,database=reports_database,user=reports_user,password=reports_password, application_name = 'pg_monitor (Reports Read-'+get_stats_from_server_name+')')
+    logger.info("Connecting to Stats DB (Reading): psycopg2:database=%s, host=%s, port=%s, user=%s", reports_database, reports_server, reports_port, reports_user);
+    # reports_read = psycopg2.connect(host=reports_server,port=reports_port,database=reports_database,user=reports_user,password=reports_password, application_name = 'pg_monitor (Stats Read-'+get_stats_from_server_name+')')
     obtain_connection = True
     while (obtain_connection):
         reports_read = None
@@ -100,11 +100,11 @@ def getMonitorStats(reports_server, reports_database, reports_port, reports_user
             reports_read.isolation_level
             obtain_connection = False
         except psycopg2.pool.PoolError as e:
-            logger.error('POOL ERROR (getMonitorStats - Reports Read): %s', e)
+            logger.error('POOL ERROR (getMonitorStats - Stats Read): %s', e)
             pg_pool.putconn(reports_read, close=True)
             #raise(e)
         except psycopg2.Error as e:
-            logger.error('POSTGRES ERROR (getMonitorStats - Reports Read): %s', e.error)
+            logger.error('POSTGRES ERROR (getMonitorStats - Stats Read): %s', e.error)
             #raise(e)
         except OperationalError as oe:
             # Close bad connections and then loop and try opening the next connection in the pool
@@ -117,8 +117,8 @@ def getMonitorStats(reports_server, reports_database, reports_port, reports_user
         exit()
     cursor_reports_read = reports_read.cursor(cursor_factory=RealDictCursor)    
     
-    logger.info("Connecting to Reports DB (Writing): psycopg2:database=%s, host=%s, port=%s, user=%s", reports_database, reports_server, reports_port, reports_user);
-    # reports_write = psycopg2.connect(host=reports_server,port=reports_port,database=reports_database,user=reports_user,password=reports_password, application_name = 'pg_monitor (Reports Write-'+get_stats_from_server_name+')')
+    logger.info("Connecting to Stats DB (Writing): psycopg2:database=%s, host=%s, port=%s, user=%s", reports_database, reports_server, reports_port, reports_user);
+    # reports_write = psycopg2.connect(host=reports_server,port=reports_port,database=reports_database,user=reports_user,password=reports_password, application_name = 'pg_monitor (Stats Write-'+get_stats_from_server_name+')')
     obtain_connection = True
     while (obtain_connection):
         reports_write = None
@@ -127,11 +127,11 @@ def getMonitorStats(reports_server, reports_database, reports_port, reports_user
             reports_write.isolation_level
             obtain_connection = False
         except psycopg2.pool.PoolError as e:
-            logger.error('POOL ERROR (getMonitorStats - Reports Write): %s', e)
+            logger.error('POOL ERROR (getMonitorStats - Stats Write): %s', e)
             pg_pool.putconn(reports_write, close=True)
             #raise(e)
         except psycopg2.Error as e:
-            logger.error('POSTGRES ERROR (getMonitorStats - Reports Write): %s', e.error)
+            logger.error('POSTGRES ERROR (getMonitorStats - Stats Write): %s', e.error)
             #raise(e)
         except OperationalError as oe:
             # Close bad connections and then loop and try opening the next connection in the pool
@@ -260,7 +260,7 @@ ORDER BY run_order ASC
         #else:
         #    reports_schema = get_stats_from_server_name + "-" + get_stats_from_database
         #    #create_schema = "SELECT tools.create_server_database_inherits('" + get_stats_from_server_name + "', '" + get_stats_from_database + "');"
-        reports_schema = "reports"
+        reports_schema = "stats"
 
         #logger.debug('Performing: %s', create_schema)
         #cursor_reports_write.execute(create_schema)
@@ -306,12 +306,12 @@ $$;
     stats_pool.putconn(stats)
     #stats_pool.putconn(stats, close=True)
     stats_pool_count = stats_pool_count - 1
-    logger.info("Closing Reports Connection (Reading)");
+    logger.info("Closing Stats Connection (Reading)");
     reports_read.commit()
     cursor_reports_read.close()
     pg_pool.putconn(reports_read)
     # reports_read.close()
-    logger.info("Closing Reports Connection (Writing)");
+    logger.info("Closing Stats Connection (Writing)");
     reports_write.commit()
     cursor_reports_write.close()
     pg_pool.putconn(reports_write)
@@ -328,7 +328,7 @@ def pg_monitor(args):
     default_logging_level = logger.WARNING
     MAX_THREAD_COUNT = 15
     # Custom Logging Levels
-    PG_DATABASE = "reports"
+    PG_DATABASE = "pgmonitor_db"
     PG_SERVER = "localhost"
     PG_PORT = "5432"
 
@@ -381,7 +381,7 @@ def pg_monitor(args):
     #    threader.MAX_THREADS = 5 # 1 Parent Thread, +5 Child Threads
 
     
-    logger.info('Starting pg_monitor2.py')
+    logger.info('Starting pg_monitor.py')
 
     logger.info("Postgres Host: %s", PG_SERVER)
     logger.info("Postgres Datbase: %s", PG_DATABASE)
@@ -411,8 +411,8 @@ def pg_monitor(args):
         server_app_name = '-'+args.server
     else:
         server_app_name = ''
-    # conn = psycopg2.connect(host=PG_SERVER,port=PG_PORT,database=PG_DATABASE,user=PG_USER,password=PG_PASSWORD,application_name = 'pg_monitor (Reports Master'+server_app_name+')')
-    threaded_postgreSQL_pool = psycopg2.pool.ThreadedConnectionPool(3, ((threader.MAX_THREADS*3)+1),host=PG_SERVER,port=PG_PORT,database=PG_DATABASE,user=PG_USER,password=PG_PASSWORD,application_name = 'pg_monitor (Reports Master'+server_app_name+')')
+    # conn = psycopg2.connect(host=PG_SERVER,port=PG_PORT,database=PG_DATABASE,user=PG_USER,password=PG_PASSWORD,application_name = 'pg_monitor (Stats Master'+server_app_name+')')
+    threaded_postgreSQL_pool = psycopg2.pool.ThreadedConnectionPool(3, ((threader.MAX_THREADS*3)+1),host=PG_SERVER,port=PG_PORT,database=PG_DATABASE,user=PG_USER,password=PG_PASSWORD,application_name = 'pg_monitor (Stats Master'+server_app_name+')')
     if(threaded_postgreSQL_pool):
         logger.info("Connection pool created successfully using ThreadedConnectionPool")
         
@@ -493,10 +493,10 @@ def pg_monitor(args):
             FROM tools.servers a
             LEFT JOIN (
     SELECT max(log_time) AS log_time, cluster_name
-    FROM reports.current_pg_database
+    FROM stats.databases
     GROUP BY cluster_name
 ) b ON b.cluster_name = a.server_name
-            LEFT JOIN reports.current_pg_database cpd
+            LEFT JOIN stats.databases cpd
             ON (cpd.cluster_name = b.cluster_name OR cpd.cluster_name = b.cluster_name || '-a' OR cpd.cluster_name = b.cluster_name || '-b') 
             AND b.log_time = cpd.log_time
             WHERE a.disabled = FALSE """ + server_filter + """
@@ -557,10 +557,10 @@ def pg_monitor(args):
 
         
         except psycopg2.pool.PoolError as e:
-            logger.error('POOL ERROR (pg_monitor - Reports Read): %s', e)
+            logger.error('POOL ERROR (pg_monitor - Stats Read): %s', e)
             #raise(e)
         except psycopg2.Error as e:
-            logger.error('POSTGRES ERROR (pg_monitor - Reports Read): %s', e.error)
+            logger.error('POSTGRES ERROR (pg_monitor - Stats Read): %s', e.error)
             #raise(e)
         #except OperationalError as oe:
         #    # Close bad connections and then loop and try opening the next connection in the pool
@@ -579,18 +579,18 @@ def pg_monitor(args):
         v.closeall()
         logger.info("Threaded PostgreSQL connection pool is closed - " + k)
     
-    logger.info('Finished pg_monitor2.py')
+    logger.info('Finished pg_monitor.py')
     #logger.slogger.shutdown()
 
 def run():
-    #logger.info('Starting pg_monitor2.py Master Thread')
+    #logger.info('Starting pg_monitor.py Master Thread')
     if (args.daemon):
         if args.pid_file:
             local_pid_file = args.pid_file
         elif args.server:
             local_pid_file = args.server + '.pid'
         else:    
-            local_pid_file = 'pg_monitor2.pid'
+            local_pid_file = 'pg_monitor.pid'
         
         if os.path.dirname(__file__) != "":
             os.chdir(os.path.dirname(__file__))
