@@ -44,7 +44,8 @@ parser.add_argument("-V", "--version", help="output version information, then ex
 parser.add_argument("-j", "--jobs", help="number of job to run simultaneously", type=int)
 parser.add_argument("--daemon", help="run in daemon mode (default: \"False\"", action="store_true")
 parser.add_argument("-l", "--log", help="set the file file location and name (default: \"none\")")
-parser.add_argument("-w", "--wait", help="set the length between starting each loop (default: \"none\", No looping)", type=int)
+parser.add_argument("-w", "--wait", help="set the number of seconds between starting each loop (default: \"none\", No looping)", type=int)
+parser.add_argument("-c", "--count", help="the max number of loops (default: \"none\", Infinate looping)", type=int)
 parser.add_argument("--pid-file", help="set pid file location (default: \"pg_monitor.pid'\")")
 parser.add_argument("--help", help="show this help message and exit", action="store_true")
 args = parser.parse_args()
@@ -331,6 +332,7 @@ def pg_monitor(args):
     PG_DATABASE = "pgmonitor_db"
     PG_SERVER = "localhost"
     PG_PORT = "5432"
+    loop_count = 0
 
     if args.verbose:
         default_logging_level = logger.INFO
@@ -549,6 +551,11 @@ def pg_monitor(args):
             if args.wait == None:
                 break
             else:
+                if args.count != None:
+                    loop_count = loop_count + 1
+                    logger.info("Loop finished - %i", loop_count)
+                    if loop_count >= args.count:
+                        break
                 sleep_time = args.wait - round(time.time() - start_time)
                 if (sleep_time > 0):
                     time.sleep(sleep_time)
