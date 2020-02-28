@@ -80,6 +80,9 @@ psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(5);SE
 # Refresh the Continous Aggregate so they have the latest data
 psql -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/refresh_aggregates.sql
 
+###### pg_monitor ######
+python3 ~/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -vvv
+
 ###### PGTAP ######
 # Must change directories to tune the pgtap tests.
 cd ~/pg_monitor/pgtap_tests/

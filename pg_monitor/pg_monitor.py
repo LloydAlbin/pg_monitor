@@ -73,7 +73,7 @@ def copyData(cursor_stats, stats_query, cursor_reports_write, copy_to_schema, co
     #cursor_reports_write.copy_from(data, "\"" + copy_to_schema + "\".\"" + copy_to_table + "\"")
     
     if (default_logging_level == logger.TRACE):
-        cursor_reports_write.execute("SELECT * FROM \"" + reports_schema + "\".\"" + row['table_name'] + "\"")
+        cursor_reports_write.execute("SELECT * FROM \"" + copy_to_schema + "\".\"" + copy_to_table + "\"")
         written_rows = cursor_reports_write.fetchall()
         for written_row in written_rows:
             logger.trace(', '.join(written_row))
@@ -440,7 +440,7 @@ def pg_monitor(args):
             logger.debug('Performing: %s', statement)
             cur.execute(statement)
             
-            statement = "SELECT tools.create_reports();";
+            statement = "SELECT tools.create_stats();";
             logger.debug('Performing: %s', statement)
             cur.execute(statement)
             
@@ -493,12 +493,11 @@ def pg_monitor(args):
             FROM tools.servers a
             LEFT JOIN (
     SELECT max(log_time) AS log_time, cluster_name
-    FROM stats.databases
+    FROM stats.pg_database
     GROUP BY cluster_name
 ) b ON b.cluster_name = a.server_name
             LEFT JOIN stats.databases cpd
             ON (cpd.cluster_name = b.cluster_name OR cpd.cluster_name = b.cluster_name || '-a' OR cpd.cluster_name = b.cluster_name || '-b') 
-            AND b.log_time = cpd.log_time
             WHERE a.disabled = FALSE """ + server_filter + """
             AND a.read_all_databases = TRUE
             AND a.maintenance_database != cpd.database_name
