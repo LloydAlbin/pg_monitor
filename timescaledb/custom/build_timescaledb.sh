@@ -6,7 +6,7 @@
 ORG="lloydalbin"
 PG_NAME="postgres"
 TS_NAME="timescaledb"
-PG_VER="pg11"
+PG_VER="pg12"
 PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
 PGTAP_VER="1.1.0"
 verbose=0

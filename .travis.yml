@@ -52,16 +52,19 @@ env:
     - PGUSER=postgres
     - PGPASSWORD=pgpass
     - PGPORT=30002
-    - KUBEVERSION=v1.17.0
+    #- KUBEVERSION=v1.17.0
+    # 1.17.0 to 
     # https://kubernetes.io/docs/setup/release/notes/
-    - MINIKUBEVERSION=v1.6.2
+    - MINIKUBEVERSION=v1.14.0
+    #1.6.2 to 1.14.0
     # https://github.com/kubernetes/minikube/tags
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
-  - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+  #- curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
   # Download minikube.
-  - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+  #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+  - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
   - mkdir -p $HOME/.kube $HOME/.minikube
   - touch $KUBECONFIG
   - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
