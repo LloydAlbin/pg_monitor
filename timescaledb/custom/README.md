@@ -51,6 +51,10 @@ The build script will download the postgres and timescaledb-docker repositories.
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean postgres --override_exit
 ```
 
+### PostgreSQL Versions
+
+The build_timescaledb.sh script has been updated to use PostgreSQL 12, but still works for PostgreSQL 11. To build PostgreSQL 11, just change the PG_VER variable to be pg11.
+
 ## Clean / Delete Repositories
 
 If you wish to delete the repositories, you may do so manually or you can use the make command to clean up the postgres & timescaledb-docker repositories.

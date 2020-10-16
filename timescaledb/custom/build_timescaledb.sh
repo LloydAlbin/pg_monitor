@@ -187,7 +187,7 @@ postgres_patch()
 		sed -i "/VOLUME/a 	&& cpan Module::Build \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& unzip pgtap-$PGTAP_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
 	fi
 }
 
