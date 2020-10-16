@@ -25,7 +25,7 @@ start shell:C:\Program Files\WindowsApps\CanonicalGroupLimited.Ubuntu18.04onWind
 # https://docs.microsoft.com/en-us/windows/wsl/initialize-distro
 ```
 
-Extra Links
+### Extra Links
 
 * [Windows Subsystem for Linux Installation Guide for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 * [Manage and configure Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/wsl-config)
@@ -34,7 +34,7 @@ Extra Links
 
 ## Ubuntu Setup
 
-Append to ~/.bashrc - Note some of this is done by commands further down as part of teh docker and kubernetes installations and setup. I need to rebuild the test platform and then note what is needed when.
+Append to ~/.bashrc - Note some of this is done by commands further down as part of the docker and kubernetes installations and setup. I need to rebuild the test platform and then note what is needed when.
 
 ```bash
 # Alias definitions.
@@ -122,3 +122,7 @@ echo "deb http://apt.postgresql.org/pub/repos/apt/ ${RELEASE}"-pgdg main | sudo 
 sudo apt update
 sudo apt -y install postgresql-client-11
 ```
+
+## New information on WSL2 Setup
+
+[Blog on Kubernetes website for setting up WSL2 with Docker and Kubernetes](https://kubernetes.io/blog/2020/05/21/wsl-docker-kubernetes-on-the-windows-desktop/)
