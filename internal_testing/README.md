@@ -38,7 +38,7 @@ In this build/testing environment I am using the following:
 
 ###### BUILD DOCKER IMAGES ######
 # Build Postgres and TimescaleDB Docker Images
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds
 # Rebuild TimescaleDB Docker Images
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --timescaledb
 docker images
