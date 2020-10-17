@@ -6,9 +6,10 @@
 ORG="lloydalbin"
 PG_NAME="postgres"
 TS_NAME="timescaledb"
-PG_VER="pg12"
+PG_VER="pg11"
 PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
 PGTAP_VER="1.1.0"
+TDS_VER="2.0.2"
 verbose=0
 postgres=0
 timescaledb=0
@@ -22,6 +23,7 @@ clean=0
 clean_location=
 override_exit=0
 pgtap=0
+tds=0
 
 # Usage info
 show_help()
@@ -50,6 +52,11 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 									pgtap - pgTAP is a suite of database functions that make it easy to write 
 										TAP-emitting unit tests in psql scripts or xUnit-style test functions.
 										http://pgtap.org/
+									tds - TDS_FDW is a PostgreSQL foreign data wrapper that can connect to 
+										databases that use the Tabular Data Stream (TDS) protocol, such as 
+										Sybase databases and Microsoft SQL server.
+	--pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
+
 EOF
 }
 
@@ -174,6 +181,24 @@ postgres_patch()
 	sed -i "/FROM alpine/a RUN echo 'nvm.overcommit_memory = 2' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
 	sed -i "/FROM alpine/a RUN echo 'vm.overcommit_ratio = 100' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
 
+	# The build order of these items, if using the "/VOLUME/a" will be in reverse order of the order listed here.
+	# aka tds, pgtap in this code become pgtap, tds in the Dockerfile
+	if [ $tds = "1" ]; then
+		# Add TDS_FDW and it's dependency freeTDS
+		# TDS_FDW is a PostgreSQL foreign data wrapper that can connect to databases that use the Tabular Data Stream (TDS) protocol, such as Sybase databases and Microsoft SQL server.
+		# https://github.com/tds-fdw/tds_fdw
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding tds_fdw "
+		sed -i "/ENV PG_SHA256/a ADD https://github.com/tds-fdw/tds_fdw/archive/v$TDS_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
+
+		# Note these will be in reverse order after being inserted into the Dockerfile
+		sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 install" $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/tds_fdw-$TDS_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& unzip v$TDS_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec make gcc freetds-dev libc-dev clang llvm10-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add freetds " $1/postgres/$2/alpine/Dockerfile	
+	fi
+
 	if [ $pgtap = "1" ]; then
 		# Add pgtap
 		# pgTAP is a suite of database functions that make it easy to write TAP-emitting unit tests in psql scripts or xUnit-style test functions.
@@ -181,6 +206,7 @@ postgres_patch()
 		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgtap "
 		sed -i "/ENV PG_SHA256/a ADD http:\/\/api.pgxn.org\/dist\/pgtap\/$PGTAP_VER\/pgtap-$PGTAP_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
 
+		# Note these will be in reverse order after being inserted into the Dockerfile
 		sed -i "/VOLUME/a 	&& make -C \/pgtap-$PGTAP_VER install" $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& su-exec postgres make -C \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& cpan TAP::Harness \\\\ " $1/postgres/$2/alpine/Dockerfile	
@@ -301,6 +327,20 @@ while :; do
 		-tn=|--ts_name=)         # Handle the case of an empty --ts_name=
 			die 'ERROR: "-tn or --tg_name" requires a non-empty option argument.'
 			;;
+        -pgv|--pgversion)       # Takes an option argument; ensure it has been specified.
+			if [ "$2" ]; then
+				PG_VER=$2
+				shift
+			else
+				die 'ERROR: "-pgv or --pgversion" requires a non-empty option argument.'
+			fi
+			;;
+		-pgv=?*|--pgversion=?*)
+			PG_VER=${1#*=} # Delete everything up to "=" and assign the remainder.
+			;;
+		-pgv=|--pgversion=)         # Handle the case of an empty --pgversion=
+			die 'ERROR: "-pgv or --pgversion" requires a non-empty option argument.'
+			;;
         --location)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
 				build_location=$2
@@ -355,6 +395,8 @@ while :; do
 			if [ "$2" ]; then
 				if [ $2 = "pgtap" ]; then
 					pgtap=1
+				elif [ $2 = "tds" ]; then
+					tds=1
 				else
 					die 'ERROR: "--add" unknown argument: $2.'
 				fi
@@ -367,6 +409,8 @@ while :; do
 			add_variable=${1#*=} # Delete everything up to "=" and assign the remainder.
 			if [ $add_variable = "pgtap" ]; then
 				pgtap=1
+			elif [ $add_variable = "tds" ]; then
+				tds=1
 			else
 				die 'ERROR: "--add" unknown argument: $2.'
 			fi
