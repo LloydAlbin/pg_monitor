@@ -79,7 +79,7 @@ before_script:
 
 script:
   # Using the default build paramaters for a fresh build
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --tsv $TSVERSION
+  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap -tsv $TSVERSION
   # Following is just to demo that the kubernetes cluster works.
   - kubectl cluster-info
   # Verify kube-addon-manager.
