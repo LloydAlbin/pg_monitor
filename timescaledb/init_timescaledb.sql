@@ -812,7 +812,7 @@ CREATE OR REPLACE FUNCTION tools.time_bucket (
   bucket_width interval,
   ts timestamptz,
   "offset" interval = '00:00:00'::interval,
-  origin timestamptz = '0001-01-01 00:00:00+00'::timestamptz
+  origin timestamp = '0001-01-01 00:00:00'::timestamp
 )
 RETURNS TIMESTAMPTZ AS
 $body$
@@ -825,6 +825,8 @@ year aka 12 months
 half year aka 6 months = .5 year
 quarter aka 3 months = .25 year
 months = months
+
+This function does not support BC origin timestamps.
 */
 DECLARE
   months integer;
@@ -832,7 +834,7 @@ DECLARE
   bucket_month integer;
 BEGIN
 	IF EXTRACT(MONTH FROM bucket_width) >= 1 OR EXTRACT(YEAR FROM bucket_width) >= 1 THEN
-    origin := origin + ((0-date_part('timezone_hour', now()))::text || ' hours')::interval;
+    --origin := origin + ((0-date_part('timezone_hour', now()))::text || ' hours')::interval;
       bucket_months :=
           (EXTRACT(MONTH FROM bucket_width) + -- months	
           (EXTRACT(YEAR FROM bucket_width) * 12)); -- years
