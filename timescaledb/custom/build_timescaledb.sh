@@ -148,6 +148,7 @@ git_update()
 	if [ ! -z "$GIT_VER" ]; then
 		UPSTREAM = $GIT_VER
 	fi
+	print_verbose 1 "Setting repository ${GIT_REPOSITORY} to ${UPSTREAM}"
 	LOCAL=$(git -C ${GIT_PATH} rev-parse ${UPSTREAM})
 	REMOTE=$(git -C ${GIT_PATH} rev-parse "${UPSTREAM}")
 	BASE=$(git -C ${GIT_PATH} merge-base HEAD "${UPSTREAM}")
