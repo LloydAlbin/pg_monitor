@@ -58,6 +58,10 @@ env:
     - MINIKUBEVERSION=v1.6.2
     #1.6.2 to 1.14.0
     # https://github.com/kubernetes/minikube/tags
+    # This forces a specific TimescaleDB Version. This should normally be set to HEAD, 
+    # but if TimescaleDB breaks backwards compatibility, then this may need to be 
+    # set to a specific version until the code is updated.
+    - TSVERSION=1.7.4
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
@@ -75,7 +79,7 @@ before_script:
 
 script:
   # Using the default build paramaters for a fresh build
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap
+  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --tsv $TSVERSION
   # Following is just to demo that the kubernetes cluster works.
   - kubectl cluster-info
   # Verify kube-addon-manager.

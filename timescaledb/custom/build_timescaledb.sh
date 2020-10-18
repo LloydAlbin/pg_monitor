@@ -6,6 +6,7 @@
 ORG="lloydalbin"
 PG_NAME="postgres"
 TS_NAME="timescaledb"
+TS_VER=
 PG_VER="pg11"
 PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
 PGTAP_VER="1.1.0"
@@ -56,6 +57,7 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 										databases that use the Tabular Data Stream (TDS) protocol, such as 
 										Sybase databases and Microsoft SQL server.
 	--pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
+	--tsv/--tsversion VERSION	Overrides the default TimescaleDB version. - Default: $TS_VER
 
 EOF
 }
@@ -131,6 +133,7 @@ git_update()
 	GIT_PATH=$1
 	GIT_REPOSITORY=$2
 	GIT_QUIET="--quiet"
+	GIT_VER=$3
 	if [ $verbose -ge 2 ]; then
 		GIT_QUIET=
 	fi
@@ -142,6 +145,9 @@ git_update()
 	fi
 
 	UPSTREAM="HEAD"
+	if [ ! -z "$GIT_VER" ]; then
+		UPSTREAM = $GIT_VER
+	fi
 	LOCAL=$(git -C ${GIT_PATH} rev-parse ${UPSTREAM})
 	REMOTE=$(git -C ${GIT_PATH} rev-parse "${UPSTREAM}")
 	BASE=$(git -C ${GIT_PATH} merge-base HEAD "${UPSTREAM}")
@@ -219,6 +225,9 @@ postgres_patch()
 
 timescaledb_patch()
 {
+	#print_verbose 1 "Checking out TimescaleDB version: $TS_VER"
+	#git checkout $TS_VER
+
 	# timescaledb_patch $build_location $ORG $PG_NAME
 	print_verbose 1 "Patching TimescaleDB Repository: $1/timescaledb-docker/Dockerfile"
 	sed -i "s#FROM postgres:#FROM $2/$3:#g" $1/timescaledb-docker/Dockerfile
@@ -340,6 +349,20 @@ while :; do
 			;;
 		-pgv=|--pgversion=)         # Handle the case of an empty --pgversion=
 			die 'ERROR: "-pgv or --pgversion" requires a non-empty option argument.'
+			;;
+        -tsv|--tsversion)       # Takes an option argument; ensure it has been specified.
+			if [ "$2" ]; then
+				TS_VER=$2
+				shift
+			else
+				die 'ERROR: "-tsv or --tsversion" requires a non-empty option argument.'
+			fi
+			;;
+		-tsv=?*|--tsversion=?*)
+			TS_VER=${1#*=} # Delete everything up to "=" and assign the remainder.
+			;;
+		-tsv=|--tsversion=)         # Handle the case of an empty --pgversion=
+			die 'ERROR: "-tsv or --tsversion" requires a non-empty option argument.'
 			;;
         --location)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
@@ -482,7 +505,7 @@ fi
 
 if [ $postgres -eq 1 ]; then
 	# Get/Update Repository
-	git_update $build_location/postgres https://github.com/docker-library/postgres.git
+	git_update $build_location/postgres https://github.com/docker-library/postgres.git ""
 	# Patch Makefile
 	postgres_patch $build_location $PG_VER_NUMBER
 	# Build Docker Image
@@ -498,7 +521,7 @@ fi
 
 if [ $timescaledb -eq 1 ]; then
 	# Get/Update Repository
-	git_update $build_location/timescaledb-docker https://github.com/timescale/timescaledb-docker.git
+	git_update $build_location/timescaledb-docker https://github.com/timescale/timescaledb-docker.git $TS_VER
 	# Patch Makefile
 	timescaledb_patch $build_location $ORG $PG_NAME
 	# Build Docker Image
