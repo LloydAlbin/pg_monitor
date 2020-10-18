@@ -142,13 +142,14 @@ git_update()
 	if [ ! -d ${GIT_PATH} ]; then
 		print_verbose 1 "Cloning from repository: ${GIT_REPOSITORY} to ${GIT_PATH}"
 		git clone ${GIT_REPOSITORY} ${GIT_PATH} ${GIT_QUIET}
+		# This won't work because timescaledb-docker does not have any branches or tags
+		#if [ ! -z "$GIT_VER" ]; then
+		#	print_verbose 1 "Setting repository ${GIT_REPOSITORY} to ${UPSTREAM}"
+		#	git checkout tags/${GIT_VER}
+		#fi
 	fi
 
 	UPSTREAM="HEAD"
-	if [ ! -z "$GIT_VER" ]; then
-		UPSTREAM = $GIT_VER
-	fi
-	print_verbose 1 "Setting repository ${GIT_REPOSITORY} to ${UPSTREAM}"
 	LOCAL=$(git -C ${GIT_PATH} rev-parse ${UPSTREAM})
 	REMOTE=$(git -C ${GIT_PATH} rev-parse "${UPSTREAM}")
 	BASE=$(git -C ${GIT_PATH} merge-base HEAD "${UPSTREAM}")
