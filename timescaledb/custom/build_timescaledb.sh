@@ -33,8 +33,8 @@ show_help()
 Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 	-h/--help					display this help and exit
 	-o/--org ORGANIZATION		insert the organization name into the docker name ORGANIZATION/NAME:VERSION - Default: lloydalbin
-	--pn/--pg_name NAME			insert the Poistgres name into the docker name ORGANIZATION/NAME:VERSION - Default: postgres
-	--tn/--ts_name NAME			insert the TimescaleDB name into the docker name ORGANIZATION/NAME:VERSION - Default: timescaledb
+	-pn/--pg_name NAME			insert the Poistgres name into the docker name ORGANIZATION/NAME:VERSION - Default: postgres
+	-tn/--ts_name NAME			insert the TimescaleDB name into the docker name ORGANIZATION/NAME:VERSION - Default: timescaledb
 	-v							verbose mode. Can be used multiple times for increased verbosity
 								MUST precede the -c command
 	-c/--clean					remove both repositories and exit
@@ -56,8 +56,8 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 									tds - TDS_FDW is a PostgreSQL foreign data wrapper that can connect to 
 										databases that use the Tabular Data Stream (TDS) protocol, such as 
 										Sybase databases and Microsoft SQL server.
-	--pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
-	--tsv/--tsversion VERSION	Overrides the default TimescaleDB version. - Default: $TS_VER
+	-pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
+	-tsv/--tsversion VERSION	Overrides the default TimescaleDB version. - Default: $TS_VER
 
 EOF
 }
