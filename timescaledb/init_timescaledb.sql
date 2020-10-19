@@ -850,10 +850,16 @@ BEGIN
           0, --second
           'Z');
 	ELSE
-      CASE 
+/*
+ * https://github.com/timescale/timescaledb/blob/master/src/time_bucket.c
+ * The default origin is Monday 2000-01-03. We don't use PG epoch since it starts on a saturday.
+ * This makes time-buckets by a week more intuitive and aligns it with
+ * date_trunc.
+ */
+       CASE 
       WHEN "offset" > '0s'::interval THEN
 	      RETURN public.time_bucket(bucket_width, ts-"offset") + "offset";
-      WHEN origin <> '0001-01-01T00:00:00Z'::timestamptz THEN
+      WHEN origin <> '0001-01-01T00:00:00'::timestamp THEN
 	      RETURN public.time_bucket(bucket_width, ts, origin);
       ELSE
 	      RETURN public.time_bucket(bucket_width, ts);
@@ -878,6 +884,12 @@ $body$
 DECLARE
   new_origin timestamp;
 BEGIN
+    IF bucket_width IS NULL THEN
+    	RAISE EXCEPTION 'bucket_width IS NULL' USING ERRCODE = '22004';
+    END IF;
+    IF ts IS NULL THEN
+    	RAISE EXCEPTION 'ts IS NULL' USING ERRCODE = '22004';
+    END IF;
 	IF origin IS NULL THEN
 		new_origin = '0001-01-01 00:00:00'::timestamp;
 	ELSE
@@ -888,7 +900,6 @@ END;
 $body$
 LANGUAGE 'plpgsql'
 IMMUTABLE
-RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamptz) OWNER TO grafana;
 
