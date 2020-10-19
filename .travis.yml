@@ -121,6 +121,7 @@ script:
   # Must change directories to tune the pgtap tests.
   - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
   # Run the all the pgtap tests in the pgtap_tests directory
+  - pg_prove -v -d postgres 03_data_tests.pg
   - pg_prove -v -d postgres .
   #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
 
