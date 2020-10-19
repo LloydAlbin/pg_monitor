@@ -865,6 +865,22 @@ LANGUAGE 'plpgsql'
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
+ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamp) OWNER TO grafana;
+
+CREATE OR REPLACE FUNCTION tools.time_bucket (
+  bucket_width interval,
+  ts timestamptz,
+  "offset" interval = NULL::interval,
+  origin timestamptz = NULL::timestamptz
+)
+RETURNS TIMESTAMPTZ AS
+$body$
+SELECT * FROM tools.time_bucket($1,$2,$3,$4::timestamp)
+$body$
+LANGUAGE 'sql'
+IMMUTABLE
+RETURNS NULL ON NULL INPUT
+SECURITY INVOKER;
 ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamptz) OWNER TO grafana;
 
 CREATE OR REPLACE FUNCTION tools.time_bucket (
