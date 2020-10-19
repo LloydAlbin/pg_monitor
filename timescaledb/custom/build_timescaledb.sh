@@ -142,11 +142,6 @@ git_update()
 	if [ ! -d ${GIT_PATH} ]; then
 		print_verbose 1 "Cloning from repository: ${GIT_REPOSITORY} to ${GIT_PATH}"
 		git clone ${GIT_REPOSITORY} ${GIT_PATH} ${GIT_QUIET}
-		# This won't work because timescaledb-docker does not have any branches or tags
-		#if [ ! -z "$GIT_VER" ]; then
-		#	print_verbose 1 "Setting repository ${GIT_REPOSITORY} to ${UPSTREAM}"
-		#	git checkout tags/${GIT_VER}
-		#fi
 	fi
 
 	UPSTREAM="HEAD"
@@ -233,6 +228,11 @@ timescaledb_patch()
 	# timescaledb_patch $build_location $ORG $PG_NAME
 	print_verbose 1 "Patching TimescaleDB Repository: $1/timescaledb-docker/Dockerfile"
 	sed -i "s#FROM postgres:#FROM $2/$3:#g" $1/timescaledb-docker/Dockerfile
+
+	# Use a specific version of timescaledb
+	if [ ! -z "$GIT_VER" ]; then
+		sed -i "s/ENV TIMESCALEDB_VERSION .*$/ENV TIMESCALEDB_VERSION ${GIT_VER}/g" $1/timescaledb-docker/Dockerfile
+	fi
 }
 
 postgres_build()
