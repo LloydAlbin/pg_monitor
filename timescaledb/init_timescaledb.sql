@@ -883,7 +883,7 @@ IF origin IS NULL THEN
 ELSE
   new_origin = origin::timestamp;
 END IF
-RETUR SELECT * FROM tools.time_bucket(bucket_width,ts,"offset",new_origin);
+RETURN SELECT * FROM tools.time_bucket(bucket_width,ts,"offset",new_origin);
 END;
 $body$
 LANGUAGE 'plpgsql'
