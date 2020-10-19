@@ -811,8 +811,8 @@ ALTER FUNCTION tools.postgres_log_trigger() OWNER TO grafana;
 CREATE OR REPLACE FUNCTION tools.time_bucket (
   bucket_width interval,
   ts timestamptz,
-  "offset" interval = '00:00:00'::interval,
-  origin timestamp = '0001-01-01 00:00:00'::timestamp
+  "offset" interval,
+  origin timestamp
 )
 RETURNS TIMESTAMPTZ AS
 $body$
@@ -870,14 +870,23 @@ ALTER FUNCTION tools.time_bucket(interval, timestamptz, interval, timestamp) OWN
 CREATE OR REPLACE FUNCTION tools.time_bucket (
   bucket_width interval,
   ts timestamptz,
-  "offset" interval = NULL::interval,
+  "offset" interval = '00:00:00'::interval,
   origin timestamptz = NULL::timestamptz
 )
 RETURNS TIMESTAMPTZ AS
 $body$
-SELECT * FROM tools.time_bucket($1,$2,$3,$4::timestamp)
+DECLARE
+  new_origin timestamp;
+BEGIN
+IF origin IS NULL THEN
+  new_origin = '0001-01-01 00:00:00'::timestamp;
+ELSE
+  new_origin = origin::timestamp;
+END IF
+RETUR SELECT * FROM tools.time_bucket(bucket_width,ts,"offset",new_origin);
+END;
 $body$
-LANGUAGE 'sql'
+LANGUAGE 'plpgsql'
 IMMUTABLE
 RETURNS NULL ON NULL INPUT
 SECURITY INVOKER;
