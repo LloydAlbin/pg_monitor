@@ -878,12 +878,12 @@ $body$
 DECLARE
   new_origin timestamp;
 BEGIN
-IF origin IS NULL THEN
-  new_origin = '0001-01-01 00:00:00'::timestamp;
-ELSE
-  new_origin = origin::timestamp;
-END IF
-RETURN QUERY SELECT * FROM tools.time_bucket(bucket_width,ts,"offset",new_origin);
+	IF origin IS NULL THEN
+		new_origin = '0001-01-01 00:00:00'::timestamp;
+	ELSE
+		new_origin = origin::timestamp;
+	END IF;
+	RETURN tools.time_bucket(bucket_width,ts,"offset",new_origin);
 END;
 $body$
 LANGUAGE 'plpgsql'
