@@ -72,23 +72,23 @@ psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
 
 ###### TIMESCALEDB SETUP ######
 # Init TimescaleDB
-psql -h localhost -v ON_ERROR_STOP=1 -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
 # Setup account with password
-psql -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
 # Make the COntinous Aggregates very aggressive
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
 # Remove Compresses Chunks Policy
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.remove_compress_chunks_policy((schema_name || '.' || table_name)::regclass) FROM tools.hypertables;"
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.remove_compress_chunks_policy((schema_name || '.' || table_name)::regclass) FROM tools.hypertables;"
 # Make the Continous Aggregate capture everything right away for testing.
 #psql -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/continous_aggregate_refresh_interval_now.sql
 # Load Test Data
-cat ~/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
-cat ~/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+cat ~/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+cat ~/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
 # Add Compresses Chunks Policy
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;"
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(5);SELECT alter_job_schedule(job_id, next_start=>now()) FROM _timescaledb_config.bgw_policy_compress_chunks p INNER JOIN _timescaledb_catalog.hypertable h ON (h.id = p.hypertable_id);"
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;"
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(5);SELECT alter_job_schedule(job_id, next_start=>now()) FROM _timescaledb_config.bgw_policy_compress_chunks p INNER JOIN _timescaledb_catalog.hypertable h ON (h.id = p.hypertable_id);"
 # Refresh the Continous Aggregate so they have the latest data
-psql -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/refresh_aggregates.sql
+psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/refresh_aggregates.sql
 
 ###### pg_monitor ######
 python3 ~/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -vvv
