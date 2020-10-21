@@ -45,8 +45,8 @@ In this build/testing environment I am using the following:
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --pgv pg12
 # Build for current Postgres and secific TimescaleDB version
 # You will also need to update the pg-monitor-timescaledb-deployment.yaml to specify this same TimescaleDB version
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --pgv HEAD
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --pgv 1.7.4
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --tsv HEAD
+~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --tsv 1.6.0
 # Rebuild TimescaleDB Docker Images
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --timescaledb
 docker images
