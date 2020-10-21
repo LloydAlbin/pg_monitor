@@ -72,7 +72,7 @@ psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
 
 ###### TIMESCALEDB SETUP ######
 # Init TimescaleDB
-psql -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
+psql -h localhost -v ON_ERROR_STOP=1 -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
 # Setup account with password
 psql -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
 # Make the COntinous Aggregates very aggressive
