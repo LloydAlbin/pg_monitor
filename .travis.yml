@@ -61,7 +61,7 @@ env:
     # This forces a specific TimescaleDB Version. This should normally be set to HEAD, 
     # but if TimescaleDB breaks backwards compatibility, then this may need to be 
     # set to a specific version until the code is updated.
-    - TSVERSION=1.7.4
+    - TSVERSION=1.6.0
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
@@ -121,7 +121,7 @@ script:
   # Must change directories to tune the pgtap tests.
   - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
   # Run the all the pgtap tests in the pgtap_tests directory
-  - pg_prove -v -d postgres 03_data_tests.pg
+  # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
   - pg_prove -v -d postgres .
   #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
 
