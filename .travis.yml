@@ -61,7 +61,9 @@ env:
     # This forces a specific TimescaleDB Version. This should normally be set to HEAD, 
     # but if TimescaleDB breaks backwards compatibility, then this may need to be 
     # set to a specific version until the code is updated.
-    - TSVERSION=1.6.0
+    - TSVERSION=1.7.0
+    # Tested and Passed
+    # 1.6.0
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
