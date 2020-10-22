@@ -26,6 +26,7 @@ override_exit=0
 pgtap=0
 tds=0
 pgaudit=0
+pgnodemx=0
 
 # Usage info
 show_help()
@@ -63,6 +64,7 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 										provided by PostgreSQL. The goal of PostgreSQL Audit to provide the 
 										tools needed to produce audit logs required to pass certain government, 
 										financial, or ISO certification audits.
+									pgnodemx - SQL functions that allow capture of node OS metrics from PostgreSQL
 	-pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
 	-tsv/--tsversion VERSION	Overrides the default TimescaleDB version. - Default: $TS_VER
 
@@ -239,12 +241,31 @@ postgres_patch()
 		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgaudit "
 		
 		# Note these will be in reverse order after being inserted into the Dockerfile
+		# shared_preload_libraries = 'pgaudit,pg_stat_statements' #pgaudit <<<<<< NEED TO ADD
 		sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& make check USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& it checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& git checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& cd pgaudit \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& git clone https://github.com/pgaudit/pgaudit.git \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+	fi
+
+	fi [ $pgnodemx = "1" ]; then
+		# pgnodemx - SQL functions that allow capture of node OS metrics from PostgreSQL
+	    # PostgreSQL version 9.5 or newer is required.
+    	# On PostgreSQL version 9.6 or earlier, a role called pgmonitor must be created, and the user calling these functions must be granted that role.
+		# https://github.com/CrunchyData/pgnodemx/
+
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgnodemx "
+		
+		# Note these will be in reverse order after being inserted into the Dockerfile
+		# shared_preload_libraries = 'pgnodemx,pg_stat_statements' #pgnodemx <<<<<< NEED TO ADD
+		sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& cd pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& git clone https://github.com/crunchydata/pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& cd contrib \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
 	fi
 }
 
@@ -452,10 +473,13 @@ while :; do
 					tds=1
 				elif [ $2 = "pgaudit" ]; then
 					pgaudit=1
-				elif [ $2 = "tds" ]; then
+				elif [ $2 = "pgnodemx" ]; then
+					pgnodemx=1
+				elif [ $2 = "all" ]; then
 					pgtap=1
 					tds=1
 					pgaudit=1
+					pgnodemx=1
 				else
 					die 'ERROR: "--add" unknown argument: $2.'
 				fi
@@ -472,10 +496,13 @@ while :; do
 				tds=1
 			elif [ $add_variable = "pgaudit" ]; then
 				pgaudit=1
+			elif [ $add_variable = "pgnodemx" ]; then
+				pgnodemx=1
 			elif [ $add_variable = "all" ]; then
 				pgtap=1
 				tds=1
 				pgaudit=1
+				pgnodemx=1
 			else
 				die 'ERROR: "--add" unknown argument: $2.'
 			fi
@@ -526,6 +553,7 @@ print_verbose 3 "Build Location: $build_location"
 print_verbose 3 "Add pgtap: $pgtap"
 print_verbose 3 "Add tds_fdw: $tds"
 print_verbose 3 "Add pgaudit: $pgaudit"
+print_verbose 3 "Add pgnodemx: $pgnodemx"
 print_verbose 3 "Process Postgres: $postgres"
 print_verbose 3 "Process TimescaleDB: $timescaledb"
 print_verbose 3 ""
