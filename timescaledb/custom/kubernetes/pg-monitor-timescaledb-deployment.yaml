@@ -29,13 +29,15 @@ spec:
               name: pg-monitor-timescaledb-pg-pass
               key: password
 #          value: pgpass
-        image: lloydalbin/timescaledb:1.6.0-pg11
+        image: lloydalbin/timescaledb:2.0.0-rc2-pg12
         imagePullPolicy: IfNotPresent
         name: pg-monitor-timescaledb
         ports:
         - containerPort: 5432
           protocol: TCP
-#        volumeMounts:
+        volumeMounts:
+          - name: podinfo
+          mountPath: /etc/podinfo
 #        - mountPath: /pgdata_local
 #          name: netapp
 #        resources:
@@ -47,7 +49,17 @@ spec:
 #            cpu: 4
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
-#      volumes:
+      volumes:
+# https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/          
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+              - path: "annotations"
+                fieldRef:
+                  fieldPath: metadata.annotations
 #      - name: netapp
 #        persistentVolumeClaim:
 #          claimName: pg-monitor-timescaledb
