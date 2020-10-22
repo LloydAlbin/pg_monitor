@@ -25,6 +25,7 @@ clean_location=
 override_exit=0
 pgtap=0
 tds=0
+pgaudit=0
 
 # Usage info
 show_help()
@@ -50,12 +51,18 @@ Usage: ${0##*/} [-hv] [-o ORGANIZATION]
 	--push						push to repository
 	--add (item)				add item to the Postgres docker image
 								Items:
+									all - Include all the items listed below
 									pgtap - pgTAP is a suite of database functions that make it easy to write 
 										TAP-emitting unit tests in psql scripts or xUnit-style test functions.
 										http://pgtap.org/
 									tds - TDS_FDW is a PostgreSQL foreign data wrapper that can connect to 
 										databases that use the Tabular Data Stream (TDS) protocol, such as 
 										Sybase databases and Microsoft SQL server.
+									pgaudit - The PostgreSQL Audit Extension (or pgaudit) provides detailed 
+										session and/or object audit logging via the standard logging facility 
+										provided by PostgreSQL. The goal of PostgreSQL Audit to provide the 
+										tools needed to produce audit logs required to pass certain government, 
+										financial, or ISO certification audits.
 	-pgv/--pgversion VERSION	Overrides the default PostgreSQL version. - Default: $PG_VER
 	-tsv/--tsversion VERSION	Overrides the default TimescaleDB version. - Default: $TS_VER
 
@@ -216,6 +223,27 @@ postgres_patch()
 		sed -i "/VOLUME/a 	&& cpan Module::Build \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a 	&& unzip pgtap-$PGTAP_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+	fi
+
+	if [ $pgaudit = "1" ]; then
+		# Add pgAudit
+		# pgAudit v1.5.X is intended to support PostgreSQL 13.
+		# pgAudit v1.4.X is intended to support PostgreSQL 12.
+		# pgAudit v1.3.X is intended to support PostgreSQL 11.
+		# pgAudit v1.2.X is intended to support PostgreSQL 10.
+		# pgAudit v1.1.X is intended to support PostgreSQL 9.6.
+		# pgAudit v1.0.X is intended to support PostgreSQL 9.5.
+		# https://github.com/pgaudit/pgaudit
+
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgaudit "
+		
+		# Note these will be in reverse order after being inserted into the Dockerfile
+		sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& make check USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& it checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& cd pgaudit \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& git clone https://github.com/pgaudit/pgaudit.git \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
 		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
 	fi
 }
@@ -422,6 +450,12 @@ while :; do
 					pgtap=1
 				elif [ $2 = "tds" ]; then
 					tds=1
+				elif [ $2 = "pgaudit" ]; then
+					pgaudit=1
+				elif [ $2 = "tds" ]; then
+					pgtap=1
+					tds=1
+					pgaudit=1
 				else
 					die 'ERROR: "--add" unknown argument: $2.'
 				fi
@@ -436,6 +470,12 @@ while :; do
 				pgtap=1
 			elif [ $add_variable = "tds" ]; then
 				tds=1
+			elif [ $add_variable = "pgaudit" ]; then
+				pgaudit=1
+			elif [ $add_variable = "all" ]; then
+				pgtap=1
+				tds=1
+				pgaudit=1
 			else
 				die 'ERROR: "--add" unknown argument: $2.'
 			fi
@@ -484,6 +524,8 @@ print_verbose 3 "Show Version Information: $version"
 print_verbose 3 "Override Exit: $override_exit"
 print_verbose 3 "Build Location: $build_location"
 print_verbose 3 "Add pgtap: $pgtap"
+print_verbose 3 "Add tds_fdw: $tds"
+print_verbose 3 "Add pgaudit: $pgaudit"
 print_verbose 3 "Process Postgres: $postgres"
 print_verbose 3 "Process TimescaleDB: $timescaledb"
 print_verbose 3 ""
