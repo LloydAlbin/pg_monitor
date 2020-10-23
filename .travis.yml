@@ -12,6 +12,10 @@ sudo: required
 #  only:
 #  - master
 
+env:
+- PGVERSION=pg11
+- PGVERSION=pg12
+
 addons:
   apt:
     packages:
@@ -82,7 +86,7 @@ before_script:
 
 script:
   # Using the default build paramaters for a fresh build
-  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add all -tsv $TSVERSION
+  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add all -tsv $TSVERSION -pgv $PGVERSION
   # Following is just to demo that the kubernetes cluster works.
   - kubectl cluster-info
   # Verify kube-addon-manager.
