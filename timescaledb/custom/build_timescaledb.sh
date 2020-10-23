@@ -182,6 +182,7 @@ clean_docker()
 	# Remove the docker images with REPOSITORY = <none> and TAG = <none>
 	print_verbose 1 "Removing Docker Images with REPOSITORY = <none> and TAG = <none>"
 	docker images | awk '/^<none>/{print $3}' | xargs docker rmi
+	docker system prune -f
 }
 
 postgres_patch()
@@ -210,7 +211,7 @@ postgres_patch()
 			sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/tds_fdw-$TDS_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& unzip v$TDS_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec make gcc freetds-dev libc-dev clang llvm10-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
-			sed -i "/VOLUME/a RUN apk add freetds " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add freetds " $1/postgres/$2/alpine/Dockerfile
 		else
 			print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding tds_fdw - Does not support this version of PostgreSQL"
 		fi
@@ -253,7 +254,8 @@ postgres_patch()
 		if (( $(echo "$PG_VER_NUMBER >= 9.5" |bc -l) )); then
 			# Note these will be in reverse order after being inserted into the Dockerfile
 			# shared_preload_libraries = 'pgaudit,pg_stat_statements' #pgaudit <<<<<< NEED TO ADD
-			sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a   && sed -i \"s/shared_preload_libraries = '/shared_preload_libraries = 'pgaudit,/g\" \$PGDATA/postgresql.conf " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& make install USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& git checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& cd \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
@@ -282,7 +284,8 @@ postgres_patch()
 		if (( $(echo "$PG_VER_NUMBER >= 9.5" |bc -l) )); then
 			# Note these will be in reverse order after being inserted into the Dockerfile
 			# shared_preload_libraries = 'pgnodemx,pg_stat_statements' #pgnodemx <<<<<< NEED TO ADD
-			sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a   && sed -i \"s/shared_preload_libraries = '/shared_preload_libraries = 'pgnodemx,/g\" \$PGDATA/postgresql.conf " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& make install USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& cd \/pgnodemx  \\\\ " $1/postgres/$2/alpine/Dockerfile	
 			sed -i "/VOLUME/a 	&& git clone https://github.com/crunchydata/pgnodemx \/pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	

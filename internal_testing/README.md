@@ -51,7 +51,7 @@ In this build/testing environment I am using the following:
 ~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --timescaledb
 docker images
 # Optional: cleanup dangling images, etc.
-docker system prune
+docker system prune -f
 
 ###### CLEANUP IN KUBERNETES ######
 # Delete Service, Secret and Deployment in Kubernetes
