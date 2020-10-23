@@ -200,15 +200,20 @@ postgres_patch()
 		# TDS_FDW is a PostgreSQL foreign data wrapper that can connect to databases that use the Tabular Data Stream (TDS) protocol, such as Sybase databases and Microsoft SQL server.
 		# https://github.com/tds-fdw/tds_fdw
 		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding tds_fdw "
-		sed -i "/ENV PG_SHA256/a ADD https://github.com/tds-fdw/tds_fdw/archive/v$TDS_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
 
-		# Note these will be in reverse order after being inserted into the Dockerfile
-		sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 install" $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/tds_fdw-$TDS_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& unzip v$TDS_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec make gcc freetds-dev libc-dev clang llvm10-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add freetds " $1/postgres/$2/alpine/Dockerfile	
+		if (( $(echo "$PG_VER_NUMBER >= 9.2" |bc -l) )); then
+			sed -i "/ENV PG_SHA256/a ADD https://github.com/tds-fdw/tds_fdw/archive/v$TDS_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
+
+			# Note these will be in reverse order after being inserted into the Dockerfile
+			sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 install" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& make -C \/tds_fdw-$TDS_VER USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/tds_fdw-$TDS_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& unzip v$TDS_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec make gcc freetds-dev libc-dev clang llvm10-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add freetds " $1/postgres/$2/alpine/Dockerfile	
+		else
+			print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding tds_fdw - Does not support this version of PostgreSQL"
+		fi
 	fi
 
 	if [ $pgtap = "1" ]; then
@@ -216,16 +221,21 @@ postgres_patch()
 		# pgTAP is a suite of database functions that make it easy to write TAP-emitting unit tests in psql scripts or xUnit-style test functions.
 		# http://pgtap.org/
 		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgtap "
-		sed -i "/ENV PG_SHA256/a ADD http:\/\/api.pgxn.org\/dist\/pgtap\/$PGTAP_VER\/pgtap-$PGTAP_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
 
-		# Note these will be in reverse order after being inserted into the Dockerfile
-		sed -i "/VOLUME/a 	&& make -C \/pgtap-$PGTAP_VER install" $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& su-exec postgres make -C \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& cpan TAP::Harness \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& cpan Module::Build \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& unzip pgtap-$PGTAP_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		if (( $(echo "$PG_VER_NUMBER >= 8.1" |bc -l) )); then
+			sed -i "/ENV PG_SHA256/a ADD http:\/\/api.pgxn.org\/dist\/pgtap\/$PGTAP_VER\/pgtap-$PGTAP_VER.zip \/." $1/postgres/$2/alpine/Dockerfile
+
+			# Note these will be in reverse order after being inserted into the Dockerfile
+			sed -i "/VOLUME/a 	&& make -C \/pgtap-$PGTAP_VER install" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& su-exec postgres make -C \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& cpan TAP::Harness \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& cpan Module::Build \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pgtap-$PGTAP_VER \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& unzip pgtap-$PGTAP_VER.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec perl perl-dev patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		else
+			print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgtap - Does not support this version of PostgreSQL"
+		fi
 	fi
 
 	if [ $pgaudit = "1" ]; then
@@ -240,32 +250,48 @@ postgres_patch()
 
 		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgaudit "
 		
-		# Note these will be in reverse order after being inserted into the Dockerfile
-		# shared_preload_libraries = 'pgaudit,pg_stat_statements' #pgaudit <<<<<< NEED TO ADD
-		sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& make check USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& git checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& cd pgaudit \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& git clone https://github.com/pgaudit/pgaudit.git \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		if (( $(echo "$PG_VER_NUMBER >= 9.5" |bc -l) )); then
+			# Note these will be in reverse order after being inserted into the Dockerfile
+			# shared_preload_libraries = 'pgaudit,pg_stat_statements' #pgaudit <<<<<< NEED TO ADD
+			sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& git checkout REL_${PG_VER_NUMBER}_STABLE \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& cd \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& git clone https://github.com/pgaudit/pgaudit.git \/pgaudit \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& apk add openssl \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make git gcc libc-dev clang llvm10-dev openssl-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		else
+			print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgaudit - Does not support this version of PostgreSQL"
+		fi
 	fi
 
-	fi [ $pgnodemx = "1" ]; then
+	if [ $pgnodemx = "1" ]; then
 		# pgnodemx - SQL functions that allow capture of node OS metrics from PostgreSQL
 	    # PostgreSQL version 9.5 or newer is required.
     	# On PostgreSQL version 9.6 or earlier, a role called pgmonitor must be created, and the user calling these functions must be granted that role.
 		# https://github.com/CrunchyData/pgnodemx/
 
-		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgnodemx "
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgnodemx"
 		
-		# Note these will be in reverse order after being inserted into the Dockerfile
-		# shared_preload_libraries = 'pgnodemx,pg_stat_statements' #pgnodemx <<<<<< NEED TO ADD
-		sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& cd pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& git clone https://github.com/crunchydata/pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a 	&& cd contrib \\\\ " $1/postgres/$2/alpine/Dockerfile	
-		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		if (( $(echo "$PG_VER_NUMBER == 9.5" |bc -l) )); then
+			# Needs to create a role called pgmonitor
+			# Note these will be in reverse order after being inserted into the Dockerfile
+			sed -i "/VOLUME/a psql -h localhost -d postgres -c 'CREATE ROLE pgmonitor;'" $1/postgres/$2/alpine/Dockerfile	
+		fi			
+
+		if (( $(echo "$PG_VER_NUMBER >= 9.5" |bc -l) )); then
+			# Note these will be in reverse order after being inserted into the Dockerfile
+			# shared_preload_libraries = 'pgnodemx,pg_stat_statements' #pgnodemx <<<<<< NEED TO ADD
+			sed -i "/VOLUME/a 	&& make install USE_PGXS=1" $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& make USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& cd \/pgnodemx  \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& git clone https://github.com/crunchydata/pgnodemx \/pgnodemx \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			# sed -i "/VOLUME/a 	&& cd contrib \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a 	&& apk add libmagic \\\\ " $1/postgres/$2/alpine/Dockerfile	
+			sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec patch make git gcc libc-dev clang llvm10-dev file-dev linux-headers \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		else
+			print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pgnodemx - Does not support this version of PostgreSQL"
+		fi
 	fi
 }
 
@@ -390,6 +416,7 @@ while :; do
         -pgv|--pgversion)       # Takes an option argument; ensure it has been specified.
 			if [ "$2" ]; then
 				PG_VER=$2
+				PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
 				shift
 			else
 				die 'ERROR: "-pgv or --pgversion" requires a non-empty option argument.'
@@ -397,6 +424,7 @@ while :; do
 			;;
 		-pgv=?*|--pgversion=?*)
 			PG_VER=${1#*=} # Delete everything up to "=" and assign the remainder.
+			PG_VER_NUMBER=$( echo $PG_VER | cut -c3-)
 			;;
 		-pgv=|--pgversion=)         # Handle the case of an empty --pgversion=
 			die 'ERROR: "-pgv or --pgversion" requires a non-empty option argument.'
