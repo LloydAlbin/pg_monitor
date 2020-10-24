@@ -36,7 +36,7 @@ spec:
         - containerPort: 5432
           protocol: TCP
         volumeMounts:
-          - name: podinfo
+        - name: podinfo
           mountPath: /etc/podinfo
 #        - mountPath: /pgdata_local
 #          name: netapp
@@ -51,15 +51,15 @@ spec:
       terminationGracePeriodSeconds: 30
       volumes:
 # https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/          
-        - name: podinfo
-          downwardAPI:
-            items:
-              - path: "labels"
-                fieldRef:
-                  fieldPath: metadata.labels
-              - path: "annotations"
-                fieldRef:
-                  fieldPath: metadata.annotations
+      - name: podinfo
+        downwardAPI:
+          items:
+            - path: "labels"
+              fieldRef:
+                fieldPath: metadata.labels
+            - path: "annotations"
+              fieldRef:
+                fieldPath: metadata.annotations
 #      - name: netapp
 #        persistentVolumeClaim:
 #          claimName: pg-monitor-timescaledb
