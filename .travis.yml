@@ -120,7 +120,11 @@ script:
   - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
   - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
   - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
-  - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql
+  - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+      psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+    else
+      psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+    fi
   #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
   #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
   # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
