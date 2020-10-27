@@ -1,3 +1,6 @@
+-- Neither of these can be run inside a function
+
+-- TimescaleDB 1.7.4 and earlier
 REFRESH MATERIALIZED VIEW logs.connection_received_logs_1s;
 REFRESH MATERIALIZED VIEW logs.connection_received_logs_1m;
 REFRESH MATERIALIZED VIEW logs.connection_received_logs_1h;
