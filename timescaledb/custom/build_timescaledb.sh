@@ -194,6 +194,21 @@ postgres_patch()
 	sed -i "/FROM alpine/a RUN echo 'nvm.overcommit_memory = 2' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
 	sed -i "/FROM alpine/a RUN echo 'vm.overcommit_ratio = 100' >> \/etc\/sysctl.conf" $1/postgres/$2/alpine/Dockerfile
 
+	# This library contains a single PostgreSQL extension, a data type called "semver". 
+	# It's an implementation of the version number format specified by the Semantic Versioning 2.0.0 Specification.
+	# https://github.com/theory/pg-semver
+	if (( $(echo "$PG_VER_NUMBER >= 9.2" |bc -l) )); then
+		sed -i "/ENV PG_SHA256/a ADD https://github.com/theory/pg-semver/archive/main.zip \/." $1/postgres/$2/alpine/Dockerfile
+
+		sed -i "/VOLUME/a 	&& rm -f \/main.zip " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& rm -rf \/pg-semver-main \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& make -C \/pg-semver-main USE_PGXS=1 install \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& make -C \/pg-semver-main USE_PGXS=1 \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& chown -R postgres:postgres \/pg-semver-main \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a 	&& unzip \/main.zip -d \/ \\\\ " $1/postgres/$2/alpine/Dockerfile	
+		sed -i "/VOLUME/a RUN apk add --virtual build-dependencies su-exec make gcc libc-dev clang llvm10-dev \\\\ " $1/postgres/$2/alpine/Dockerfile	
+	fi
+
 	# The build order of these items, if using the "/VOLUME/a" will be in reverse order of the order listed here.
 	# aka tds, pgtap in this code become pgtap, tds in the Dockerfile
 	if [ $tds = "1" ]; then
