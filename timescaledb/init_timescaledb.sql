@@ -18,11 +18,15 @@ ALTER DATABASE pgmonitor_db OWNER TO grafana;
 \set ON_ERROR_STOP true
 
 SET client_encoding = 'UTF8';
-SELECT pg_catalog.set_config('search_path', '', false);
+--SELECT pg_catalog.set_config('search_path', '', false); -- This causes problems for creating code that uses the semver inside this script. If run outside of this script, everything runs fine.
 
 -- Install TimescaleDB Extension
 CREATE EXTENSION IF NOT EXISTS timescaledb WITH SCHEMA public;
 COMMENT ON EXTENSION timescaledb IS 'Enables scalable inserts and complex queries for time-series data';
+
+-- Install pg_semver Extension
+CREATE EXTENSION IF NOT EXISTS semver WITH SCHEMA public;
+--COMMENT ON EXTENSION semver  IS 'Implementation of the version number format specified by the Semantic Versioning 2.0.0 Specification';
 
 SET ROLE grafana;
 
@@ -43,6 +47,22 @@ CREATE TABLE tools.version (
 );
 ALTER TABLE tools.version OWNER TO grafana;
 INSERT INTO tools.version VALUES (:pgmonitor_version);
+
+CREATE OR REPLACE FUNCTION tools.check_timescaledb_version (
+  tsv varchar
+)
+RETURNS boolean AS
+$body$
+SELECT installed_version::public.semver >= $1::public.semver 
+FROM pg_catalog.pg_available_extensions
+WHERE name = 'timescaledb';
+$body$
+LANGUAGE 'sql'
+VOLATILE
+RETURNS NULL ON NULL INPUT
+SECURITY INVOKER
+PARALLEL UNSAFE
+COST 100;
 
 -- TABLES: logs
 CREATE TABLE stats.pg_settings (
@@ -512,25 +532,56 @@ CREATE VIEW stats.databases AS
   ORDER BY cpd.cluster_name, cpd.database_name;
 ALTER TABLE stats.databases OWNER TO grafana;
 
-CREATE VIEW tools.hypertable AS
- SELECT ht.schema_name AS table_schema,
-    ht.table_name,
-    t.tableowner AS table_owner,
-    ht.num_dimensions,
-    ( SELECT count(1) AS count
-           FROM _timescaledb_catalog.chunk ch
-          WHERE (ch.hypertable_id = ht.id)) AS num_chunks,
-    size.table_size,
-    size.index_size,
-    size.toast_size,
-    size.total_size
-   FROM ((_timescaledb_catalog.hypertable ht
-     LEFT JOIN pg_tables t ON (((ht.table_name = t.tablename) AND (ht.schema_name = t.schemaname))))
-     LEFT JOIN LATERAL public.hypertable_relation_size((
-        CASE
-            WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
-            ELSE NULL::text
-        END)::regclass) size(table_size, index_size, toast_size, total_size) ON (true));
+DO $check$
+DECLARE
+  r RECORD;
+BEGIN
+  SELECT tools.check_timescaledb_version('1.7.4') AS check INTO r;
+  IF r.check IS TRUE THEN 
+    -- 1.7.4 and newer
+    CREATE VIEW tools.hypertable AS
+    SELECT ht.schema_name AS table_schema,
+        ht.table_name,
+        t.tableowner AS table_owner,
+        ht.num_dimensions,
+        ( SELECT count(1) AS count
+              FROM _timescaledb_catalog.chunk ch
+              WHERE (ch.hypertable_id = ht.id)) AS num_chunks,
+        size.table_size,
+        size.index_size,
+        size.toast_size,
+        size.total_size
+      FROM ((_timescaledb_catalog.hypertable ht
+        LEFT JOIN pg_tables t ON (((ht.table_name = t.tablename) AND (ht.schema_name = t.schemaname))))
+        LEFT JOIN LATERAL public.hypertable_detailed_size((
+            CASE
+                WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
+                ELSE NULL::text
+            END)::regclass) size(table_size, index_size, toast_size, total_size, node_name) ON (true));
+  ELSE
+    -- Older than 1.7.4
+    CREATE VIEW tools.hypertable AS
+    SELECT ht.schema_name AS table_schema,
+        ht.table_name,
+        t.tableowner AS table_owner,
+        ht.num_dimensions,
+        ( SELECT count(1) AS count
+              FROM _timescaledb_catalog.chunk ch
+              WHERE (ch.hypertable_id = ht.id)) AS num_chunks,
+        size.table_size,
+        size.index_size,
+        size.toast_size,
+        size.total_size
+      FROM ((_timescaledb_catalog.hypertable ht
+        LEFT JOIN pg_tables t ON (((ht.table_name = t.tablename) AND (ht.schema_name = t.schemaname))))
+        LEFT JOIN LATERAL public.hypertable_relation_size((
+            CASE
+                WHEN has_schema_privilege((ht.schema_name)::text, 'USAGE'::text) THEN format('%I.%I'::text, ht.schema_name, ht.table_name)
+                ELSE NULL::text
+            END)::regclass) size(table_size, index_size, toast_size, total_size) ON (true));
+  END IF;
+END$check$;
+
 ALTER TABLE tools.hypertable OWNER TO grafana;
 
 CREATE VIEW logs.last_log_entries AS
@@ -3146,14 +3197,31 @@ INSERT INTO tools.hypertables (schema_name, table_name, time_column_name, partit
 ('stats', 'custom_table_settings',      'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name'),
 ('stats', 'granted_locks',              'log_time', 'cluster_name', 20, INTERVAL '1 hour', INTERVAL '6 hour', INTERVAL '2 hour', 'log_time DESC', 'cluster_name');
 
-CREATE OR REPLACE FUNCTION tools.timescaledb_enterprise()
-RETURNS boolean
-LANGUAGE sql
-AS $$
-    SELECT CASE WHEN edition = 'enterprise' AND expired IS FALSE AND expiration_time > now() THEN TRUE ELSE FALSE END FROM timescaledb_information.license;
-$$;
+DO $check$
+DECLARE
+  r RECORD;
+BEGIN
+  SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check INTO r;
+  IF r.check IS TRUE THEN 
+    -- 2.0.0-beta1 and newer
+    EXECUTE E'CREATE OR REPLACE FUNCTION tools.timescaledb_enterprise()
+    RETURNS boolean
+    LANGUAGE sql
+    AS $$
+      SELECT FALSE;
+    $$;
+';
+  ELSE
+    -- Older than 2.0.0-beta1
+    EXECUTE E'CREATE OR REPLACE FUNCTION tools.timescaledb_enterprise()
+    RETURNS boolean
+    LANGUAGE sql
+    AS $$
+        SELECT CASE WHEN edition = ''enterprise'' AND expired IS FALSE AND expiration_time > now() THEN TRUE ELSE FALSE END FROM timescaledb_information.license;
+    $$;';
+  END IF;
+END $check$;
 ALTER FUNCTION tools.timescaledb_enterprise() OWNER TO grafana;
-
 
 CREATE OR REPLACE FUNCTION tools.timescaledb_drop_chunks()
 RETURNS SETOF text
@@ -3187,7 +3255,11 @@ SELECT * FROM tools.hypertables;
 DO $$
 DECLARE
   r RECORD;
+  rcheck RECORD;
+  sql TEXT;
+  jb_id RECORD;
 BEGIN
+    SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check INTO rcheck;
     FOR r IN SELECT * FROM tools.hypertables WHERE compress_chunk_policy IS NOT NULL LOOP
         EXECUTE 'ALTER TABLE ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || ' SET (timescaledb.compress, timescaledb.compress_orderby = ' || quote_literal(r.compress_orderby) || ', timescaledb.compress_segmentby = ' || quote_literal(r.compress_segmentby) || ')';
     END LOOP;
@@ -3217,21 +3289,42 @@ done automatically by TimescaleDB). timescaledb.max_interval_per_job specifies t
         continous_agg_view_aggregate 
       FROM tools.hypertables WHERE continous_agg_bucket_width IS NOT NULL LOOP
       IF r.continous_agg_bucket_width = '1mon' OR r.continous_agg_bucket_width = '1y' THEN
-        EXECUTE 'CREATE VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width) || '
+        sql := 'CREATE VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width) || E'
 AS
-SELECT tools.time_bucket(''' || r.continous_agg_bucket_width || '''::interval, ' || quote_ident(r.time_column_name) || ') AS ' || quote_ident(r.time_column_name) || ', ' || r.continous_agg_additional_fields || ', ' || r.continous_agg_view_aggregate || ' AS "value"
-FROM ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_1d') || '
-GROUP BY tools.time_bucket(''' || r.continous_agg_bucket_width || '''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || '
-ORDER BY tools.time_bucket(''' || r.continous_agg_bucket_width || '''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || ';
+SELECT tools.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || ') AS ' || quote_ident(r.time_column_name) || ', ' || r.continous_agg_additional_fields || ', ' || r.continous_agg_view_aggregate || ' AS "value"
+FROM ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_1d') || E'
+GROUP BY tools.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || E'
+ORDER BY tools.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || ';
 ALTER TABLE ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '_' || r.continous_agg_bucket_width || ' OWNER TO grafana;';
+        EXECUTE sql;
       ELSE
-        EXECUTE 'CREATE VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width)  || '
-WITH (timescaledb.continuous, timescaledb.max_interval_per_job = ''' || r.continous_agg_max_interval_per_job || ''', timescaledb.refresh_lag = ''' || r.continous_agg_refresh_lag || ''', timescaledb.refresh_interval = ''' || r.continous_agg_refresh_interval || ''')
-AS
-SELECT public.time_bucket(''' || r.continous_agg_bucket_width || '''::interval, ' || quote_ident(r.time_column_name) || ') AS ' || quote_ident(r.time_column_name) || ', ' || r.continous_agg_additional_fields || ', ' || r.continous_agg_aggregate || ' AS "value"
-FROM ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '
-GROUP BY public.time_bucket(''' || r.continous_agg_bucket_width || '''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || ';
-ALTER TABLE ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '_' || r.continous_agg_bucket_width || ' OWNER TO grafana;';
+        IF rcheck.check IS TRUE THEN 
+          -- 2.0.0-beta1 and newer
+          sql := 'CREATE MATERIALIZED VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width)  || E'
+  WITH (timescaledb.continuous)
+  AS
+  SELECT public.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || ') AS ' || quote_ident(r.time_column_name) || ', ' || r.continous_agg_additional_fields || ', ' || r.continous_agg_aggregate || ' AS "value"
+  FROM ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '
+  GROUP BY public.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields || ' WITH NO DATA';
+          RAISE NOTICE 'sql = %', sql;
+          EXECUTE sql;
+          EXECUTE E'SELECT add_continuous_aggregate_policy(''' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width) || E''', 
+            start_offset => INTERVAL ''1 month'', end_offset => INTERVAL ''1 hour'', schedule_interval => ''1 hour'')' INTO jb_id;
+--          EXECUTE 'CALL run_job(' || jb_id.add_continuous_aggregate_policy || ')';
+--          EXECUTE E'SELECT refresh_continuous_aggregate(''' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width) || E''')'; 
+--          EXECUTE 'REFRESH MATERIALIZED VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width);
+        ELSE
+          -- Older than 2.0.0-beta1
+  
+          EXECUTE 'CREATE VIEW ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name || '_' || r.continous_agg_bucket_width)  || '
+  WITH (timescaledb.continuous, timescaledb.max_interval_per_job = ''' || r.continous_agg_max_interval_per_job || E''', timescaledb.refresh_lag = ''' || r.continous_agg_refresh_lag || E''', timescaledb.refresh_interval = ''' || r.continous_agg_refresh_interval || E''')
+  AS
+  SELECT public.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || ') AS ' || quote_ident(r.time_column_name) || ', ' || r.continous_agg_additional_fields || ', ' || r.continous_agg_aggregate || ' AS "value"
+  FROM ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '
+  GROUP BY public.time_bucket(''' || r.continous_agg_bucket_width || E'''::interval, ' || quote_ident(r.time_column_name) || '), ' || r.continous_agg_additional_fields;
+
+        END IF;
+        EXECUTE 'ALTER TABLE ' || quote_ident(r.schema_name) || '.' || quote_ident(r.table_name) || '_' || r.continous_agg_bucket_width || ' OWNER TO grafana;';
       END IF;
 
 /* -- ERROR:  no valid bucketing function found for continuous aggregate query
@@ -3255,7 +3348,20 @@ ALTER TABLE logs.connection_received_logs_summary_1y OWNER TO grafana;
     END LOOP;
 END $$;
 
-SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;
+DO $check$
+DECLARE
+  r RECORD;
+BEGIN
+  SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check INTO r;
+  IF r.check IS TRUE THEN 
+    -- 2.0.0-beta1 and newer
+    PERFORM public.add_compression_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;
+  ELSE
+    -- Older than 2.0.0-beta1
+    PERFORM public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;
+  END IF;
+END $check$;
+
 
 DO $$
 DECLARE
@@ -3302,3 +3408,18 @@ VALUES
 INSERT INTO tools.servers ("server_name", "server", "port", "maintenance_database", "username", "password", "read_all_databases", "disabled", "maintenance_db", "pgpass_file")
 VALUES
   ('localhost', 'localhost', '30002', 'postgres', NULL, NULL, TRUE, FALSE, TRUE, NULL);
+
+/*
+-- Example of how to switch code between versions of TimescaleDB
+DO $check$
+DECLARE
+  r RECORD;
+BEGIN
+  SELECT tools.check_timescaledb_version('1.7.4') AS check INTO r;
+  IF r.check IS TRUE THEN 
+    -- 1.7.4 and newer
+  ELSE
+    -- Older than 1.7.4
+  END IF;
+END $check$;
+*/
