@@ -2,7 +2,7 @@
 
 |License|Overall Build|
 |:---:|:---:|
-|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 
 |PostgreSQL 11|PostgreSQl 12|
 |[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/2)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
