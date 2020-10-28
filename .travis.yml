@@ -69,6 +69,8 @@ env:
     # Tested and Passed
     # 1.6.0
     # 1.7.0 & 1.7.4 Stall after pg_prove 2nd script before running the 3rd script.
+    # Build and test currently supported versions of PostgreSQL
+    - PGVERSION=pg11
     - PGVERSION=pg12
 
 before_script:
@@ -136,6 +138,18 @@ script:
   # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
   - pg_prove -v -d postgres .
   #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+  # Remove Custom TimescaleDB with pgtap
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+  # Remove Grafana
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+  # Remove Graphite
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+  - kubectl delete -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+  # Clean from previous builds before building, otherwise patching issues
+  - ~/build/LloydAlbin/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean
 
   # Note: Last build test took 18+ mintues
 
