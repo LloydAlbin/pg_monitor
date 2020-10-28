@@ -70,7 +70,7 @@ env:
     # 1.6.0
     # 1.7.0 & 1.7.4 Stall after pg_prove 2nd script before running the 3rd script.
     # Build and test currently supported versions of PostgreSQL
-    - PGVERSION=pg11
+    # - PGVERSION=pg11
     - PGVERSION=pg12
 
 before_script:
