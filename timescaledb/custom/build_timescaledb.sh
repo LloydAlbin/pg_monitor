@@ -198,6 +198,7 @@ postgres_patch()
 	# It's an implementation of the version number format specified by the Semantic Versioning 2.0.0 Specification.
 	# https://github.com/theory/pg-semver
 	if (( $(echo "$PG_VER_NUMBER >= 9.2" |bc -l) )); then
+		print_verbose 2 "Patching Postgres Repository: $1/postgres/$2/alpine/Dockerfile - Adding pg_semver "
 		sed -i "/ENV PG_SHA256/a ADD https://github.com/theory/pg-semver/archive/main.zip \/." $1/postgres/$2/alpine/Dockerfile
 
 		sed -i "/VOLUME/a 	&& rm -f \/main.zip " $1/postgres/$2/alpine/Dockerfile	
