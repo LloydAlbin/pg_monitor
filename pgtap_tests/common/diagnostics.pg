@@ -68,7 +68,7 @@ $BODY$
 LANGUAGE plpgsql;
 
 -- Plan the tests.
-SELECT plan(:plan + 12);
+SELECT plan(:plan + 15);
 
 
 -- Configuration Data
@@ -84,8 +84,16 @@ SELECT diag('Current Session User: ' || session_user);
 SELECT diag('Current User: ' || current_user);
 SELECT diag('pgTAP Version: ' || pgtap_version());
 SELECT diag('pgTAP Postgres Version: ' || pg_version());
-SELECT diag('TimescaleDB Edition: ' || edition) FROM timescaledb_information.license WHERE expired = false;
-SELECT diag('TimescaleDB Expiration: ' || expiration_time) FROM timescaledb_information.license WHERE expired = false;
+/*
+SELECT CASE WHEN tools.check_timescaledb_version('2.0.0-beta1') 
+    THEN
+        skip('License Changed for version 2.0.0 and newer', 2)
+    ELSE collect_tap()
+        diag('TimescaleDB Edition: ' || (SELECT edition FROM timescaledb_information.license WHERE expired = false)) ,
+        diag('TimescaleDB Expiration: ' || (SELECT expiration_time FROM timescaledb_information.license WHERE expired = false)) 
+    ) END;
+*/
+SELECT skip('License Changed for version 2.0.0 and newer', 2);
 SELECT diag('TimescaleDB Default Version: ' || default_version) FROM pg_catalog.pg_available_extensions WHERE name = 'timescaledb';
 SELECT diag('TimescaleDB Installed Version: ' || installed_version) FROM pg_catalog.pg_available_extensions WHERE name = 'timescaledb';
 SELECT diag('Postgres Version: ' || current_setting( 'server_version'));
@@ -111,14 +119,18 @@ SELECT is(
 SELECT CASE 
     WHEN current_database() = 'postgres' 
     THEN collect_tap(
+        skip('Skipping semver extension test', 1),
         is(
                 (SELECT count(*)::int FROM pg_catalog.pg_extension)
             , 3, 'Verifying only 3 extensions are installed')
     )
     ELSE collect_tap(
         is(
+        (SELECT extname FROM pg_catalog.pg_extension WHERE extname = 'semver')
+    , 'semver', 'Verifying extension semver is installed'),
+        is(
                 (SELECT count(*)::int FROM pg_catalog.pg_extension)
-            , 3, 'Verifying only 3 extensions are installed')
+            , 4, 'Verifying only 4 extensions are installed')
     )
     END;
 
@@ -133,6 +145,7 @@ FROM pg_catalog.pg_extension
         current_database() <> 'postgres' 
         AND extname != 'plpgsql' 
         AND extname != 'timescaledb' 
+        AND extname != 'semver'
         AND extname != 'pgtap');
     
 SELECT has_language( 'c' );
