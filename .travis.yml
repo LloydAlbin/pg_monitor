@@ -13,13 +13,13 @@ jobs:
         - PGVERSION=pg12
       script: ./.travis_build_script.yml
     - #stage: PostgreSQL 11
-      name: "PostgreSQL 11"
+      name: "PostgreSQL 11 - TimescaleDB (latest)"
       env:
         - TSVERSION=HEAD
         - PGVERSION=pg11
       script: ./.travis_build_script.yml
     - # stage: PostgreSQl 12
-      name: "PostgreSQL 12"
+      name: "PostgreSQL 12 - TimescaleDB (latest)"
       env:
         - TSVERSION=HEAD
         - PGVERSION=pg12
