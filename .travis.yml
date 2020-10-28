@@ -1,6 +1,18 @@
 jobs:
   include:
     - #stage: PostgreSQL 11
+      name: "PostgreSQL 11 - TimescaleDB 1.7.4"
+      env:
+        - TSVERSION=1.7.4
+        - PGVERSION=pg11
+      script: ./.travis_build_script.yml
+    - # stage: PostgreSQl 12
+      name: "PostgreSQL 12 - TimescaleDB 1.7.4"
+      env:
+        - TSVERSION=1.7.4
+        - PGVERSION=pg12
+      script: ./.travis_build_script.yml
+    - #stage: PostgreSQL 11
       name: "PostgreSQL 11"
       env:
         - TSVERSION=HEAD

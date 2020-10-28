@@ -1,12 +1,8 @@
 # pg_monitor
 
-|License|Overall Build|
-|:---:|:---:|
-|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
-
-|PostgreSQL 11|PostgreSQl 12|
-|:---:|:---:|
-|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/2)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
+|License|Overall Build|PostgreSQL 11 - TimescaleDB 1.7.4|PostgreSQl 12 - TimescaleDB 1.7.4|PostgreSQL 11 - Latest TimescaleDB|PostgreSQl 12 - Latest TimescaleDB|
+|:---:|:---:|:---:|:---:|
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/2)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/3)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/4)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 
 pg_monitor is a entire tech stack to monitor your Hardware, PostgreSQL Live and PostgreSQL Logs in realtime.
 
