@@ -10,24 +10,34 @@
 --\ir ../common/diagnostic.sql
 \i common/diagnostics.pg
 
+/*
+-- Need for TimescaleDB 1.7.4 and older
 SELECT diag('');
 SELECT diag('Sleep until materialized views are finished being refreshed.');
 DO $$
 DECLARE
 	r RECORD;
+    rcheck RECORD;
 BEGIN
-	LOOP
-        SELECT * INTO r FROM timescaledb_information.continuous_aggregate_stats 
-        WHERE (view_name::text LIKE 'logs.postgres_log_%'
-        OR view_name::text LIKE 'logs.connection_%')
-        AND (completed_threshold < '2020-01-18 19:56:01.401 PST' 
-        OR completed_threshold IS NULL);
-		IF NOT FOUND THEN
-        	EXIT;
-		END IF;
-        PERFORM pg_sleep(30); -- Sleep for 30 seconds and then re-test
-    END LOOP;
+    SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check INTO rcheck;
+    IF rcheck.check IS TRUE THEN 
+        -- 2.0.0-beta1 and newer
+    ELSE
+        -- Older than 2.0.0-beta1
+        LOOP
+            SELECT * INTO r FROM timescaledb_information.continuous_aggregate_stats 
+            WHERE (view_name::text LIKE 'logs.postgres_log_%'
+            OR view_name::text LIKE 'logs.connection_%')
+            AND (completed_threshold < '2020-01-18 19:56:01.401 PST' 
+            OR completed_threshold IS NULL);
+            IF NOT FOUND THEN
+                EXIT;
+            END IF;
+            PERFORM pg_sleep(30); -- Sleep for 30 seconds and then re-test
+        END LOOP;
+    END IF;
 END $$;
+*/
 
 SELECT diag('');
 SELECT diag('Test logs.connection_attempt_history()');
