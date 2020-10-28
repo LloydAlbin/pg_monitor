@@ -12,9 +12,9 @@ sudo: required
 #  only:
 #  - master
 
-env:
-- PGVERSION=pg11
-- PGVERSION=pg12
+#env:
+#- PGVERSION=pg11
+#- PGVERSION=pg12
 
 addons:
   apt:
@@ -69,6 +69,7 @@ env:
     # Tested and Passed
     # 1.6.0
     # 1.7.0 & 1.7.4 Stall after pg_prove 2nd script before running the 3rd script.
+    - PGVERSION=pg12
 
 before_script:
   # Download kubectl, which is a requirement for using minikube.
