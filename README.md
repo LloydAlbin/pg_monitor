@@ -9,8 +9,6 @@
 |1.7.4|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/11)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/12)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/2)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 |Latest|||[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/3)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/4)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 
-|Latest
-
 pg_monitor is a entire tech stack to monitor your Hardware, PostgreSQL Live and PostgreSQL Logs in realtime.
 
 You can use then use Grafana to display the combined stats from all three sources. I use [RaspberryPI's](https://www.raspberrypi.org/) to drive displays in my office.
