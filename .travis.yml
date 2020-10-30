@@ -62,7 +62,7 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - grep image ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -143,7 +143,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -224,7 +225,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -305,7 +307,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -386,7 +389,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -467,7 +471,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -548,7 +553,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -629,7 +635,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -710,7 +717,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -791,7 +799,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -872,7 +881,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
@@ -953,7 +963,8 @@ jobs:
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
         #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
-        - sed -r -i 's/:[0-9a-z.\-]+-pg[0-9.]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i "s/:[0-9a-z.\-]+-pg[0-9.]{2}$/:${TSVERSION}-${PGVERSION}/g" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - grep "image:" ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
         # Make sure TimescaleDB pod is scheduled and running.
         - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
