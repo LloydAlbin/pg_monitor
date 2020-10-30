@@ -4,6 +4,8 @@
 |:---:|:---:|
 |![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 |**TimescaleDB**|**PostgreSQL 11**|
+|1.5.1|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/5)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
+|1.6.1|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/6)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 |1.7.4|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 |Latest|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/3)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|
 |**TimescaleDB**|**PostgreSQL 12**|
