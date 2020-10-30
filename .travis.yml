@@ -507,3 +507,489 @@ jobs:
         #- bash <(curl -s https://codecov.io/bash)>
         - kubectl get all
         - kubectl get secrets
+    - #stage: PostgreSQL 9.6
+      name: "PostgreSQL 9.6 - TimescaleDB 1.5.1"
+      env:
+        - TSVERSION=1.5.1
+        - PGVERSION=pg9.6
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.-]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.5.1"
+      env:
+        - TSVERSION=1.5.1
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.-]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 9.6
+      name: "PostgreSQL 9.6 - TimescaleDB 1.6.1"
+      env:
+        - TSVERSION=1.6.1
+        - PGVERSION=pg9.6
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.6.1"
+      env:
+        - TSVERSION=1.6.1
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 9.6
+      name: "PostgreSQL 9.6 - TimescaleDB 1.7.4"
+      env:
+        - TSVERSION=1.7.4
+        - PGVERSION=pg9.6
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.7.4"
+      env:
+        - TSVERSION=1.7.4
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        # Following is just to demo that the kubernetes cluster works.
+        - kubectl cluster-info
+        # Verify kube-addon-manager.
+        # kube-addon-manager is responsible for managing other kubernetes components, such as kube-dns, dashboard, storage-provisioner..
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+        # Wait for kube-dns to be ready.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+        # Deploy Custom TimescaleDB with pgtap
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
+        #- kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - sed -r -i 's/:[0-9.]+-pg[0-9]{2}$/:$TSVERSION-$PGVERSION/g' ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+        # Make sure TimescaleDB pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-timescaledb -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-timescaledb deployment to be available"; kubectl get pods -n default; done
+        # Deploy Grafana
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/grafana/kubernetes/pg-monitor-grafana-deployment.yaml
+        # Make sure Grafana pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-grafana -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-grafana deployment to be available"; kubectl get pods -n default; done
+        # Deploy Graphite
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-service.yaml
+        - kubectl apply -f ~/build/LloydAlbin/pg_monitor/graphite/kubernetes/pg-monitor-graphite-deployment.yaml
+        # Make sure Graphite pod is scheduled and running.
+        - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n default get pods -lapp=pg-monitor-graphite -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for pg-monitor-graphite deployment to be available"; kubectl get pods -n default; done
+        # Verify Postgres Version and Connection
+        - psql -d postgres -c 'SELECT version();'
+        # Install pg_monitor sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -f ~/build/LloydAlbin/pg_monitor/timescaledb/init_timescaledb.sql
+        - psql -v ON_ERROR_STOP=1 -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
+        - psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - cat ~/build/LloydAlbin/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
+        - if (( psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check;" -t )); then
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql;
+          else
+            psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/build/LloydAlbin/pg_monitor/pgtap_tests/common/refresh_aggregates.sql;
+          fi
+        #- psql -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(300);"
+        #- psql -h localhost -p 30002 -d postgres -U postgres -f ~/build/LloydAlbin/pg_monitor/grafana/pg_monitor_timescaledb_init.sql
+        # Obtain the stats 5 times waiting a minimum of 30 seconds between start times
+        - python3 ~/build/LloydAlbin/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -w 30 -c 5
+        # Must change directories to tune the pgtap tests.
+        - cd ~/build/LloydAlbin/pg_monitor/pgtap_tests/
+        # Run the all the pgtap tests in the pgtap_tests directory
+        # - travis_wait pg_prove -v -d postgres 03_data_tests.pg
+        - pg_prove -v -d postgres .
+        #- pg_prove -v -h localhost -p 30002 -d postgres -U postgres .
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
