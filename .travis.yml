@@ -50,7 +50,7 @@ jobs:
         # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
         - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
       script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin || travis_terminate 1;
       after_script:
         #- bash <(curl -s https://codecov.io/bash)>
         - kubectl get all
@@ -84,7 +84,7 @@ jobs:
         # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
         - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
       script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin || travis_terminate 1;
       after_script:
         #- bash <(curl -s https://codecov.io/bash)>
         - kubectl get all
