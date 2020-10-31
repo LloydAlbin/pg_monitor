@@ -549,9 +549,9 @@ DO $check$
 DECLARE
   r RECORD;
 BEGIN
-  SELECT tools.check_timescaledb_version('1.7.4') AS check INTO r;
+  SELECT tools.check_timescaledb_version('2.0.0-beta1') AS check INTO r;
   IF r.check IS TRUE THEN 
-    -- 1.7.4 and newer
+    -- 2.0.0-beta1 and newer
     CREATE VIEW tools.hypertable AS
     SELECT ht.schema_name AS table_schema,
         ht.table_name,
@@ -572,7 +572,7 @@ BEGIN
                 ELSE NULL::text
             END)::regclass) size(table_size, index_size, toast_size, total_size, node_name) ON (true));
   ELSE
-    -- Older than 1.7.4
+    -- Older than 2.0.0-beta1
     CREATE VIEW tools.hypertable AS
     SELECT ht.schema_name AS table_schema,
         ht.table_name,
