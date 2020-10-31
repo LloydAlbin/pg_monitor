@@ -10,7 +10,7 @@ BEGIN
 	SELECT * INTO r FROM pg_settings WHERE name = 'server_version';
     IF r.setting LIKE '9.%' THEN
     	RAISE NOTICE '9.x and needs pg_monitor role created - Creating';
-    	CREATE ROLE pg_monitor WITH NOLOGIN NOREPLICATION;
+    	CREATE ROLE pgmonitor WITH NOLOGIN NOREPLICATION;
     END IF;
 END $$;
 
