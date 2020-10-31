@@ -32,79 +32,56 @@ In this build/testing environment I am using the following:
 ## Testing Clean Install
 
 ```bash
+###### CLONE REPOSITORIES ######
+git clone https://github.com/LloydAlbin/postgres-docker.git ~/postgres-docker
+git clone https://github.com/LloydAlbin/timescaledb-docker.git ~/lloydalbin-timescaledb-docker
+git clone https://github.com/LloydAlbin/pg_monitor.git ~/pg_monitor
+
 ###### DELETE GITHUB DATA ######
 # Clean from previous builds before building, otherwise patching issues
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh --clean
+~/postgres-docker/build_postgres.sh -v -v -v -V --clean
+~/lloydalbin-timescaledb-docker/build_timescaledb.sh -v -v -v -V --clean
 
 ###### BUILD DOCKER IMAGES ######
+# tsv - pgv
+#1.5.0-1.5.1 - pg11, pg10, pg9.6
+#1.6.0-1.6.1 - pg11, pg10, pg9.6
+#1.7.0-1.7.4 - pg12, pg11, pg10, pg9.6
+#2.0.0-rc1-2.0.x - pg12, pg11
 # Build Postgres and TimescaleDB Docker Images
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds
-# Build for secific Postgres version and current TimescaleDB Docker Images
-# You will also need to update the pg-monitor-timescaledb-deployment.yaml to specify this same Postgres version
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --pgv pg11
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --pgv pg12
-# Build for current Postgres and secific TimescaleDB version
-# You will also need to update the pg-monitor-timescaledb-deployment.yaml to specify this same TimescaleDB version
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --tsv HEAD
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --add pgtap --add tds --tsv 1.6.0
-# Rebuild TimescaleDB Docker Images
-~/pg_monitor/timescaledb/custom/build_timescaledb.sh -v -v -v -V --timescaledb
+~/postgres-docker/build_postgres.sh -v -v -v -V --add all --clean --override_exit  -pgv $PGVERSION --org $DOCKER_ORG --pg_name $DOCKER_IMAGE_NAME
+# Build Postgres and TimescaleDB Docker Images
+~/lloydalbin-timescaledb-docker/build_timescaledb.sh -v -v -v -V --clean --override_exit -pgv $PGVERSION --org $DOCKER_ORG --pg_name $DOCKER_IMAGE_NAME_POSTGRES --ts_name $DOCKER_IMAGE_NAME_TIMESCALE
+
+# Show your docker images
 docker images
 # Optional: cleanup dangling images, etc.
+# You can do this by specifying a second --clean when using build_postgres.sh or build_timescaledb.sh
 docker system prune -f
 
-###### CLEANUP IN KUBERNETES ######
-# Delete Service, Secret and Deployment in Kubernetes
-kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
-kubectl delete -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
-kubectl delete -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
-
-###### INSTALL IN KUBERNETES ######
-# Add Service, Secret and Deployment in Kubernetes
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-service.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/kubernetes/pg-monitor-timescaledb-secret.yaml
-kubectl apply -f ~/pg_monitor/timescaledb/custom/kubernetes/pg-monitor-timescaledb-deployment.yaml
+###### TEST PG_MONITOR IN KUBERNETES ######
+~/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv 1.5.1 -pgv pg9.6
+# Example for using in Travis
+# ~/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v --location ~/build/LloydAlbin -tsv 1.5.1 -pgv pg9.6
 
 ###### TIMESCALEDB CLEANUP ######
-# Cleanup from previous Timescale DB Testing
-psql -h localhost -p 30002 -U postgres -d postgres -c "DROP DATABASE pgmonitor_db;"
-psql -h localhost -p 30002 -U postgres -d postgres -c "DROP ROLE grafana;"
+~/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v --clean
 
 ###### TIMESCALEDB SETUP ######
-# Init TimescaleDB
-psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d postgres -f ~/pg_monitor/timescaledb/init_timescaledb.sql
-# Setup account with password
-psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d postgres -c "ALTER ROLE grafana WITH PASSWORD 'pgpass';"
-# Make the COntinous Aggregates very aggressive
-# Skip if TimescaleDB 2.0.0 or later
-psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/make_aggregates_fast.sql
+# After make_aggregates_fast.sql
 # Remove Compresses Chunks Policy
 # for TimescaleDB 1.7.4 and older
 psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.remove_compress_chunks_policy((schema_name || '.' || table_name)::regclass) FROM tools.hypertables;"
 # Make the Continous Aggregate capture everything right away for testing.
 #psql -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/continous_aggregate_refresh_interval_now.sql
+
+###### TIMESCALEDB SETUP ######
 # Load Test Data
-cat ~/pg_monitor/pgtap_tests/logs/pglog_db1.csv | psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db1';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
-cat ~/pg_monitor/pgtap_tests/logs/pglog_db2.csv | psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT 'db2';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"
 # Add Compresses Chunks Policy - This is not done in the Travis tests
 # for TimescaleDB 1.7.4 and older
 psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT public.add_compress_chunks_policy((schema_name || '.' || table_name)::regclass, compress_chunk_policy) FROM tools.hypertables;"
 # for TimescaleDB 1.7.4 and older
 psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -c "SELECT pg_sleep(5);SELECT alter_job_schedule(job_id, next_start=>now()) FROM _timescaledb_config.bgw_policy_compress_chunks p INNER JOIN _timescaledb_catalog.hypertable h ON (h.id = p.hypertable_id);"
-# Refresh the Continous Aggregate so they have the latest data
-# for TimescaleDb 1.7.4 and older
-psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/refresh_aggregates.sql
-# for TimescaleDB 2.0.0 and newer
-psql -v ON_ERROR_STOP=1 -h localhost -p 30002 -U postgres -d pgmonitor_db -f ~/pg_monitor/pgtap_tests/common/refresh_aggregates_2.sql
-
-###### pg_monitor ######
-python3 ~/pg_monitor/pg_monitor/pg_monitor.py -h localhost -p 30002 -U grafana -W pgpass -vvv
-
-###### PGTAP ######
-# Must change directories to tune the pgtap tests.
-cd ~/pg_monitor/pgtap_tests/
-# Run the all the pgtap tests in the pgtap_tests directory
-pg_prove -v -h localhost -p 30002 -U postgres -d postgres .
 ```
 
 ## Testing Upgrade Install
