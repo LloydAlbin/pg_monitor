@@ -11,11 +11,13 @@ BEGIN
     IF r.setting LIKE '9.%' THEN
     	RAISE NOTICE '9.x and needs pg_monitor role created - Creating';
     	CREATE ROLE pgmonitor WITH NOLOGIN NOREPLICATION;
+      -- Create grafana user
+      CREATE USER grafana LOGIN IN ROLE pgmonitor;
+    ELSE
+      -- Create grafana user
+      CREATE USER grafana LOGIN IN ROLE pg_monitor;
     END IF;
 END $$;
-
--- Create grafana user
-CREATE USER grafana LOGIN IN ROLE pg_monitor;
 
 \set ON_ERROR_STOP true
 
