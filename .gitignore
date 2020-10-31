@@ -1,4 +1,5 @@
 /pg_monitor/*.log
 /pg_monitor/scharp_py_tools/__pycache__
 /timescaledb/debian
-/pg_monitor/sword
+/build_test/
+*/sword
