@@ -21,6 +21,176 @@ env:
 
 jobs:
   include:
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.5.1"
+      env:
+        - TSVERSION=1.5.1
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 11
+      name: "PostgreSQL 11 - TimescaleDB 1.5.1"
+      env:
+        - TSVERSION=1.5.1
+        - PGVERSION=pg11
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.6.1"
+      env:
+        - TSVERSION=1.6.1
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 11
+      name: "PostgreSQL 11 - TimescaleDB 1.6.1"
+      env:
+        - TSVERSION=1.6.1
+        - PGVERSION=pg11
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
+    - #stage: PostgreSQL 10
+      name: "PostgreSQL 10 - TimescaleDB 1.7.4"
+      env:
+        - TSVERSION=1.7.4
+        - PGVERSION=pg10
+      language: bash
+      services: docker
+      sudo: required
+      addons:
+        apt:
+          packages:
+            - postgresql-client
+            - perl
+            - python3
+            - python3-psycopg2
+            - python3-daemon
+      before_script:
+        # Download kubectl, which is a requirement for using minikube.
+        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+        # Download minikube.
+        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
+        - mkdir -p $HOME/.kube $HOME/.minikube
+        - touch $KUBECONFIG
+        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
+        - "sudo chown -R travis: /home/travis/.minikube/"
+        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
+        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
+      script: 
+        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
+      after_script:
+        #- bash <(curl -s https://codecov.io/bash)>
+        - kubectl get all
+        - kubectl get secrets
     - #stage: PostgreSQL 11
       name: "PostgreSQL 11 - TimescaleDB 1.7.4"
       env:
@@ -128,278 +298,6 @@ jobs:
       env:
         - TSVERSION=latest
         - PGVERSION=pg12
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 11
-      name: "PostgreSQL 11 - TimescaleDB 1.5.1"
-      env:
-        - TSVERSION=1.5.1
-        - PGVERSION=pg11
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 11
-      name: "PostgreSQL 11 - TimescaleDB 1.6.1"
-      env:
-        - TSVERSION=1.6.1
-        - PGVERSION=pg11
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 9.6
-      name: "PostgreSQL 9.6 - TimescaleDB 1.5.1"
-      env:
-        - TSVERSION=1.5.1
-        - PGVERSION=pg9.6
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 10
-      name: "PostgreSQL 10 - TimescaleDB 1.5.1"
-      env:
-        - TSVERSION=1.5.1
-        - PGVERSION=pg10
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 9.6
-      name: "PostgreSQL 9.6 - TimescaleDB 1.6.1"
-      env:
-        - TSVERSION=1.6.1
-        - PGVERSION=pg9.6
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 10
-      name: "PostgreSQL 10 - TimescaleDB 1.6.1"
-      env:
-        - TSVERSION=1.6.1
-        - PGVERSION=pg10
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 9.6
-      name: "PostgreSQL 9.6 - TimescaleDB 1.7.4"
-      env:
-        - TSVERSION=1.7.4
-        - PGVERSION=pg9.6
-      language: bash
-      services: docker
-      sudo: required
-      addons:
-        apt:
-          packages:
-            - postgresql-client
-            - perl
-            - python3
-            - python3-psycopg2
-            - python3-daemon
-      before_script:
-        # Download kubectl, which is a requirement for using minikube.
-        - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/$KUBEVERSION/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-        # Download minikube.
-        - curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-        #- curl -Lo minikube https://storage.googleapis.com/minikube/releases/$MINIKUBEVERSION/minikube-linux-amd64 && chmod +x minikube && sudo install minikube-linux-amd64 /usr/local/bin/minikub && minikube kubectl -- get po -A
-        - mkdir -p $HOME/.kube $HOME/.minikube
-        - touch $KUBECONFIG
-        - sudo minikube start --vm-driver=none --kubernetes-version=$KUBEVERSION
-        - "sudo chown -R travis: /home/travis/.minikube/"
-        # Add https://metacpan.org/pod/TAP::Parser::SourceHandler::pgTAP for pg_prove
-        - cpanm --sudo TAP::Parser::SourceHandler::pgTAP
-      script: 
-        - ~/build/LloydAlbin/pg_monitor/internal_testing/test_timescaledb.sh -V -v -v -v -tsv $TSVERSION -pgv $PGVERSION --location ~/build/LloydAlbin
-      after_script:
-        #- bash <(curl -s https://codecov.io/bash)>
-        - kubectl get all
-        - kubectl get secrets
-    - #stage: PostgreSQL 10
-      name: "PostgreSQL 10 - TimescaleDB 1.7.4"
-      env:
-        - TSVERSION=1.7.4
-        - PGVERSION=pg10
       language: bash
       services: docker
       sudo: required
