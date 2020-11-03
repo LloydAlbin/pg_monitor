@@ -2,7 +2,7 @@
 
 |License|Overall Build||||
 |:---:|:---:|:---:|:---:|:---:|
-|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://www.travis-ci.org/LloydAlbin/pg_monitor.svg?branch=master)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)||||
+|![GitHub](https://img.shields.io/github/license/LloydAlbin/pg_monitor)|[![Build Status](https://img.shields.io/travis/com/LloydAlbin/pg_monitor)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)||||
 |**TimescaleDB**|**PostgreSQL 10**|**PostgreSQL 11**|**PostgreSQL 12**|**PostgreSQL 13**|
 ||![Relative date](https://img.shields.io/date/1668038400?label=EOL)|![Relative date](https://img.shields.io/date/1699488000?label=EOL)|![Relative date](https://img.shields.io/date/1731542400?label=EOL)|![Relative date](https://img.shields.io/date/1762992000?label=EOL)|
 |1.5.1|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/1?use_travis_com=true)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/LloydAlbin/pg_monitor/branches/master/2?use_travis_com=true)](https://www.travis-ci.org/LloydAlbin/pg_monitor/builds)|||

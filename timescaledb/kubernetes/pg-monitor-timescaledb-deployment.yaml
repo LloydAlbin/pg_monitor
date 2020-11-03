@@ -18,18 +18,18 @@ spec:
       name: pg-monitor-timescaledb
     spec:
       containers:
-      - env:
-        - name: PGDATA
-          value: /pgdata_local/11
-        - name: POSTGRES_INITDB_ARGS
-          value: --data-checksums --encoding=UTF8 --locale=en_US --auth-host='md5'
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: pg-monitor-timescaledb-pg-pass
-              key: password
-#          value: pgpass
-        image: timescale/timescaledb:2.0.0-rc2-pg12
+      - image: timescale/timescaledb:2.0.0-rc2-pg12
+        env:
+          - name: PGDATA
+            value: /pgdata_local/11
+          - name: POSTGRES_INITDB_ARGS
+            value: --data-checksums --encoding=UTF8 --locale=en_US --auth-host='md5'
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pg-monitor-timescaledb-pg-pass
+                key: password
+#                value: pgpass
         imagePullPolicy: Always
         name: pg-monitor-timescaledb
         ports:
@@ -38,8 +38,8 @@ spec:
         volumeMounts:
         - name: podinfo
           mountPath: /etc/podinfo
-#        - mountPath: /pgdata_local
-#          name: netapp
+        - name: netapp
+          mountPath: /pgdata_local
 #        resources:
 #          requests:
 #            memory: "8G"
@@ -47,6 +47,27 @@ spec:
 #          limits:
 #            memory: "8G"
 #            cpu: 4
+      - image: lloydalbin/pg_ldap_sync:10-alpine
+        env:
+          - name: PGHOST
+            value: pg-monitor-timescaledb
+          - name: PGUSER
+            value: postgres
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pg-monitor-timescaledb-pg-pass
+                key: password
+#                value: pgpass
+        command: ["/bin/bash"]
+        args: ["-c", "while true; do sleep 5;done"]
+        name: pg-ldap-sync
+        resources: {}
+        volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo
+        - name: netapp
+          mountPath: /pgdata_local
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       volumes:
@@ -60,6 +81,7 @@ spec:
             - path: "annotations"
               fieldRef:
                 fieldPath: metadata.annotations
-#      - name: netapp
+      - name: netapp
+        emptyDir: {}
 #        persistentVolumeClaim:
 #          claimName: pg-monitor-timescaledb
