@@ -11,11 +11,13 @@ hostname=$(hostname -s)
 
 #ExecStart=/pgdata_local/pg_readlog.sh \
 #     (ClusterName) (TimescaleDBServer) (ReportsDatabase) (ReportsPort) \
-#     (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory)
+#     (LocalLogDirectory) (LocalTempDirectory) (PostgresBinDirectory) \
+#     (TempCSVLogfile) (LoopSeconds)
 
 ExecStart=/pgdata_local/pg_readlog.sh \
      $hostname (TimescaleDBServer)  pgmonitor_db 30002 \
-     /pgdata_local/pg_log /pgdata_local /usr/local/postgres-current/bin
+     /pgdata_local/pg_log /pgdata_local /usr/local/postgres-current/bin \
+     logtail.csv 5
 
 [Install]
 WantedBy=multi-user.target
