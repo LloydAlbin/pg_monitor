@@ -61,7 +61,7 @@ while true; do
                 fi
         else
                 # PG 12 and less
-                if cat $pg_temp_log_directory/$pg_temp_logfile | $postgres_bin_directory/psql -h $pg_hostname -d $pg_database -p $pg_port -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT '$server';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name,backend_type,leader_pid) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"; then
+                if cat $pg_temp_log_directory/$pg_temp_logfile | $postgres_bin_directory/psql -h $pg_hostname -d $pg_database -p $pg_port -q -c "CREATE TEMP TABLE upload_logs (LIKE logs.postgres_log);ALTER TABLE upload_logs ALTER COLUMN cluster_name SET DEFAULT '$server';COPY upload_logs (log_time,user_name,database_name,process_id,connection_from,session_id,session_line_num,command_tag,session_start_time,virtual_transaction_id,transaction_id,error_severity,sql_state_code,message,detail,hint,internal_query,internal_query_pos,context,query,query_pos,location,application_name) FROM STDIN (FORMAT CSV);INSERT INTO logs.postgres_log SELECT * FROM upload_logs;"; then
                         # If the upload was successful then delete the temporary logtail.csv
                         # If the upload failed, then we will append the new data to it until the upload is successful
                         rm $pg_temp_log_directory/$pg_temp_logfile;
