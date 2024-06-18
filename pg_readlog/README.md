@@ -26,8 +26,8 @@ log_hostname = 'true'
 
 You need to edit one of the following three files depending on how you are going to start this script.
 
-* start_pg_readlog.sh (Manually start and stop service):
-* start_pg_readlog (Automatically start and stop init.d script):
+* start_pg_readlog.sh (Manually start background service):
+* start_pg_readlog_manual.sh logtail.csv (Manually process specified logtail.csv or log file):
 * pg_readlog.service (Automatically start and stop service):
 
 Edits that you need to make:
