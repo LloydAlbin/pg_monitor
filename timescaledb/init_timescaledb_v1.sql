@@ -1175,15 +1175,15 @@ DECLARE
 	sql TEXT;
 BEGIN
   sql := E'SELECT 
-   time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || ''') AS "time",
+   time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || '''::TIMESTAMPTZ, ''' || grafana_to_time || '''::TIMESTAMPTZ) AS "time",
    cluster_name,
   coalesce(sum(wbuffer),0) AS count
 FROM reports.checkpoint_logs a
 WHERE 
     ' || grafana_time_filter || '
     AND tools.field_list_check(cluster_name, $$' || cluster_name_in::text || E'$$) 
-GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || ''', ''' || grafana_to_time || '''), cluster_name
-ORDER BY time, cluster_name;';
+GROUP BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || '''::TIMESTAMPTZ, ''' || grafana_to_time || '''::TIMESTAMPTZ), cluster_name
+ORDER BY time_bucket_gapfill(''' || grafana_interval || ''',time, ''' || grafana_from_time || '''::TIMESTAMPTZ, ''' || grafana_to_time || '''::TIMESTAMPTZ), cluster_name;';
 --  RAISE NOTICE 'SQL: %', sql;
   RETURN QUERY EXECUTE sql;
 END;
